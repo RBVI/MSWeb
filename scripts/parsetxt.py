@@ -1,4 +1,5 @@
 import sys
+import time
 def getArgs (argv): #defines function to add -[letter] [input] pairs into dictionary
     args = {}
     while argv:
@@ -7,6 +8,7 @@ def getArgs (argv): #defines function to add -[letter] [input] pairs into dictio
         argv = argv[1:]
     return args
 args = getArgs(sys.argv)
+start_time = time.time() #initializes timer
 if "-i" in args.keys():
     inputfile = open(args["-i"], "r")
     lines = inputfile.readlines()
@@ -16,5 +18,7 @@ if "-i" in args.keys():
     data = []
     for line in lines[1:]:
         data.append(line.split("\t"))
+    print(header)
 else:
     print("No input file specified with '-i'. Run script and specify input file as '-i <inputfile>.txt' and try again")
+print("--- %s seconds ---" % (time.time() - start_time)) #"stops" timer
