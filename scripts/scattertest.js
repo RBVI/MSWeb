@@ -3,7 +3,8 @@ var trace1 = {
     x:[1,2,3,4,5,6],
     y:[3,5,2,6,4,8],
     mode:'lines+markers',
-    type:'scatter'
+    type:'scatter',
+    colorscale: [[0,'#ff0000'],[0.5,'#ff0000'],[0.5, '#ff6e00'],[1.0,'#ff6e00']]
 };
 var trace2 = {
     x:[1,2,3,4,5,6],
