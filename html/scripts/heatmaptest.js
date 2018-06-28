@@ -4,6 +4,7 @@ var colors = [
   [0.5, "#fc9919"],
   [1, "#fcec19"]
 ]
+
 var data = [{
     x:[1,2,3,4,5,6],
     y:[1,2,3,4,5,6],
@@ -11,4 +12,16 @@ var data = [{
     type: 'heatmap',
     colorscale: colors
 }];
-Plotly.plot(TESTER, data);
+
+var layout = {
+    title: 'title name',
+    annotations: [],
+    xaxis: {
+      title: 'x-axis name'
+    },
+    yaxis: {
+      title: 'y-axis name'
+    }
+}
+
+Plotly.plot(TESTER, data, layout);
