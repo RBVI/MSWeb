@@ -4,11 +4,16 @@ import enable_cgitb
 import os
 
 def main():
-    files = os.listdir(os.path.join(os.pardir, 'data'))
+    files = []
+    for file in os.listdir(os.path.join(os.pardir, 'data')):
+        if file.endswith(".txt"):
+            files.append(file)
     print("Content-Type: text/html")
     print("")
-    for file in files:
-        print("<option>"+str(file)+"</option>")
-
+    if not files:
+        print("<option>No files in data directory!</option>")
+    else:
+        for file in files:
+            print("<option>"+str(file)+"</option>")
 if __name__ == "__main__":
     main()
