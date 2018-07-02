@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Upload Test</title>
+  </head>
+  <body>
+    <h2>Upload a File</h2>
+      <form action="myform.cgi">
+        <input type="file" name="fileupload" value="fileupload" id="fileupload"> <br> <br>
+          <label for="fileupload"> Select file</label>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>
