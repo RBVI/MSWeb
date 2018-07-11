@@ -1,17 +1,18 @@
 <!DOCTYPE HTML>
 <html>
     <head>
+        <script language="JavaScript" src="scripts/ajax.js?n=<?php echo uniqid(); ?>"></script>
         <script src="lib/plotly-latest.min.js"></script>
         <script src="lib/react.production.min.js"></script>
         <script src="lib/react-dom.production.min.js"></script>
-        <script src="scripts/ajaxtest.js"></script>
-
-        <title>Plotly.js test page</title>
+        <title>MSWeb Main Page</title>
     </head>
-    <body onload="loadList()">
-        <h1>Plot</h1>
+    <body onload="loadList();loadData();">
+        <h1>MSWeb Main Page</h1>
         <select id="datalist"></select>
         <div id="root"></div>
-        <script src="scripts/reacttest.js"></script>
+        <div id="dataload"></div>
+        <div id="cgitest"></div>
+        <script src="scripts/react.js"></script>
     </body>
 </html>
