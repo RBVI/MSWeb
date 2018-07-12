@@ -2,8 +2,6 @@ const e = React.createElement; // creates an alias of React.createElement for ea
 // begin react component declaration
 
 
-
-
 // end react component declaration
 class App extends React.Component {
     render() {
@@ -13,6 +11,6 @@ class App extends React.Component {
     }
 }
 ReactDOM.render(
-    e(App), 
+    e(App),
     document.getElementById("root")
 );
