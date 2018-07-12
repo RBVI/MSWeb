@@ -45,7 +45,7 @@ function loadData() {
             select.appendChild(table);
         }
     };
-    xhttp.open("GET", "/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm", true);
+    xhttp.open("GET", "/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm&data=phosphoMSViewerDataSet.txt", true);
     xhttp.send();
 };
 // used to test retrieval of data from server with loadData.py
@@ -62,6 +62,6 @@ function cgiTest() {
             }
         }
     };
-    xhttp.open("GET","/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm", true);
+    xhttp.open("GET","/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm&data=phosphoMSViewerDataSet.txt", true);
     xhttp.send();
 };

@@ -9,7 +9,7 @@ def main():
     input = {}
     for item in form:
         input[item] = form.getvalue(item)
-    inputfile = open(os.path.join(os.pardir, 'data/phosphoMSViewerDataSet.txt'),"r")
+    inputfile = open(os.path.join(os.pardir, 'data', input["data"]),"r")
     lines = inputfile.readlines()
     lines = lines[3:] #strips first three lines to create header
     header = lines[0].split("\t") #splits column headers by tab and adds to list
