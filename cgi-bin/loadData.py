@@ -27,5 +27,6 @@ def main():
     print("")
     for line in output:
         print(line)
+    inputfile.close()
 if __name__ == "__main__":
     main()

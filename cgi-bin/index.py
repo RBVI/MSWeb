@@ -13,7 +13,6 @@ def main():
     if not files:
         print("No files in data directory!")
     else:
-        for file in files:
-            print(str(file))
+        print("|".join(files))
 if __name__ == "__main__":
     main()
