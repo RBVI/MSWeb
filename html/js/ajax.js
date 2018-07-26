@@ -5,12 +5,14 @@ function loadList() {
         if (this.readyState == 4 && this.status == 200) {
             select = document.getElementById("datalist");
             text = this.responseText;
-            items = text.split("\n");
+            items = text.split("|");
             for(var i=0; i<(items.length);i++){
                 var opt = document.createElement("option");
                 opt.innerHTML = items[i];
+                opt.value = items[i];
                 select.appendChild(opt);
             }
+            loadHeader(document.getElementById("datalist"));
         }
     };
     xhttp.open("GET", "/MSWeb/cgi-bin/index.py", true);
@@ -21,8 +23,10 @@ function loadData() {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
+            status.value = 50;
             select = document.getElementById("dataload");
             data = this.responseText.split("\n");
+            status.value = 75;
             var table = document.createElement("table");
             for(var i=0;i<(data.length-1);i++){
                 line = data[i].split("|");
@@ -42,12 +46,44 @@ function loadData() {
                 }
                 table.appendChild(tablerow);
             }
+            select.innerHTML = "";
             select.appendChild(table);
+            status.value = 100;
         }
     };
-    xhttp.open("GET", "/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm", true);
+    var dataset = document.getElementById("datalist").value;
+    var data1 = document.getElementById("header1").value;
+    var data2 = document.getElementById("header2").value;
+    var status = document.getElementById("status");
+    status.value = 25;
+    xhttp.open("GET", "/MSWeb/cgi-bin/loadData.py?data="+dataset+"&data1="+data1+"&data2="+data2, true);
     xhttp.send();
 };
+function loadHeader(selectObj) {
+    var xhttp = new XMLHttpRequest();
+    var value = selectObj.value;
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            select1 = document.getElementById("header1");
+            select2 = document.getElementById("header2");
+            removeOptions(select1);
+            removeOptions(select2);
+            headers = this.responseText.split("|");
+            for(var i=0;i<(headers.length);i++) {
+                var opt = document.createElement("option");
+                var opt2 = document.createElement("option");
+                opt.innerHTML = headers[i];
+                opt.value = headers[i];
+                opt2.innerHTML = headers[i];
+                opt2.value = headers[i];
+                select1.appendChild(opt);
+                select2.appendChild(opt2);
+            }
+        }
+    }
+    xhttp.open("GET", ("/MSWeb/cgi-bin/loadHeader.py?data="+value), true);
+    xhttp.send();
+}
 // used to test retrieval of data from server with loadData.py
 function cgiTest() {
     var xhttp = new XMLHttpRequest();
@@ -62,6 +98,12 @@ function cgiTest() {
             }
         }
     };
-    xhttp.open("GET","/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm", true);
+    xhttp.open("GET","/MSWeb/cgi-bin/loadData.py?data1=m/z&data2=ppm&data=phosphoMSViewerDataSet.txt", true);
     xhttp.send();
 };
+function removeOptions(selectbox) {
+    var i;
+    for(i = selectbox.options.length - 1 ; i >= 0 ; i--) {
+        selectbox.remove(i);
+    }
+}
