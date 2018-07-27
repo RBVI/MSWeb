@@ -19,7 +19,7 @@ $(document).ready(init);
 */
 
 
-
+/*
 
 
 function App() {
@@ -103,10 +103,55 @@ function App() {
 
 
 
+const element = React.createElement(App);
+
+
+
+function init(){
+ReactDOM.render(element, document.getElementById('root'));
+}
+$(document).ready(init);
+*/
+
+
+
+/*
+
+function App() {
+  return React.createElement(
+    "h1",
+    null,
+    "Hello World!"
+  );
+}
+
 
 const element = React.createElement(App);
 
 function init(){
-ReactDOM.render(element, document.getElementById('root'));
+  ReactDOM.render(element, document.getElementById('root'));
+}
+$(document).ready(init);
+
+*/
+function App(){
+
+return React.createElement("div", {className: "page"}, React.createElement(
+    "div",
+    { className: "wrap" },
+    React.createElement("div", { className: "floatleft" },
+    React.createElement("h1", null, "hello")),
+    React.createElement("div", { className: "floatright" },
+    React.createElement("h1", null, "hello2"))),
+    React.createElement("div", {className: "floatbottom"}, React.createElement("h1", null, "hello3"))
+);
+}
+
+
+
+const element = React.createElement(App);
+
+function init(){
+  ReactDOM.render(element, document.getElementById('root'));
 }
 $(document).ready(init);
