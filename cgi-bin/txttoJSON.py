@@ -21,11 +21,16 @@ def main():
             # -- parsing of data begins -- 
             lines = infile.readlines()
             lines = lines[3:]
-            data = []
+            data_parsed = []
             for line in lines:
-                data.append(line.split("\t"))
-
-            data = {"Headers":header,"Data Points":datapoints}
+                line_stripped = line.rstrip()
+                data_parsed.append(line_stripped.split("\t"))
+            data_parsed[0][0] = "Data #"
+            data_parsed = data_parsed[:20] #debug, limits to 20 data points
+            data_transpose = list(zip(*data_parsed))
+            data = {}
+            for item in data_transpose:
+                data[item[0]] = item[1:]
             # -- declaration of metadata begins -- 
             metadata = {}
             metadata["Title"] = input("Enter data title: ")
