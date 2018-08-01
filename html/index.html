@@ -6,8 +6,11 @@
         <script language="JavaScript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script language="JavaScript" src="js/jquery.layout-1.4.0.js"></script>
         <script language="JavaScript" src="js/jquery.tablesorter.combined.js"></script>
+        <script language="Javascript" src="js/jquery.multiselect.min.js"></script>
+        <script language="JavaScript" src="js/jquery.multiselect.filter.min.js"></script>
         <script language="JavaScript" src="js/fuse.min.js"></script>
         <script language="JavaScript" src="js/plotly-latest.min.js"></script>
+        <script language="JavaScript" src="js/search.js"></script>
         <script language="JavaScript" src="js/west.js"></script>
         <script language="JavaScript" src="js/center.js"></script>
         <script language="JavaScript" src="js/south.js"></script>
@@ -18,72 +21,18 @@
         <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.multiselect.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.multiselect.filter.css" type="text/css">
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ends, rest of title -->
         <title>MSWeb Main Page</title>
     </head>
-<<<<<<< HEAD
     <body onload="loadList();loadData();">
         <h1>MSWeb Main Page</h1>
-        <div id="searchBar">
-            <form>
-                
-                <input  
-                    type="text"
-                    id="userInput"
-                    placeholder="Enter text">
-                <button  
-                    onclick="fuzzySearch()">Search</button>
-                <script>
-                    //uses fuse lib
-                    function fuzzySearch() {
-                            var options = {
-                            // returned result will be a list of the items' identifiers 
-                            // id: "Hash"?
-                            shouldSort: true,
-                            threshold: 0.6,
-                            location: 0,
-                            distance: 100,
-                            maxPatternLength: 32,
-                            minMatchCharLength: 1,
-                            keys: [
-                                "Title",
-                                "Researcher",
-                                "Upload",
-                                "Experiment",
-                                "Hash"
-                            ]
-                        };
-                        var fuse = new Fuse(list, options); //"list" is the item array
-                        var result = fuse.search(userInput);
-                    }        
-
-                   function retrieveMetaData() {
-                       var xhttp = new XMLHttpRequest();
-                       xhttp.onreadystatechange = function() {
-                           if(xhttp.readyState == 4 && xhttp.state == 200) {
-                                list = this.responseText;
-                           }
-                       }
-                       xhttp.open("GET", "/MSWeb/data/index.json", true);
-                       xhttp.send();
-                   }
-
-                $(document).ready(function() {
-                    retrieveMetaData();
-                })
-
-                </script>
-            </form>
-        </div>
-        <div id="root">
-            
-        </div>
+        <div id="root"></div>
         <div id="dataload"></div>
         <div id="cgitest"></div>
-        <script src="js/react.js"></script>
-        </body>
-=======
+    </body>
     <body>
         <div class="ui-layout-center">
             <div id="center">
@@ -94,6 +43,22 @@
             <div id="west">
                 <h1>west</h1>
             </div>
+            <h3>Search for a Data Set</h3>
+            <div id="searchBar">
+                    <form>
+                        <input  
+                            type="text"
+                            id="userInput"
+                            placeholder="Enter text">
+                        <button  
+                            onclick="fuzzySearch()">Search</button> 
+                    </form>
+            </div>
+            <div class="tags"></div>
+                <label>
+                        <input type="checkbox" rel="Researcher"/>
+
+                </label>
         </div>
         <div class="ui-layout-south">
             <div id="south">
@@ -101,5 +66,6 @@
             </div>
         </div>
     </body>
->>>>>>> develop
 </html>
+
+

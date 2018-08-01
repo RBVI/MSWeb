@@ -1,68 +1,35 @@
-const e = React.createElement;
-
-function searchingFor(term) {
-    return function (x) {
-      return x.first.toLowerCase().includes(term.toLowerCase()) ||
-       x.last.toLowerCase().includes(term.toLowerCase()) || 
-       x.birth.toLowerCase().includes(term.toLowerCase()) ||
-        !term;
+function fuzzySearch() {
+    var options = {
+        // id: "Hash"? returned result will be a list of the items' identifiers
+        shouldSort: true,
+        threshold: 0.6,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchLength: 1,
+        keys: [
+            "Title",
+            "Researcher",
+            "Upload",
+            "Experiment",
+            "Hash"
+        ]
     };
-  }
-  
-  class Search extends Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        people: people,
-        term: ''
-      };
-      this.searchHandler = this.searchHandler.bind(this);
+    var fuse = new fuse(ListeningStateChangedEvent, options); // "list" is the item array
+    var result = fuse.search(userInput);
+}
+
+function retrieveMetaData() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if(xhttp.readyState == 4 && xhttp.state == 200) {
+            list = this.responseText;
+        }
     }
-  
-    searchHandler(event) {
-      this.setState({ term: event.target.value });
-    }
-  
-    render() {
-      const { term, dataList } = this.state;
-      return e(
-        "div",
-        { className: "App" },
-        e(
-          "form",
-          null,
-          e("input", {
-            type: "text",
-            onChange: this.searchHandler,
-            value: term
-          }),
-          e("input", {
-            type: "submit",
-            value: "Search" })
-        )
-        /* { map creates new array with filtered results */
-        // dataList.filter(searchingFor(term)).map(dataSet => e(
-        //   "div",
-        //   {
-        //     className: "filtered_list"
-        //     // set key to column number?
-        //     , key: dataSet.id },
-        //   e(
-        //     "h1",
-        //     null,
-        //     dataSet.first
-        //   ),
-        //  e(
-        //     "h1",
-        //     null,
-        //     dataSet.last
-        //   ),
-        //   e(
-        //     "h3",
-        //     null,
-        //     dataSet.upload
-        //   )
-        // ))
-      );
-    }
-  }
+    xhttp.open("GET", "/MSWeb/data/index.json", true);
+    xhttp.send();
+}
+
+$(document).ready(function() {
+    retrieveMetaData();
+})
