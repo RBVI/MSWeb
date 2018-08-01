@@ -10,18 +10,64 @@
         <link rel="stylesheet" href="stylesheet.css" type="text/css"  >
         <title>MSWeb Main Page</title>
     </head>
-<<<<<<< HEAD
     <body onload="loadList();loadData();">
         <h1>MSWeb Main Page</h1>
-      <!--  <select id="datalist"></select> -->
-        <div id="root"></div>
+        <div id="searchBar">
+            <form>
+                
+                <input  
+                    type="text"
+                    id="userInput"
+                    placeholder="Enter text">
+                <button  
+                    onclick="fuzzySearch()">Search</button>
+                <script>
+                    //uses fuse lib
+                    function fuzzySearch() {
+                            var options = {
+                            // returned result will be a list of the items' identifiers 
+                            // id: "Hash"?
+                            shouldSort: true,
+                            threshold: 0.6,
+                            location: 0,
+                            distance: 100,
+                            maxPatternLength: 32,
+                            minMatchCharLength: 1,
+                            keys: [
+                                "Title",
+                                "Researcher",
+                                "Upload",
+                                "Experiment",
+                                "Hash"
+                            ]
+                        };
+                        var fuse = new Fuse(list, options); //"list" is the item array
+                        var result = fuse.search(userInput);
+                    }        
+
+                   function retrieveMetaData() {
+                       var xhttp = new XMLHttpRequest();
+                       xhttp.onreadystatechange = function() {
+                           if(xhttp.readyState == 4 && xhttp.state == 200) {
+                                list = this.responseText;
+                           }
+                       }
+                       xhttp.open("GET", "/MSWeb/data/index.json", true);
+                       xhttp.send();
+                   }
+
+                $(document).ready(function() {
+                    retrieveMetaData();
+                })
+
+                </script>
+            </form>
+        </div>
+        <div id="root">
+            
+        </div>
         <div id="dataload"></div>
         <div id="cgitest"></div>
-        <script src="scripts/react.js"></script>
+        <script src="js/react.js"></script>
         </body>
-=======
-    <body>
-      <div id="root"></div>
-    </body>
->>>>>>> develop
 </html>
