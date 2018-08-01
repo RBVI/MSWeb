@@ -1,12 +1,6 @@
 /* put your own css code here, don't use the jquery stylesheets */
 
 
- .scrollable{
-   overflow: auto;
-   width: 200px; /* adjust this width depending to amount of text to display */
-   height: 100px; /* adjust height depending on number of options to display */
-   border: 1px silver solid;
- }
- .scrollable select{
-   border: none;
- }
+.overflow {
+      height: 100px;
+    }
