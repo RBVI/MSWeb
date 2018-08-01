@@ -1,15 +1,28 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <script language="Javascript" src="js/fuse.min.js"></script>
+        <!-- JS starts -->
+        <script language="JavaScript" src="js/jquery-3.2.1.min.js"></script>
+        <script language="JavaScript" src="js/jquery-ui-1.12.1.min.js"></script>
+        <script language="JavaScript" src="js/jquery.layout-1.4.0.js"></script>
+        <script language="JavaScript" src="js/jquery.tablesorter.combined.js"></script>
+        <script language="JavaScript" src="js/fuse.min.js"></script>
         <script language="JavaScript" src="js/plotly-latest.min.js"></script>
-        <script language="JavaScript" src="js/react.production.min.js"></script>
-        <script language="JavaScript" src="js/react-dom.production.min.js"></script>
-        <script language="JavaScript" src="js/jquery-3.3.1.min.js"></script>
-        <script language="JavaScript" src="js/Reacttest.js"></script>
-        <link rel="stylesheet" href="stylesheet.css" type="text/css"  >
+        <script language="JavaScript" src="js/west.js"></script>
+        <script language="JavaScript" src="js/center.js"></script>
+        <script language="JavaScript" src="js/south.js"></script>
+        <script language="JavaScript" src="js/init.js"></script>
+        <!-- JS ends, CSS begins -->
+        <link rel="stylesheet" href="css/jquery-ui.min.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery-ui.structure.min.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
+        <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
+        <!-- CSS ends, rest of title -->
         <title>MSWeb Main Page</title>
     </head>
+<<<<<<< HEAD
     <body onload="loadList();loadData();">
         <h1>MSWeb Main Page</h1>
         <div id="searchBar">
@@ -70,4 +83,23 @@
         <div id="cgitest"></div>
         <script src="js/react.js"></script>
         </body>
+=======
+    <body>
+        <div class="ui-layout-center">
+            <div id="center">
+                <h1>center</h1>
+            </div>
+        </div>
+        <div class="ui-layout-west">
+            <div id="west">
+                <h1>west</h1>
+            </div>
+        </div>
+        <div class="ui-layout-south">
+            <div id="south">
+                <h1>south</h1> 
+            </div>
+        </div>
+    </body>
+>>>>>>> develop
 </html>
