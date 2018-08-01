@@ -1,1 +1,4 @@
 /* put your own css code here, don't use the jquery stylesheets */
+.columns {
+    width: 200px;
+}
