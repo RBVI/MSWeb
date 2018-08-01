@@ -1,0 +1,44 @@
+[
+    {
+        "Title": "testdata3",
+        "Researcher": "John Smith",
+        "Upload": [
+            "Jane Doe ",
+            "2018-08-01"
+        ],
+        "Experiment": [
+            "2018-09-21",
+            "Mass Spec",
+            "N/A"
+        ],
+        "Hash": "7d33054904636bcc644b14224e2386cd5f9d220dc056acfd723b660a9747ee02"
+    },
+    {
+        "Title": "testdata2",
+        "Researcher": "John Smith",
+        "Upload": [
+            "Jane Doe",
+            "2018-08-01"
+        ],
+        "Experiment": [
+            "2018-09-21",
+            "Mass Spec",
+            "N/A"
+        ],
+        "Hash": "82a657bc23988bd9ef3d6345eaf61e8e3835f4b9f9eaafe470069958c3418ce6"
+    },
+    {
+        "Title": "phosphoMSViewerDataset",
+        "Researcher": "John Smith",
+        "Upload": [
+            "Jane Doe",
+            "2018-07-30"
+        ],
+        "Experiment": [
+            "2018-09-21",
+            "Mass Spec",
+            "N/A"
+        ],
+        "Hash": "9b9bee40c5ecc22d555ad5e952ecb72115c2a6e91fbfb8d8de7d065950ab259a"
+    }
+]
