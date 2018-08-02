@@ -8,15 +8,26 @@ function removeOptions(selectbox) { // removes <option> tags from <select> tags
 }
 function retrieveData(hash) {
     $.ajax({
-        method: "GET",
+        method: "POST",
+        contentType: "text/plain; charset=UTF-8",
         url: "/MSWeb/cgi-bin/retrieveJSON.py",
         data: { hash: hash },
+        dataType: "json",
         success: function(data){
             var jsonData = data;
         },
-        error: alert("retrieval of JSON data failed!"),
-        dataType: "json"
+        error: alert("retrieval of JSON data failed!")
     })
+}
+function retrieveDataXHR() {
+    var xhttp = new XMLHttpRequest;
+    xhttp.onreadystatechane = function() {
+        if(this.readyState ==4 && this.status == 200) {
+            alert("JSON retrieval successful");
+        }
+    };
+    xhttp.open("GET", "/MSWeb/cgi-bin/retrieveJSON.py?hash=7d33054904636bcc644b14224e2386cd5f9d220dc056acfd723b660a9747ee02")
+    xhttp.send();
 }
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {
