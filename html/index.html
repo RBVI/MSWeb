@@ -6,9 +6,7 @@
         <script language="JavaScript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script language="JavaScript" src="js/jquery.layout-1.4.0.js"></script>
         <script language="JavaScript" src="js/jquery.tablesorter.combined.js"></script>
-        <script language="JavaScript" src="js/jquery.multilineSelectmenu.min.js"></script>
-        <script langauge="JavaScript" src="js/jquery.multiselect.min.js"></script>
-        <script langauge="JavaScript" src="js/jquery.multiselect.filter.min.js"></script>
+        <script language="JavaScript" src="js/jquery.multi-select.js"></script>
         <script language="JavaScript" src="js/fuse.min.js"></script>
         <script language="JavaScript" src="js/plotly-latest.min.js"></script>
         <script language="JavaScript" src="js/west.js"></script>
@@ -21,9 +19,7 @@
         <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.multilineSelectmenu.min.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.multiselect.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.multiselect.filter.css" type="text/css">
+        <link rel="stylesheet" href="css/multi-select.css" type="text/css">
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ends, rest of title -->
         <title>MSWeb Main Page</title>
@@ -32,11 +28,13 @@
         <div class="ui-layout-center">
             <div id="center">
                 <h1>center</h1>
-                <select id="number">
-                  <option>The White House | 1600 Pennsylvania Avenue | Washington, D.C. 20500</option>
-                  <option>Access Interpreting | 1100 H St NW Ste 440 | Washington, D.C. 20005</option>
-                  <option>Prime Mininster | 10 Downing Street | London, England</option>
-            </select>
+                <select multiple="multiple" id="my-select" name="my-select[]">
+                      <option value='elem_1'>elem 1</option>
+                      <option value='elem_2'>elem 2</option>
+                      <option value='elem_3'>elem 3</option>
+                      <option value='elem_4'>elem 4</option>
+                      <option value='elem_5'>elem 5</option>
+                    </select>
                 </div>
             </div>
         </div>
