@@ -6,6 +6,18 @@ function removeOptions(selectbox) { // removes <option> tags from <select> tags
         selectbox.remove(i);
     }
 }
+function retrieveData(hash) {
+    $.ajax({
+        method: "GET",
+        url: "/MSWeb/cgi-bin/retrieveJSON.py",
+        data: { hash: hash },
+        success: function(data){
+            var jsonData = data;
+        },
+        error: alert("retrieval of JSON data failed!"),
+        dataType: "json"
+    })
+}
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {
     $('body').layout({
