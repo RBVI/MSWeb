@@ -15,7 +15,7 @@ function fuzzySearch() {
             "Hash"
         ]
     };
-    var fuse = new fuse(ListeningStateChangedEvent, options); // "list" is the item array
+    var fuse = new fuse(list, options); // "list" is the item array
     var result = fuse.search(userInput);
 }
 

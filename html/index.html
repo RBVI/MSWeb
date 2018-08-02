@@ -6,11 +6,9 @@
         <script language="JavaScript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script language="JavaScript" src="js/jquery.layout-1.4.0.js"></script>
         <script language="JavaScript" src="js/jquery.tablesorter.combined.js"></script>
-        <script language="Javascript" src="js/jquery.multiselect.min.js"></script>
-        <script language="JavaScript" src="js/jquery.multiselect.filter.min.js"></script>
         <script language="JavaScript" src="js/fuse.min.js"></script>
         <script language="JavaScript" src="js/plotly-latest.min.js"></script>
-        <script language="JavaScript" src="js/search.js"></script>
+        <script language="JavaScript" src="js/fuzzySearch.js"></script>
         <script language="JavaScript" src="js/west.js"></script>
         <script language="JavaScript" src="js/center.js"></script>
         <script language="JavaScript" src="js/south.js"></script>
@@ -21,8 +19,6 @@
         <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.multiselect.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.multiselect.filter.css" type="text/css">
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ends, rest of title -->
         <title>MSWeb Main Page</title>
@@ -45,20 +41,15 @@
             </div>
             <h3>Search for a Data Set</h3>
             <div id="searchBar">
-                    <form>
-                        <input  
-                            type="text"
-                            id="userInput"
-                            placeholder="Enter text">
-                        <button  
-                            onclick="fuzzySearch()">Search</button> 
-                    </form>
+                <form>
+                    <input  
+                        type="text"
+                        id="userInput"
+                        placeholder="Enter text">
+                    <button  
+                        onclick="fuzzySearch()">Search</button> 
+                </form>
             </div>
-            <div class="tags"></div>
-                <label>
-                        <input type="checkbox" rel="Researcher"/>
-
-                </label>
         </div>
         <div class="ui-layout-south">
             <div id="south">
