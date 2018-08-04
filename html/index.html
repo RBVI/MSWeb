@@ -27,8 +27,8 @@
     <body>
         <div class="ui-layout-center">
             <div id="center">
-                <h1>center</h1>
-                <select multiple="multiple" id="my-select" name="my-select[]">
+                <h3>Select dataset(s)</h3>
+                <select multiple="multiple" id="data-selection" name="data-selection[]">
                       <option value='elem_1'>elem 1</option>
                       <option value='elem_2'>elem 2</option>
                       <option value='elem_3'>elem 3</option>
@@ -40,23 +40,35 @@
         </div>
         <div class="ui-layout-west">
             <div id="west">
-                <h1>west</h1>
-                    <h3>Search for a Data Set</h3>
-                        <div id="searchBar">
-                            <form>
-                                <input  
-                                    type="text"
-                                    id="userInput"
-                                    placeholder="Enter text">
-                                <button  
-                                    onclick="fuzzySearch()">Search</button> 
-                            </form>
-                        </div>
+                <h3>Search for a Data Set</h3>
+                <div id="searchBar">
+                    <form>
+                        <input type="text" id="userInput" placeholder="Enter text">
+                        <button onclick="fuzzySearch()">Search</button> 
+                    </form>
+                </div>
+                <div id="filter-wrap">
+                    <h3>Filters</h3>
+                    <div id="filters">
+                        <input name="title" class="filter" placeholder="Title">
+                        <input name="researcher" class="filter" placeholder="Researcher">
+                        <input name="uploadby" class="filter" placeholder="Uploader">
+                        <input name="uploaddate" class="filter" placeholder="Upload Date">
+                        <input name="experimentdate" class="filter" placeholder="Experiment Date">
+                        <input name="experimentcond" class="filter" placeholder="Experiment Conditions">
+                        <input name="uniqueid" class="filter" placeholder="Dataset ID">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="ui-layout-south">
             <div id="south">
-                <h1>south</h1>
+                <h2>Plots</h2>
+                <div id="plots">
+                    <div class="plot-container" id="plot1"></div>
+                    <div class="plot-container" id="plot2"></div>
+                    <div class="plot-container" id="plot3"></div>
+                </div>
             </div>
         </div>
     </body>

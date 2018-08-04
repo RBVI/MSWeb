@@ -1,1 +1,28 @@
 /* put your own css code here, don't use the jquery stylesheets */
+.data-selector {
+    width:auto;
+    margin-left:25px;
+    margin-right:25px;
+}
+.plot-container {
+    border: 1px solid lightgrey;
+    flex:1;
+}
+#plots {
+    display: flex;
+}
+#filter-wrap {
+    width:auto; 
+}
+#filters {
+    width:auto;
+}
+.filter {
+    width:auto;
+}
+#userInput {
+    width:auto;
+}
+h3 {
+    margin-bottom:5px;
+}

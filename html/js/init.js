@@ -10,5 +10,6 @@ function init() {
     west.init();
     center.init();
     south.init();
+    console.log("init.js loaded and initialized")
 }
 $(window).on("load", init);
