@@ -10,6 +10,7 @@
 }
 #plots {
     display: flex;
+    position: absolute;
 }
 #filter-wrap {
     width:auto; 
