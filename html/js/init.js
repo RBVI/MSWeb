@@ -1,5 +1,23 @@
 // put JS code that needs to connect two layout elements together in here
 // declare layout-transcending functions here
+var datasetIndex = [];
+var searchResult = [];
+function removeOptions(selectbox) { // removes <option> tags from <select> tags
+    if (selectbox.id == "data-selection"){
+        $("#data-selection").empty();
+        $("#data-selection").multiSelect("refresh");
+    }else{
+        var i;
+        for(i=selectbox.options.length-1;i>=0;i--){
+            selectbox.remove(i);
+        } 
+    }
+} 
+function retrieveIndex(){
+    $.ajaxSetup({async: false});
+    $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
+    $.ajaxSetup({async: true});
+}
 function initLayout() {
     $('body').layout({
         name: "main",
@@ -23,9 +41,11 @@ function initLayout() {
     });
     $(".controlgroup").controlgroup();
     $(".controlgroup-vert").controlgroup({"direction": "vertical"});
+
 }
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {
+    retrieveIndex();
     initLayout();
     west.init();
     center.init();
