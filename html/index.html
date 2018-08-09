@@ -18,10 +18,17 @@
         <script language="JavaScript" src="js/jquery.multi-select.js"></script>
         <script language="JavaScript" src="js/fuse.min.js"></script>
         <script language="JavaScript" src="js/plotly-latest.min.js"></script>
+<<<<<<< HEAD
         <script language="JavaScript" src="js/west.js?n=<?php echo uniqid(); ?>"></script>
         <script language="JavaScript" src="js/center.js?n=<?php echo uniqid(); ?>"></script>
         <script language="JavaScript" src="js/south.js?n=<?php echo uniqid(); ?>"></script>
         <script language="JavaScript" src="js/init.js?n=<?php echo uniqid(); ?>"></script>
+>>>>>>> develop
+=======
+        <script language="JavaScript" src="js/west.js"></script>
+        <script language="JavaScript" src="js/center.js"></script>
+        <script language="JavaScript" src="js/south.js"></script>
+        <script language="JavaScript" src="js/init.js"></script>
 >>>>>>> develop
         <!-- JS ends, CSS begins -->
         <link rel="stylesheet" href="css/jquery-ui.min.css" type="text/css">
@@ -35,7 +42,7 @@
 >>>>>>> develop
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ends, rest of title -->
-        <title>MSWeb Main Page</title>
+        <title>MSWeb Preview</title>
     </head>
     <body onload="loadList();loadData();">
         <h1>MSWeb Main Page</h1>
@@ -44,34 +51,23 @@
         <div id="cgitest"></div>
     </body>
     <body>
-        <div class="ui-layout-center">
-            <div id="center">
-                <h1>center</h1>
-                <select multiple="multiple" id="my-select" name="my-select[]">
-                      <option value='elem_1'>elem 1</option>
-                      <option value='elem_2'>elem 2</option>
-                      <option value='elem_3'>elem 3</option>
-                      <option value='elem_4'>elem 4</option>
-                      <option value='elem_5'>elem 5</option>
-                    </select>
-                </div>
+        <div class="ui-layout-center" id="center">
+            <h3 class="text">Select dataset(s)</h3>
+            <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
+            <div class="controlgroup" id="plot-functions">
+                <button>Download</button>
+                <button>Upload</button>
+                <button>Plot</button>
             </div>
         </div>
-        <div class="ui-layout-west">
-            <div id="west">
-                <h1>west</h1>
-                    <h3>Search for a Data Set</h3>
-                        <div id="searchBar">
-                            <form>
-                                <input  
-                                    type="text"
-                                    id="userInput"
-                                    placeholder="Enter text">
-                                <button  
-                                    onclick="fuzzySearch()">Search</button> 
-                            </form>
-                        </div>
+        <div class="ui-layout-west" id="west">
+            <h1 class="text" id="title">MSWeb</h1>
+            <h3 class="text">Search for a Data Set</h3>
+            <div id="searchBar">
+                <input type="text" id="userInput" placeholder="Enter text">
+                <button id="search">Search</button> 
             </div>
+<<<<<<< HEAD
             <h3>Search for a Data Set</h3>
             <div id="searchBar">
                 <form>
@@ -83,11 +79,26 @@
                         onclick="fuzzySearch()">Search</button> 
                 </form>
             </div>
+=======
+            <input id="title" class="filter" placeholder="Title">
+            <input id="researcher" class="filter" placeholder="Researcher">
+            <input id="uploadby" class="filter" placeholder="Uploader">
+            <input id="uploaddate" class="filter" placeholder="Upload Date">
+            <input id="experimentdate" class="filter" placeholder="Experiment Date">
+            <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
+            <input id="uniqueid" class="filter" placeholder="Dataset ID">
+>>>>>>> develop
         </div>
-        <div class="ui-layout-south">
-            <div id="south">
-                <h1>south</h1>
+        <div class="ui-layout-south" id="south">
+            <div id="south-west">
+                <div id="south-west-plot"></div>
+                <div class="controlgroup plot-buttons" id="south-west-functions">
+                    <button>Delete</button>
+                    <button>Customize</button>
+                </div>
             </div>
+            <div id="south-center"></div>
+            <div id="south-east"></div>
         </div>
     </body>
 </html>

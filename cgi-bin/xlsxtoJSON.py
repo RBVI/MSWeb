@@ -1,7 +1,6 @@
 #!/usr/local/bin/python3
 import json, os, sys, cgi
 import openpyxl as pyxl
-
 def getArgs(argv):
     args = {}
     while argv:
@@ -9,7 +8,6 @@ def getArgs(argv):
             args[argv[0]] = argv[1]
         argv = argv[1:]
     return args
-
 def main():
     types = []
     if 'REQUEST_METHOD' in os.environ:

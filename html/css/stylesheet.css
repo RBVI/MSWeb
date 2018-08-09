@@ -1,1 +1,16 @@
 /* put your own css code here, don't use the jquery stylesheets */
+.data-selector {
+    width:auto;
+    margin:auto;
+}
+.controlgroup {
+    float:right;
+}
+.filter {
+    width:auto;
+}
+.text {
+    margin-bottom:5px;
+    overflow-x: hidden;
+}
+
