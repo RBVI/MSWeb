@@ -22,60 +22,51 @@
         <link rel="stylesheet" href="css/multi-select.css" type="text/css">
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ends, rest of title -->
-        <title>MSWeb Main Page</title>
+        <title>MSWeb Preview</title>
     </head>
     <body>
-        <div class="ui-layout-center">
-            <div id="center">
-                <h3>Select dataset(s)</h3>
-                <select multiple="multiple" id="data-selection" name="data-selection[]">
-                      <option value='elem_1'>elem 1</option>
-                      <option value='elem_2'>elem 2</option>
-                      <option value='elem_3'>elem 3</option>
-                      <option value='elem_4'>elem 4</option>
-                      <option value='elem_5'>elem 5</option>
-                    </select>
-                </div>
+        <div class="ui-layout-center" id="center">
+            <h3 class="text">Select dataset(s)</h3>
+            <select multiple="multiple" id="data-selection" name="data-selection[]">
+                    <option value='elem_1'>elem 1</option>
+                    <option value='elem_2'>elem 2</option>
+                    <option value='elem_3'>elem 3</option>
+                    <option value='elem_4'>elem 4</option>
+                    <option value='elem_5'>elem 5</option>
+            </select>
+            <div class="controlgroup" id="plot-functions">
+                <button>Download</button>
+                <button>Upload</button>
+                <button>Plot</button>
             </div>
         </div>
-        <div class="ui-layout-west">
-            <div id="west">
-                <h3>Search for a Data Set</h3>
-                <div id="searchBar">
-                    <form>
-                        <input type="text" id="userInput" placeholder="Enter text">
-                        <button onclick="fuzzySearch()">Search</button> 
-                    </form>
-                </div>
-                <div id="filter-wrap">
-                    <h3>Filters</h3>
-                    <div id="filters">
-                        <label class="filter-label" for="title">Title</label>
-                        <input id="title" class="filter" placeholder="Title">
-                        <label class="filter-label" for="researcher">Researcher</label>
-                        <input id="researcher" class="filter" placeholder="Researcher">
-                        <label class="filter-label" for="uploadby">Uploader</label>
-                        <input id="uploadby" class="filter" placeholder="Uploader">
-                        <label class="filter-label" for="uploaddate">Upload Date</label>
-                        <input id="uploaddate" class="filter" placeholder="Upload Date">
-                        <label class="filter-label" for="experimentdate">Experiment Date</label>
-                        <input id="experimentdate" class="filter" placeholder="Experiment Date">
-                        <label class="filter-label" for="experimentcond">Experiment Conditions</label>
-                        <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
-                        <label class="filter-label" for="uniqueid">Dataset ID</label>
-                        <input id="uniqueid" class="filter" placeholder="Dataset ID">
-                    </div>
-                </div>
+        <div class="ui-layout-west" id="west">
+            <h1 class="text" id="title">MSWeb</h1>
+            <h3 class="text">Search for a Data Set</h3>
+            <div id="searchBar">
+                <form>
+                    <input type="text" id="userInput" placeholder="Enter text">
+                    <button onclick="fuzzySearch()">Search</button> 
+                </form>
             </div>
+            <input id="title" class="filter" placeholder="Title">
+            <input id="researcher" class="filter" placeholder="Researcher">
+            <input id="uploadby" class="filter" placeholder="Uploader">
+            <input id="uploaddate" class="filter" placeholder="Upload Date">
+            <input id="experimentdate" class="filter" placeholder="Experiment Date">
+            <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
+            <input id="uniqueid" class="filter" placeholder="Dataset ID">
         </div>
-        <div class="ui-layout-south">
-            <div id="south">
-                <div id="plots">
-                    <div class="plot-container" id="plot1"></div>
-                    <div class="plot-container" id="plot2"></div>
-                    <div class="plot-container" id="plot3"></div>
+        <div class="ui-layout-south" id="south">
+            <div id="south-west">
+                <div id="south-west-plot"></div>
+                <div class="controlgroup plot-buttons" id="south-west-functions">
+                    <button>Delete</button>
+                    <button>Customize</button>
                 </div>
             </div>
+            <div id="south-center"></div>
+            <div id="south-east"></div>
         </div>
     </body>
 </html>

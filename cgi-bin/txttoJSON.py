@@ -1,5 +1,5 @@
+#!/usr/local/bin/python3
 import json, os, sys, cgi, datetime
-
 def getArgs(argv):
     args = {}
     while argv:
@@ -7,7 +7,6 @@ def getArgs(argv):
             args[argv[0]] = argv[1]
         argv = argv[1:]
     return args
-
 def main():
     if "REQUEST_METHOD" in os.environ:
         #running as cgi

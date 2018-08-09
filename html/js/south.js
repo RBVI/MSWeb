@@ -23,7 +23,16 @@ var south = function() {
                 }
             },
         }];
-        Plotly.newPlot("plot1", data);
+        var layout = {
+            margin: {
+                l: 10,
+                r: 10,
+                b: 10,
+                t: 10,
+                pad: 0
+            }
+        };
+        Plotly.newPlot("south-west-plot", data);
     }
     function heatmapTest() {
         var x = [];

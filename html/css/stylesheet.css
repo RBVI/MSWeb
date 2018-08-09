@@ -1,29 +1,16 @@
 /* put your own css code here, don't use the jquery stylesheets */
 .data-selector {
     width:auto;
-    margin-left:25px;
-    margin-right:25px;
+    margin:auto;
 }
-.plot-container {
-    border: 1px solid lightgrey;
-    flex:1;
-}
-#plots {
-    display: flex;
-    position: absolute;
-}
-#filter-wrap {
-    width:auto; 
-}
-#filters {
-    width:auto;
+.controlgroup {
+    float:right;
 }
 .filter {
     width:auto;
 }
-#userInput {
-    width:auto;
-}
-h3 {
+.text {
     margin-bottom:5px;
+    overflow-x: hidden;
 }
+

@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 import json, os, cgi, enable_cgitb, hashlib
 def hashJSON(jsonlist):
     hashes = {}
