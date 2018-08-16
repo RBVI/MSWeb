@@ -1,9 +1,9 @@
 [
     {
         "Title": "testdata3",
-        "Researcher": "John Smith",
+        "Researcher": "John Smith1",
         "Upload": [
-            "Jane Doe ",
+            "Jane Doe1",
             "2018-08-01"
         ],
         "Experiment": [
@@ -15,9 +15,9 @@
     },
     {
         "Title": "testdata2",
-        "Researcher": "John Smith",
+        "Researcher": "John Smith2",
         "Upload": [
-            "Jane Doe",
+            "Jane Doe2",
             "2018-08-01"
         ],
         "Experiment": [
@@ -29,9 +29,9 @@
     },
     {
         "Title": "phosphoMSViewerDataset",
-        "Researcher": "John Smith",
+        "Researcher": "John Smith3",
         "Upload": [
-            "Jane Doe",
+            "Jane Doe3",
             "2018-07-30"
         ],
         "Experiment": [
