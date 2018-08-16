@@ -33,78 +33,66 @@ var west = function() {
             searchResult = fuse.search(search);
             center.updateMultiselect(searchResult);
         }
-    }
+    }  
 
     function filterList(tempData, searchFor, searchWith){
-      var data = [];
-      if(searchFor === "Title"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Title.toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "Researcher"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Researcher.toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "UploadBy"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Upload[0].toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "UploadDate"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Upload[1].toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "ExperimentDate"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Experiment[0].toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "ExperimentType"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Experiment[1].toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-      else if(searchFor === "ExperimentConditions"){
-        for(var i = 0; i < tempData.length; i++){
-          if(tempData[i].Experiment[2].toUpperCase().includes(searchWith.toUpperCase())){
-            data.push(tempData[i]);
-          }
-        }
-      }
-
-      return data;
+      	var data = [];
+      	if(searchFor === "Title"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Title.toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+    	}else if(searchFor === "Researcher"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Researcher.toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}else if(searchFor === "UploadBy"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Upload[0].toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}else if(searchFor === "UploadDate"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Upload[1].toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}else if(searchFor === "ExperimentDate"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Experiment[0].toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}else if(searchFor === "ExperimentType"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Experiment[1].toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}else if(searchFor === "ExperimentConditions"){
+        	for(var i = 0; i < tempData.length; i++){
+          		if(tempData[i].Experiment[2].toUpperCase().includes(searchWith.toUpperCase())){
+            		data.push(tempData[i]);
+          		}
+        	}
+      	}
+      	return data;
     }
-
     function filterSearch(tempData){
-      var data = tempData;
-
-      var docNames = ["title", "researcher", "uploadby", "uploaddate", "experimentdate", "experimenttype", "experimentcond"];
-      var searchFors = ["Title", "Researcher", "UploadBy", "UploadDate", "ExperimentDate", "ExperimentType", "ExperimentConditions"];
-
-for(var i = 0; i < docNames.length; i++){
-  doc = document.getElementById(docNames[i]);
-  if (doc && doc.value) {
-    data = filterList(data, searchFors[i], doc.value)
-  }
-}
-
-return data;
-
+      	var data = tempData;
+      	var docNames = ["title", "researcher", "uploadby", "uploaddate", "experimentdate", "experimenttype", "experimentcond"];
+      	var searchFors = ["Title", "Researcher", "UploadBy", "UploadDate", "ExperimentDate", "ExperimentType", "ExperimentConditions"];
+      	for(var i = 0; i < docNames.length; i++){
+        	doc = document.getElementById(docNames[i]);
+        	if (doc && doc.value) {
+        	 	data = filterList(data, searchFors[i], doc.value);
+        	}
+      	}
+      	return data;
     }
     return {
         init: init,
