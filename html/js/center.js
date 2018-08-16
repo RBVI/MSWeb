@@ -13,7 +13,6 @@ var center = function() {
         $("#data-selection").multiSelect("addOption", {value: dataset[i].Hash, text: dataset[i].Title});
         $("#data-selection").children("option").each(function(i){
             $(this).attr("title",
-            "Title: "+ dataset[i].Title + "\n" +
             "Researcher: " + dataset[i].Researcher + "\n" +
             "Uploaded By: " + dataset[i].Upload[0] + "\n" +
             "Uploaded Date: " + dataset[i].Upload[1] + "\n" +
