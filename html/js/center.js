@@ -12,7 +12,15 @@ var center = function() {
       for(var i=0; i<dataset.length;i++) {
         $("#data-selection").multiSelect("addOption", {value: dataset[i].Hash, text: dataset[i].Title});
         $("#data-selection").children("option").each(function(i){
-            $(this).attr("title", $(this).val());
+            $(this).attr("title",
+            "Researcher: " + dataset[i].Researcher + "\n" +
+            "Uploaded By: " + dataset[i].Upload[0] + "\n" +
+            "Uploaded Date: " + dataset[i].Upload[1] + "\n" +
+            "Experiment Date: " + dataset[i].Experiment[0] + "\n" +
+            "Experiment Type: " + dataset[i].Experiment[1] + "\n" +
+            "Experiment Conditions: " + dataset[i].Experiment[2]
+
+          );
         })
       }
       $("#data-selection").multiSelect("refresh");
