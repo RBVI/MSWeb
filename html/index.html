@@ -27,7 +27,7 @@
     <body>
         <div class="ui-layout-center" id="center">
             <h3 class="text">Select dataset(s)</h3>
-            <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
+            <select size="3" class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
             <div class="controlgroup" id="plot-functions">
                 <button id="download">Download</button>
                 <button id="upload">Upload</button>
@@ -35,17 +35,18 @@
             </div>
         </div>
         <div class="ui-layout-west" id="west">
-            <h1 class="text" id="title">MSWeb</h1>
+            <h1 class="text" id="maintitle">MSWeb</h1>
             <h3 class="text">Search for a Data Set</h3>
             <div id="searchBar">
                 <input type="text" id="userInput" placeholder="Enter text">
-                <button id="search">Search</button> 
+                <button id="search">Search</button>
             </div>
             <input id="title" class="filter" placeholder="Title">
             <input id="researcher" class="filter" placeholder="Researcher">
             <input id="uploadby" class="filter" placeholder="Uploader">
             <input id="uploaddate" class="filter" placeholder="Upload Date">
             <input id="experimentdate" class="filter" placeholder="Experiment Date">
+            <input id="experimenttype" class="filter" placeholder="Experiment Type">
             <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
         </div>
         <div class="ui-layout-south" id="south">

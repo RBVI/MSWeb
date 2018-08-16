@@ -11,9 +11,9 @@ function removeOptions(selectbox) { // removes <option> tags from <select> tags
         var i;
         for(i=selectbox.options.length-1;i>=0;i--){
             selectbox.remove(i);
-        } 
+        }
     }
-} 
+}
 function retrieveIndex(){
     $.ajaxSetup({async: false});
     $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
