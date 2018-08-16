@@ -13,4 +13,6 @@
     margin-bottom:5px;
     overflow-x: hidden;
 }
-
+.ui-tooltip {
+    white-space: pre-line;
+}

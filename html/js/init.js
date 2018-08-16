@@ -2,6 +2,7 @@
 // declare layout-transcending functions here
 var datasetIndex = [];
 var searchResult = [];
+var downloadList = [];
 function removeOptions(selectbox) { // removes <option> tags from <select> tags
     if (selectbox.id == "data-selection"){
         $("#data-selection").empty();
@@ -18,6 +19,7 @@ function retrieveIndex(){
     $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
 }
+// function to call the necessary jquery calls to initialize the layout
 function initLayout() {
     $('body').layout({
         name: "main",
@@ -41,7 +43,18 @@ function initLayout() {
     });
     $(".controlgroup").controlgroup();
     $(".controlgroup-vert").controlgroup({"direction": "vertical"});
-
+    $("#download").click(function(){center.downloadRaw();});
+    $('#data-selection').multiSelect({
+        cssClass: "data-selector",
+        afterSelect: function(hash){
+            downloadList.push(hash[0]);
+        },
+        afterDeselect: function(hash) {
+            var index = downloadList.indexOf(hash[0]);
+            downloadList.splice(index, 1);
+        }
+    });
+    $(document).tooltip();
 }
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {
