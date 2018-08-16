@@ -93,43 +93,17 @@ var west = function() {
     function filterSearch(tempData){
       var data = tempData;
 
+      var docNames = ["title", "researcher", "uploadby", "uploaddate", "experimentdate", "experimenttype", "experimentcond"];
+      var searchFors = ["Title", "Researcher", "UploadBy", "UploadDate", "ExperimentDate", "ExperimentType", "ExperimentConditions"];
 
-      doc = document.getElementById("title");
-      if (doc && doc.value) {
-        data = filterList(data, "Title", doc.value)
-      }
+for(var i = 0; i < docNames.length; i++){
+  doc = document.getElementById(docNames[i]);
+  if (doc && doc.value) {
+    data = filterList(data, searchFors[i], doc.value)
+  }
+}
 
-      doc = document.getElementById("researcher");
-      if (doc && doc.value) {
-        data = filterList(data, "Researcher", doc.value)
-      }
-
-      doc = document.getElementById("uploadby");
-      if (doc && doc.value) {
-        data = filterList(data, "UploadBy", doc.value)
-      }
-
-      doc = document.getElementById("uploaddate");
-      if (doc && doc.value) {
-        data = filterList(data, "UploadDate", doc.value)
-      }
-
-      doc = document.getElementById("experimentdate");
-      if (doc && doc.value) {
-        data = filterList(data, "ExperimentDate", doc.value)
-      }
-
-      doc = document.getElementById("experimenttype");
-      if (doc && doc.value) {
-        data = filterList(data, "ExperimentType", doc.value)
-      }
-
-      doc = document.getElementById("experimentcond");
-      if (doc && doc.value) {
-        data = filterList(data, "ExperimentConditions", doc.value)
-      }
-
-      return data;
+return data;
 
     }
     return {
