@@ -19,15 +19,13 @@ def main():
                 if os.path.splitext(item)[0].lower() == os.path.splitext(download)[0].lower():
                     rawDownloads.append(item)
         tmpZip = BytesIO()
-        #outZip = zipfile.ZipFile(tmpZip, "w", zipfile.ZIP_DEFLATED)
         with zipfile.ZipFile(tmpZip, "w", zipfile.ZIP_DEFLATED) as outZip:
             for filename in rawDownloads:
-                outZip.write(os.path.join(os.pardir, "data", "raw-data", filename))
+                outZip.write(os.path.join(os.pardir, "data", "raw-data", filename), filename)
         sys.stdout.write("Content-Type: application/octet-stream\r\n")
-        sys.stdout.write("Content-Disposition: attachment; filename='dataDownloads.zip'\r\n\r\n")
+        sys.stdout.write('Content-Disposition: attachment; filename="dataDownloads.zip" \r\n\r\n')
         sys.stdout.flush()
         sys.stdout.buffer.write(tmpZip.getvalue())
-        #tmpZip.close()
     else:
         jsonName = hashes[args["hash"]]
         for item in os.listdir(os.path.join(os.pardir,"data","raw-data")):
