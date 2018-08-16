@@ -19,7 +19,6 @@ var center = function() {
             "Experiment Date: " + dataset[i].Experiment[0] + "\n" +
             "Experiment Type: " + dataset[i].Experiment[1] + "\n" +
             "Experiment Conditions: " + dataset[i].Experiment[2]
-
           );
         })
       }
