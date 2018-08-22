@@ -28,6 +28,25 @@
         <div class="ui-layout-center" id="center">
             <h3 class="text">Select dataset(s)</h3>
             <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
+            <div id="uploaddialog" title="Upload Dataset">
+                <p>All fields are required, enter N/A if field not applicable</p>
+                <form id="uploadform" action="/MSWeb/cgi-bin/txttoJSON.py" method="post" enctype="multipart/form-data" target="_blank">
+                    <fieldset>
+                        <label for="uploadtitle">Title</label>
+                        <input type="text" name="uploadtitle" id="uploadtitle">
+                        <label for="uploadresearcher">Researcher</label>
+                        <input type="text" name="uploadresearcher" id="uploadresearcher">
+                        <label for="uploadexperimentdate">Experiment Date</label>
+                        <input type="text" name="uploadexperimentdate" id="uploadexperimentdate" placeholder="YYYY-MM-DD">
+                        <label for="uploadexperimenttype">Experiment Type</label>
+                        <input type="text" name="uploadexperimenttype" id="uploadexperimenttype">
+                        <label for="uploadexperimentcond">Experiment Conditions</label>
+                        <input type="text" name="uploadexperimentcond" id="uploadexperimentcond">
+                        <label for="uploadfile">File to Upload</label>
+                        <input type="file" name="uploadfile" id="uploadfile">
+                    </fieldset>
+                </form>
+            </div>
             <div class="controlgroup" id="plot-functions">
                 <button id="download">Download</button>
                 <button id="upload">Upload</button>

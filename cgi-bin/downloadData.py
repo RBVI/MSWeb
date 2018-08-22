@@ -31,12 +31,13 @@ def main():
         for item in os.listdir(os.path.join(os.pardir,"data","raw-data")):
             if os.path.splitext(item)[0].lower() == os.path.splitext(jsonName)[0].lower():
                 rawName = item
-        print("Content-Type: application/octet-stream")
-        print('Content-Disposition: attachment; filename="' + rawName + '"')
-        print("")
-        with open(os.path.join(os.pardir, "data", "raw-data", rawName)) as fp:
-            for line in fp.readlines():
-                print(line)
+        tmpZip = BytesIO()
+        with zipfile.ZipFile(tmpZip, "w", zipfile.ZIP_DEFLATED) as outZip:
+            outZip.write(os.path.join(os.pardir, "data", "raw-data", rawName), rawName)
+        sys.stdout.write("Content-Type: application/octet-stream\r\n")
+        sys.stdout.write('Content-Disposition: attachment; filename="' + os.path.splitext(rawName)[0] + '.zip"\r\n\r\n')
+        sys.stdout.flush()
+        sys.stdout.buffer.write(tmpZip.getvalue())
 
 if __name__ == "__main__":
     main()

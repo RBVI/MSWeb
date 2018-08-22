@@ -44,6 +44,7 @@ function initLayout() {
     $(".controlgroup").controlgroup();
     $(".controlgroup-vert").controlgroup({"direction": "vertical"});
     $("#download").click(function(){center.downloadRaw();});
+    $("#upload").click(function(){uploadDialog.dialog("open")})
     $('#data-selection').multiSelect({
         cssClass: "data-selector",
         afterSelect: function(hash){
@@ -55,6 +56,26 @@ function initLayout() {
         }
     });
     $(document).tooltip();
+    uploadDialog = $("#uploaddialog").dialog({
+        autoOpen: false,
+        resizable: false,
+        draggable: false,
+        height: 450,
+        width: 440,
+        modal: true,
+        buttons: {
+            "Upload Dataset": function(){
+                $("#uploadform").submit();
+                uploadDialog.dialog("close");
+            },
+            Cancel: function() {
+                uploadDialog.dialog("close");
+            }
+        },
+        close: function() {
+            $("#uploadform")[0].reset()
+        }
+    })
 }
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {
