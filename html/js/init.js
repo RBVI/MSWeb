@@ -86,6 +86,10 @@ function initLayout() {
             "Close": function() {
                 successDialog.dialog("close");
             }
+        },
+        close: function() {
+            retrieveIndex();
+            center.updateMultiselect(datasetIndex);
         }
     })
     $("#uploadform").submit(function(){
