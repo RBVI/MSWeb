@@ -30,7 +30,7 @@
             <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
             <div id="uploaddialog" title="Upload Dataset">
                 <p>All fields are required, enter N/A if field not applicable</p>
-                <form id="uploadform" action="/MSWeb/cgi-bin/txttoJSON.py" method="post" enctype="multipart/form-data" target="_blank">
+                <form id="uploadform" action="/MSWeb/cgi-bin/txttoJSON.py" method="post" enctype="multipart/form-data" target="successframe">
                     <fieldset>
                         <label for="uploadtitle">Title</label>
                         <input type="text" name="uploadtitle" id="uploadtitle">
@@ -46,6 +46,9 @@
                         <input type="file" name="uploadfile" id="uploadfile">
                     </fieldset>
                 </form>
+            </div>
+            <div id="successdialog" title="Upload Dataset">
+                <iframe name="successframe" id="successframe" src="uploading.html"></iframe>
             </div>
             <div class="controlgroup" id="plot-functions">
                 <button id="download">Download</button>

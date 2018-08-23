@@ -22,13 +22,16 @@ def main():
         lines = []
         with open(os.path.join(os.pardir, 'data', 'raw-data', form['uploadfile'].filename), 'r') as fp:
             lines = fp.readlines()
-        lines = lines[3:]
+        for line in lines:
+                splitline = line.split("\t")
+                if splitline[0] == "" or splitline[0].isspace() or splitline[1] == "Search Name:" or splitline[0] == "1":
+                    lines = lines[1:]
         data_parsed = [] 
         for line in lines:
             line_stripped = line.rstrip()
             data_parsed.append(line_stripped.split("\t"))
         data_parsed[0][0] = "Data #"
-        data_parsed = data_parsed[:20] #debug, limits to 20 data points
+        #data_parsed = data_parsed[:20] #debug, limits to 20 data points
         data_transpose = list(zip(*data_parsed))
         data = {}
         for item in data_transpose:
@@ -41,20 +44,47 @@ def main():
         with open(os.path.join(os.pardir, "data", "parsed-data", os.path.splitext(form["uploadfile"].filename)[0]+".json"), 'w') as fp:
             json.dump({"Metadata":metadata, "Data":data}, fp, indent=4)
         jsonIndex()
+        print("Content-Type: text/html")
+        print("")
+        print("<!DOCTYPE html>")
+        print("<html>")
+        print("<head>")
+        print("<style>")
+        print("p { margin:5px;padding:none; }")
+        print("</style>")
+        print("<title>Upload Successful</title>")
+        print("</head>")
+        print("<body>")
+        print("<h1>Upload Successful</h1>")
+        print("<p>Successfully uploaded " + form["uploadfile"].filename + ".")
+        print("<p>Title: " + metadata["Title"] + "</p>")
+        print("<p>Researcher: " + metadata["Researcher"] + "</p>")
+        print("<p>Uploaded By: " + metadata["Upload"][0] + "</p>")
+        print("<p>Uploaded On: " + metadata["Upload"][1] + "</p>")
+        print("<p>Experiment Date: " + metadata["Experiment"][0] + "</p>")
+        print("<p>Experiment Type: " + metadata["Experiment"][1] + "</p>")
+        print("<p>Experiment Conditions: " + metadata["Experiment"][2] + "</p>")
+        print("</body>")
+        print("</html>")
+
     else:
         #running locally
         args = getArgs(sys.argv)
         if "-i" in args:
-            infile = open(os.path.join(os.pardir, 'data', 'raw-data', args["-i"]), "r")
+            with open(os.path.join(os.pardir, 'data', 'raw-data', args["-i"]), "r") as fp:
+                lines = fp.readlines()
+                infilename = fp.name
             # -- parsing of data begins -- 
-            lines = infile.readlines()
-            lines = lines[3:]
+            for line in lines:
+                splitline = line.split("\t")
+                if splitline[0] == "" or splitline[0].isspace() or splitline[1] == "Search Name:" or splitline[0] == "1":
+                    lines = lines[1:]
             data_parsed = []
             for line in lines:
                 line_stripped = line.rstrip()
                 data_parsed.append(line_stripped.split("\t"))
             data_parsed[0][0] = "Data #"
-            data_parsed = data_parsed[:20] #debug, limits to 20 data points
+            #data_parsed = data_parsed[:20] #debug, limits to 20 data points
             data_transpose = list(zip(*data_parsed))
             data = {}
             for item in data_transpose:
@@ -71,11 +101,12 @@ def main():
             expcond = input("Enter experiment conditions: ")
             metadata["Experiment"] = [expdate, exptype, expcond]
             # -- dumps metadata and data to json file in parsed-data directory -- 
-            outfile = os.path.splitext(infile.name)[0].split("/")
+            outfile = os.path.splitext(infilename)[0].split("/")
             outfile[2] = "parsed-data"
             with open("/".join(outfile)+".json", "w") as fp:
                 json.dump({"Metadata":metadata, "Data":data}, fp, indent=4)
             jsonIndex()
+            print("Data parse successful - parsed " + infilename + " and wrote result to parsed-data as " + os.path.splitext(infilename)[0] + ".json")
         else:
             print("No input file specified with '-i'. Specify an input file and try again.")
 

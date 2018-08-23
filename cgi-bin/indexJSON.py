@@ -30,9 +30,7 @@ def main():
         json.dump(hashes, fp, indent=4)
     # -- reports end of indexing to user depending on command line or cgi --
     if 'REQUEST_METHOD' in os.environ:
-        print("Content-Type: text")
-        print("")
-        print("Successfully indexed metadata of json files in parsed-data directory and wrote to index.json")
+        pass
     else:
         print("Successfully indexed metadata of json files in parsed-data directory and wrote to index.json")
 if __name__ == "__main__":

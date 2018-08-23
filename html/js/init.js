@@ -76,6 +76,21 @@ function initLayout() {
             $("#uploadform")[0].reset()
         }
     })
+    successDialog = $("#successdialog").dialog({
+        autoOpen: false,
+        resizable: false,
+        draggable: false,
+        height: 400,
+        width: 400,
+        buttons: {
+            "Close": function() {
+                successDialog.dialog("close");
+            }
+        }
+    })
+    $("#uploadform").submit(function(){
+        successDialog.dialog("open");
+    })
 }
 // only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
 function init() {

@@ -27,3 +27,11 @@ input {
 div#searchBar {
     display:inline;
 }
+#successframe {
+    width: 360px;
+    height: 300px;
+    margin: none;
+    padding: none;
+    border: none;
+    position:fixed;
+}

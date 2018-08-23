@@ -3,8 +3,8 @@
         "Title": "testdata3",
         "Researcher": "John Smith",
         "Upload": [
-            "Jane Doe ",
-            "2018-08-01"
+            "Jane Doe",
+            "2018-08-23"
         ],
         "Experiment": [
             "2018-09-21",
@@ -18,7 +18,7 @@
         "Researcher": "John Smith",
         "Upload": [
             "Jane Doe",
-            "2018-08-01"
+            "2018-08-23"
         ],
         "Experiment": [
             "2018-09-21",
@@ -28,11 +28,11 @@
         "Hash": "82a657bc23988bd9ef3d6345eaf61e8e3835f4b9f9eaafe470069958c3418ce6"
     },
     {
-        "Title": "phosphoMSViewerDataset",
+        "Title": "phosphoMSViewerDataSet",
         "Researcher": "John Smith",
         "Upload": [
             "Jane Doe",
-            "2018-07-30"
+            "2018-08-23"
         ],
         "Experiment": [
             "2018-09-21",
@@ -46,7 +46,7 @@
         "Researcher": "John Smith",
         "Upload": [
             "Anonymous",
-            "2018-08-22"
+            "2018-08-23"
         ],
         "Experiment": [
             "2018-09-21",
