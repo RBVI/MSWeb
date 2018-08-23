@@ -4,35 +4,39 @@ var south = function() {
     function init() {
         histogramTest();
         console.log("south.js loaded and initialized");
-    }  
-    //declare functions here 
+    }
+    //declare functions here
     function histogramTest() {
-        var y = [];
-        for (var i=0;i<500;i++) {
-            y[i] = Math.random();
-        }
-        var data = [{
-            y: y,
-            type: "histogram",
-            marker: {
-                color: 'blue',
-                opacity: 0.8,
-                line: {
-                    color: "black",
-                    width: 1
-                }
-            },
-        }];
-        var layout = {
-            margin: {
-                l: 10,
-                r: 10,
-                b: 10,
-                t: 10,
-                pad: 0
-            }
-        };
-        Plotly.newPlot("south-west-plot", data);
+        // var y = [];
+        // for (var i=0;i<500;i++) {
+        //     y[i] = Math.random();
+        // }
+        // var data = [{
+        //     y: y,
+        //     type: "histogram",
+        //     marker: {
+        //         color: 'blue',
+        //         opacity: 0.8,
+        //         line: {
+        //             color: "black",
+        //             width: 1
+        //         }
+        //     },
+        // }];
+        // var layout = {
+        //     margin: {
+        //         l: 10,
+        //         r: 10,
+        //         b: 10,
+        //         t: 10,
+        //         pad: 0
+        //     }
+        // };
+        // Plotly.newPlot("south-plot", data);
+
+			//alert("app: "+app.App.default.toSource());
+
+
     }
     function heatmapTest() {
         var x = [];

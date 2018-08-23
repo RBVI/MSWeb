@@ -2,6 +2,14 @@
 <html>
     <head>
         <!-- JS starts -->
+        <meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"/>
+		<meta name="theme-color" content="#000000"/>
+        <script type="text/javascript" src="js/react.production.min.js"></script>
+        <script type="text/javascript" src="js/react-dom.production.min.js"></script>
+        <script type="text/javascript" src="js/vendors~app~index.bundle.js"></script>
+		<script type="text/javascript" src="js/app~index.bundle.js"></script>
+		<script type="text/javascript" src="js/app.bundle.js"></script>
         <script language="JavaScript" src="js/jquery-3.2.1.min.js"></script>
         <script language="JavaScript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script language="JavaScript" src="js/jquery.layout-1.4.0.js"></script>
@@ -27,11 +35,11 @@
     <body>
         <div class="ui-layout-center" id="center">
             <h3 class="text">Select dataset(s)</h3>
-            <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
+            <select size="3" class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
             <div class="controlgroup" id="plot-functions">
-                <button id="download">Download</button>
-                <button id="upload">Upload</button>
-                <button id="plotbutton">Plot</button>
+                <button>Download</button>
+                <button>Upload</button>
+                <button>Plot</button>
             </div>
         </div>
         <div class="ui-layout-west" id="west">
@@ -51,14 +59,26 @@
         </div>
         <div class="ui-layout-south" id="south">
             <div id="south-west">
-                <div id="south-west-plot"></div>
+                <div id="south-plot"></div>
+
+                <noscript>You need to enable JavaScript to run this app.</noscript>
+        		<script type="text/javascript" >
+
+        			//alert("app: "+app.App.default.toSource());
+        			var dataSources = {
+        				col1: [1, 2, 3],
+        				col2: [4, 3, 2],
+        				col3: [17, 13, 9]
+        			};
+        			ReactDOM.render(React.createElement(app.App.default, { dataSources: dataSources }), document.getElementById("south-plot"));
+
+        		</script>
+
                 <div class="controlgroup plot-buttons" id="south-west-functions">
                     <button>Delete</button>
                     <button>Customize</button>
                 </div>
             </div>
-            <div id="south-center"></div>
-            <div id="south-east"></div>
         </div>
     </body>
 </html>
