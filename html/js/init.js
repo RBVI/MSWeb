@@ -24,22 +24,7 @@ function initLayout() {
     $('body').layout({
         name: "main",
         south__size: "60%",
-        west__size: "25%",
-        south__onresize: function() {
-            Plotly.Plots.resize(document.getElementById("south-west-plot"));
-            Plotly.Plots.resize(document.getElementById("south-center"));
-            Plotly.Plots.resize(document.getElementById("south-east"));}
-    });
-    $("#south").layout({
-        name: "south",
-        center__paneSelector: "#south-center",
-        west__paneSelector: "#south-west",
-        east__paneSelector: "#south-east",
-        west__resizable: false,
-        center__resizable: false,
-        east__resizable: false,
-        west__size: "33%",
-        east__size: "33%"
+        west__size: "25%"
     });
     $(".controlgroup").controlgroup();
     $(".controlgroup-vert").controlgroup({"direction": "vertical"});
