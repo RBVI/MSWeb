@@ -98,6 +98,7 @@ def main():
         infile = form['uploadfile'].file
         if not os.path.exists(os.path.join(os.pardir, "data", "raw-data", form["uploadfile"].filename)):
             try:
+                initUmask = os.umask(0o002)
                 with open(os.path.join(os.pardir, 'data', 'raw-data', form["uploadfile"].filename), 'wb') as fp:
                     fp.write(infile.read())
                 lines = []
@@ -125,12 +126,17 @@ def main():
                 if not os.path.exists(os.path.join(os.pardir, "data", "parsed-data", os.path.splitext(form["uploadfile"].filename)[0]+".json")):
                     with open(os.path.join(os.pardir, "data", "parsed-data", os.path.splitext(form["uploadfile"].filename)[0]+".json"), 'w') as fp:
                         json.dump({"Metadata":metadata, "Data":data}, fp, indent=4)
+                    os.umask(initUmask)
                     jsonIndex() #reindexes index.json and hashes.json
                     returnSuccess(metadata, form) #returns success html page
                 else:
+                    os.umask(initUmask)
                     returnFail("fileexists")
-            except PermissionError:
-                returnFail("permission")
+            except PermissionError as e:
+                #returnFail("permission")
+                print("Content-Type: text")
+                print("")
+                print(e)
             except SyntaxError:
                 returnFail("syntax")
             except NameError:

@@ -15,8 +15,8 @@ def main():
         print("")
         print("Umask Report: ")
         print("")
-        umask = 0
-        print("Umask set to "+str(umask))
+        umask = 0o002
+        print("Umask set to: "+"0o{0:o}".format(umask))
         initUmask = os.umask(umask)
         fname = ""
         testPath = os.path.join(os.pardir, "data", "raw-data", "test.txt")
@@ -30,7 +30,7 @@ def main():
         print(fname+" removed")
         print("-----------------------")
         os.umask(initUmask)
-        print("Initial umask is "+str(initUmask))
+        print("Initial umask is: "+"0o{0:o}".format(initUmask))
         with open(testPath, "w") as fp:
             fp.write("test")
         fileStat = os.stat(testPath)

@@ -29,7 +29,11 @@ function initLayout() {
     $(".controlgroup").controlgroup();
     $(".controlgroup-vert").controlgroup({"direction": "vertical"});
     $("#download").click(function(){center.downloadRaw();});
-    $("#upload").click(function(){uploadDialog.dialog("open")})
+    $("#upload").click(function(){uploadDialog.dialog("open")});
+    $("#plotbutton").click(function(){
+        $("#south").empty();
+        south.initReactChartEditor();
+    });
     $('#data-selection').multiSelect({
         cssClass: "data-selector",
         afterSelect: function(hash){

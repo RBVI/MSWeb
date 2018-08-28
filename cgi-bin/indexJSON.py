@@ -7,6 +7,7 @@ def hashJSON(jsonlist):
     return hashes
 
 def main():
+    initUmask = os.umask(0o002)
     # -- lists json files in parsed-data directory -- 
     jsonfiles = []
     for jsonfile in os.listdir(os.path.join(os.pardir, "data", "parsed-data")):
@@ -28,6 +29,7 @@ def main():
     # -- writes hashes and filenames to hashes.json -- 
     with open(os.path.join(os.pardir, "data", "hashes.json"), "w") as fp:
         json.dump(hashes, fp, indent=4)
+    os.umask(initUmask)
     # -- reports end of indexing to user depending on command line or cgi --
     if 'REQUEST_METHOD' in os.environ:
         pass

@@ -35,3 +35,7 @@ div#searchBar {
     border: none;
     position:fixed;
 }
+#noChartEditor {
+    width: auto;
+    text-align:center;
+}

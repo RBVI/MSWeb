@@ -81,16 +81,10 @@
             <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
         </div>
         <div class="ui-layout-south" id="south">
-            <noscript>You need to enable JavaScript to run this app.</noscript>
-            <script type="text/javascript">
-            //alert("app: "+app.App.default.toSource());
-            var dataSources = {
-                col1: [1, 2, 3],
-                col2: [4, 3, 2],
-                col3: [17, 13, 9]
-            };
-            ReactDOM.render(React.createElement(app.App.default, { dataSources: dataSources }), document.getElementById("south"));
-            </script>
+            <div id="noChartEditor">
+                <h1>Chart Editor not loaded</h1>
+                <p>Select datasets above and click "Plot" when you want to initialize the chart editor</p>
+            </div>
         </div>
     </body>
 </html>
