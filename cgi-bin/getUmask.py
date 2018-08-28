@@ -11,19 +11,34 @@ def main():
         print("")
         print("Current umask is "+str(initUmask))
     elif set == "true":
-        initUmask = os.umask(0)
+        print("Content-Type: text")
+        print("")
+        print("Umask Report: ")
+        print("")
+        umask = 0
+        print("Umask set to "+str(umask))
+        initUmask = os.umask(umask)
         fname = ""
         testPath = os.path.join(os.pardir, "data", "raw-data", "test.txt")
         with open(testPath, "w") as fp:
             fp.write("test")
             fname = fp.name
-        os.umask(initUmask)
         fileStat = os.stat(testPath)
-        print("Content-Type: text")
-        print("")
-        print("Initial umask is "+str(initUmask))
         print("File "+fname+" created with permissions "+str(fileStat.st_mode))
         print("(Converted ST_MODE: "+str(stat.filemode(fileStat.st_mode))+")")
+        os.remove(testPath)
+        print(fname+" removed")
+        print("-----------------------")
+        os.umask(initUmask)
+        print("Initial umask is "+str(initUmask))
+        with open(testPath, "w") as fp:
+            fp.write("test")
+        fileStat = os.stat(testPath)
+        print("File "+fname+" created with permissions "+str(fileStat.st_mode))
+        print("(Converted ST_MODE: "+str(stat.filemode(fileStat.st_mode))+")")
+        os.remove(testPath)
+        print(fname+" removed")
+
 
 if __name__ == "__main__":
     main()
