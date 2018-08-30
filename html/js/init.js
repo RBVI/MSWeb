@@ -3,6 +3,7 @@
 var datasetIndex = [];
 var searchResult = [];
 var downloadList = [];
+var dataSources = {};
 function removeOptions(selectbox) { // removes <option> tags from <select> tags
     if (selectbox.id == "data-selection"){
         $("#data-selection").empty();
