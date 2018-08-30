@@ -6,12 +6,12 @@ var south = function() {
     }
     //declare functions here
     function initReactChartEditor() {
-        var dataSources = {
+        dataSources = {
             col1: [1, 2, 3],
             col2: [4, 3, 2],
             col3: [17, 13, 9]
         };
-        ReactDOM.render(React.createElement(app.App.default, { dataSources: dataSources }), document.getElementById("south"));
+        reactChartEditor = ReactDOM.render(React.createElement(app.App.default, { dataSources: dataSources }), document.getElementById("south"));
     }
     return {
         init: init,

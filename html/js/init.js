@@ -4,6 +4,7 @@ var datasetIndex = [];
 var searchResult = [];
 var downloadList = [];
 var dataSources = {};
+var reactChartEditor;
 function removeOptions(selectbox) { // removes <option> tags from <select> tags
     if (selectbox.id == "data-selection"){
         $("#data-selection").empty();
@@ -34,6 +35,13 @@ function initLayout() {
     $("#plotbutton").click(function(){
         $("#south").empty();
         south.initReactChartEditor();
+    });
+    $("#chartControls").button().click(function(){
+        if ($(".editor_controls").is(":hidden")){
+            $(".editor_controls").show();
+        } else {
+            $(".editor_controls").hide();
+        }
     });
     $('#data-selection').multiSelect({
         cssClass: "data-selector",

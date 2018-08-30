@@ -34,6 +34,7 @@
         <title>MSWeb Preview</title>
     </head>
     <body>
+        <!-- CENTER DIV -->
         <div class="ui-layout-center" id="center">
             <h3 class="text">Select dataset(s)</h3>
             <select class="multiselect" multiple="multiple" id="data-selection" name="data-selection[]"></select>
@@ -65,21 +66,26 @@
                 <button id="plotbutton">Plot</button>
             </div>
         </div>
+        <!-- WEST DIV -->
         <div class="ui-layout-west" id="west">
             <h1 class="text" id="maintitle">MSWeb</h1>
             <h3 class="text">Search for a Data Set</h3>
-            <div id="searchBar">
-                <input type="text" id="userInput" placeholder="Enter text">
-                <button id="search">Search</button>
-            </div>
-            <input id="title" class="filter" placeholder="Title">
-            <input id="researcher" class="filter" placeholder="Researcher">
-            <input id="uploadby" class="filter" placeholder="Uploader">
-            <input id="uploaddate" class="filter" placeholder="Upload Date">
-            <input id="experimentdate" class="filter" placeholder="Experiment Date">
-            <input id="experimenttype" class="filter" placeholder="Experiment Type">
-            <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
+            <fieldset>
+                <div id="searchBar">
+                    <input type="text" id="userInput" placeholder="Enter text">
+                    <button id="search">Search</button>
+                </div>
+                <input id="title" class="filter" placeholder="Title">
+                <input id="researcher" class="filter" placeholder="Researcher">
+                <input id="uploadby" class="filter" placeholder="Uploader">
+                <input id="uploaddate" class="filter" placeholder="Upload Date">
+                <input id="experimentdate" class="filter" placeholder="Experiment Date">
+                <input id="experimenttype" class="filter" placeholder="Experiment Type">
+                <input id="experimentcond" class="filter" placeholder="Experiment Conditions">
+            </fieldset>
+            <button id="chartControls">Show/Hide Chart Controls</button>
         </div>
+        <!-- SOUTH DIV -->
         <div class="ui-layout-south" id="south">
             <div id="noChartEditor">
                 <h1>Chart Editor not loaded</h1>
