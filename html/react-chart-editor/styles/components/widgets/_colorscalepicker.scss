@@ -1,0 +1,39 @@
+$colorscalepicker-width: 215px;
+
+.colorscalePickerContainer {
+  min-width: $colorscalepicker-width;
+  position: relative;
+  padding: 0;
+  resize: none;
+  border: none;
+  background: none;
+}
+
+.colorscalePickerContainer::-webkit-scrollbar {
+  width: 5px;
+}
+
+.colorscalePickerTopContainer {
+  display: none;
+}
+
+.colorscaleDescription {
+  display: none;
+}
+
+.colorscalePickerContainer input:focus {
+  outline: none;
+}
+.colorscalePickerBottomContainer {
+  padding-right: 3px;
+}
+
+.customPickerContainer {
+  margin-top: var(--spacing-quarter-unit);
+  text-align: left;
+
+  &__outer {
+    width: $colorscalepicker-width;
+    text-align: center;
+  }
+}

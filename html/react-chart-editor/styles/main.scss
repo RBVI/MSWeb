@@ -1,0 +1,58 @@
+@charset 'utf-8';
+@import 'variables/main';
+@import 'mixins';
+@import 'helpers';
+@import 'movement';
+
+:root {
+  --env: $ENV;
+}
+
+@if $ENV == 'ie' {
+  :root {
+    @include generateVars;
+  }
+} @else {
+  .plotly-editor--theme-provider {
+    @include generateVars;
+  }
+}
+
+.editor_controls {
+  position: relative;
+  width: var(--editor-width);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  @import 'components/main';
+  @include font-smoothing;
+  font-family: var(--font-family-body);
+  &__wrapper {
+    display: flex;
+    flex-grow: 1;
+  }
+  a {
+    color: $color-dodger-shade;
+    cursor: pointer;
+  }
+}
+
+.plotly_editor {
+  display: flex;
+  /*
+       We are defining the max height of the app so that the editor knows how big to be
+       currently the editor will take up whatever space it can if it is not constrained in its parent
+     */
+  flex-grow: 1;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+}
+
+.plotly_editor_plot {
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  flex-grow: 1;
+}

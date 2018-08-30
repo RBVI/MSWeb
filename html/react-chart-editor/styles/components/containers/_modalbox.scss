@@ -1,0 +1,38 @@
+.modalbox {
+  position: absolute;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  text-transform: none;
+  text-align: left;
+  border: var(--border-default);
+  align-content: center;
+  box-shadow: var(--box-shadow-base);
+  left: calc(var(--spacing-quarter-unit) * -1);
+  width: calc(100% + var(--spacing-half-unit));
+  top: calc(100% + var(--spacing-quarter-unit));
+  background-color: var(--color-background-top);
+  @include z-index('cloud');
+
+  &__cover {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    @include z-index('underground');
+  }
+
+  &--dark {
+    background-color: var(--color-background-inverse);
+  }
+
+  &--relative {
+    position: relative;
+  }
+}
+
+.field .modalbox {
+  width: 100%;
+  left: -1px;
+  top: 100%;
+}

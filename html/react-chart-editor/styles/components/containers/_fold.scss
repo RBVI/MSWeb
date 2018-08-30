@@ -1,0 +1,169 @@
+.fold {
+  width: 100%;
+  user-select: none;
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    clear: both;
+    padding: var(--spacing-quarter-unit) var(--spacing-half-unit);
+    color: var(--fold-header-text-color-closed);
+    font-size: var(--font-size-base);
+    border: 1px solid var(--fold-header-border-color-closed);
+    background-color: var(--fold-header-background-closed);
+    height: 15px;
+    border-radius: var(--border-radius);
+    text-shadow: var(--text-shadow-dark-ui);
+    transition: background-color 0.1s ease-in-out, color 0.1s ease-in-out,
+      border 0.1s ease-in-out;
+
+    &:hover {
+      cursor: pointer;
+      background-color: var(--fold-header-background-closed); // darken 6%
+    }
+
+    svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      @include drop-shadow--dark-ui();
+      path {
+        fill: currentColor;
+      }
+    }
+
+    &--open {
+      color: var(--fold-header-text-color-base);
+      background-color: var(--fold-header-background-base);
+      border: 1px solid var(--fold-header-border-color-base);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      text-shadow: var(--text-shadow-dark-ui-inactive);
+
+      svg {
+        @include drop-shadow--dark-ui--lighter();
+      }
+
+      &:hover {
+        background-color: var(--fold-header-background-base); // darken 6%
+      }
+    }
+
+    &__icon {
+      display: block;
+      margin-right: var(--spacing-quarter-unit);
+      transform: translateY(-1px);
+    }
+
+    &__title {
+      margin-left: var(--spacing-half-unit) / 3;
+      font-size: var(--font-size-medium);
+      line-height: var(--font-size-medium);
+      font-weight: var(--font-weight-semibold);
+      transform: translateY(1px);
+      white-space: nowrap;
+      max-width: 230px;
+      letter-spacing: 0.2px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    &__arrow {
+      transform: translateX(-3px) translateY(-1px);
+      svg {
+        will-change: transform;
+        transition: transform 0.1s ease-in-out;
+        transform: rotate(-90deg);
+        font-weight: bold;
+        transform-origin: center center;
+      }
+
+      &-title {
+        display: flex;
+        flex-grow: 1;
+      }
+      &--open {
+        svg {
+          transform: rotate(0deg);
+        }
+      }
+    }
+
+    &__delete {
+      font-size: 18px;
+      opacity: 0.75;
+      transform: translateY(-2px);
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__content {
+    background: var(--color-background-top);
+    border: var(--border-default);
+    border-width: 0 1px 1px 1px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+
+    &__plot {
+      overflow: hidden;
+      border-bottom-left-radius: var(--border-radius);
+      border-bottom-right-radius: var(--border-radius);
+    }
+    & > *:first-child {
+      border-top: 0;
+    }
+
+    &__empty {
+      font-family: var(--font-family-headings);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 30px 25px;
+
+      &__icon {
+        margin: 0 auto;
+        margin-bottom: 15px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--color-dodger);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        svg {
+          margin: 0 auto !important;
+          fill: white;
+          width: 23px;
+          height: 23px;
+        }
+      }
+
+      &__message__primary {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 17px;
+        color: var(--color-text-base);
+      }
+
+      &__message__secondary {
+        font-family: var(--font-family-body);
+        font-size: var(--font-size-small);
+        text-align: center;
+        color: var(--color-text-base);
+      }
+    }
+
+    &--noheader {
+      border-width: 1px 1px 1px 1px;
+    }
+  }
+}
+
+.fold {
+  margin-bottom: var(--spacing-half-unit);
+}
+
+.fold .fold:last-child {
+  margin-bottom: 0;
+}

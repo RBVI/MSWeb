@@ -1,0 +1,102 @@
+.panel {
+  flex-grow: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--spacing-half-unit);
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  @include scrollbar();
+
+  @at-root .editor_controls__wrapper > .panel {
+    // These are for the first panel
+    background-color: var(--panel-background);
+    border-right: var(--border-default);
+    width: calc(var(--panel-width));
+  }
+  &__content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  &__header {
+    margin-bottom: var(--spacing-half-unit);
+    display: flex;
+    flex-shrink: 0;
+    &__content {
+      flex-grow: 1;
+    }
+    &__actions__container {
+      width: 100%;
+    }
+    &__collapse {
+      font-size: var(--font-size-medium);
+      float: left;
+      color: var(--color-text-base);
+      display: flex;
+      align-items: center;
+      height: 100%;
+      cursor: pointer;
+      svg {
+        width: 16px !important;
+        height: 16px !important;
+        fill: var(--color-text-light);
+        padding-right: 3px;
+      }
+    }
+    &__action {
+      float: right;
+    }
+  }
+
+  &__empty {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--panel-width);
+    border-right: var(--border-default);
+    height: 100%;
+    padding: var(--spacing-half-unit);
+    background-color: var(--panel-background);
+    box-sizing: border-box;
+    @include z-index(orbit);
+    display: flex;
+    &__message {
+      text-align: center;
+      padding-top: calc(var(--spacing-base-unit) * 2);
+      &__icon {
+        margin-bottom: var(--spacing-half-unit);
+        opacity: 0.5;
+        svg {
+          $size: 48px;
+          width: $size !important;
+          height: $size !important;
+          path {
+            fill: var(--color-text-light);
+          }
+        }
+      }
+      &__heading {
+        @include heading();
+      }
+      &__content {
+        font-size: var(--font-size-base);
+        color: var(--color-text-base);
+        line-height: var(--font-leading-body);
+      }
+    }
+  }
+  &--no-padding {
+    padding: 0;
+  }
+}
+
+// if the panel is within a fold, allow overflow for dropdown, etc.
+.fold {
+  .panel {
+    overflow-x: visible;
+    overflow-y: visible;
+  }
+}
