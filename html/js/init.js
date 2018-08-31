@@ -1,106 +1,25 @@
 // put JS code that needs to connect two layout elements together in here
 // declare layout-transcending functions here
 var datasetIndex = [];
-var searchResult = [];
-var downloadList = [];
-var dataSources = {};
-var reactChartEditor;
-function removeOptions(selectbox) { // removes <option> tags from <select> tags
-    if (selectbox.id == "data-selection"){
-        $("#data-selection").empty();
-        $("#data-selection").multiSelect("refresh");
-    }else{
-        var i;
-        for(i=selectbox.options.length-1;i>=0;i--){
-            selectbox.remove(i);
-        }
-    }
-}
 function retrieveIndex(){
     $.ajaxSetup({async: false});
     $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
 }
-// function to call the necessary jquery calls to initialize the layout
+// function to initialize layout with jquery calls
 function initLayout() {
-    $('body').layout({
+    $("body").layout({
         name: "main",
-        south__size: "60%",
-        west__size: "25%"
+        west__size: "20%"
     });
-    $(".controlgroup").controlgroup();
-    $(".controlgroup-vert").controlgroup({"direction": "vertical"});
-    $("#download").click(function(){center.downloadRaw();});
-    $("#upload").click(function(){uploadDialog.dialog("open")});
-    $("#plotbutton").click(function(){
-        $("#south").empty();
-        south.initReactChartEditor();
-    });
-    $("#chartControls").button().click(function(){
-        if ($(".editor_controls").is(":hidden")){
-            $(".editor_controls").show();
-        } else {
-            $(".editor_controls").hide();
-        }
-    });
-    $('#data-selection').multiSelect({
-        cssClass: "data-selector",
-        afterSelect: function(hash){
-            downloadList.push(hash[0]);
-        },
-        afterDeselect: function(hash) {
-            var index = downloadList.indexOf(hash[0]);
-            downloadList.splice(index, 1);
-        }
-    });
-    $(document).tooltip();
-    uploadDialog = $("#uploaddialog").dialog({
-        autoOpen: false,
-        resizable: false,
-        draggable: false,
-        height: 450,
-        width: 440,
-        modal: true,
-        buttons: {
-            "Upload Dataset": function(){
-                $("#uploadform").submit();
-                uploadDialog.dialog("close");
-            },
-            Cancel: function() {
-                uploadDialog.dialog("close");
-            }
-        },
-        close: function() {
-            $("#uploadform")[0].reset()
-        }
-    })
-    successDialog = $("#successdialog").dialog({
-        autoOpen: false,
-        resizable: false,
-        draggable: false,
-        height: 400,
-        width: 400,
-        buttons: {
-            "Close": function() {
-                successDialog.dialog("close");
-            }
-        },
-        close: function() {
-            retrieveIndex();
-            center.updateMultiselect(datasetIndex);
-        }
-    })
-    $("#uploadform").submit(function(){
-        successDialog.dialog("open");
-    })
+    $("#tabs").tabs();
 }
-// only call declared functions here, DO NOT declare functions in init() otherwise it will get really messy
+// only call previously declared functions here, do NOT declare functions here
 function init() {
     retrieveIndex();
     initLayout();
     west.init();
     center.init();
-    south.init();
-    console.log("init.js loaded and initialized")
+    console.log("MSWeb initialization complete");
 }
 $(window).on("load", init);

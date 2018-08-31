@@ -1,0 +1,41 @@
+/* put your own css code here, don't use the jquery stylesheets */
+.data-selector {
+    width:auto;
+    margin:auto;
+}
+.controlgroup {
+    float:right;
+}
+.text {
+    margin-bottom:5px;
+    overflow-x: hidden;
+}
+.ui-tooltip {
+    white-space: pre-line;
+}
+#uploaddialog form fieldset label {
+    display: block;
+    width: auto;
+}
+#uploaddialog form fieldset input {
+    display: block;
+    width: auto;
+}
+input {
+    width:auto;
+}
+div#searchBar {
+    display:inline;
+}
+#successframe {
+    width: 360px;
+    height: 300px;
+    margin: none;
+    padding: none;
+    border: none;
+    position:fixed;
+}
+#noChartEditor {
+    width: auto;
+    text-align:center;
+}
