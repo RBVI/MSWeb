@@ -2,15 +2,11 @@
     "Metadata": {
         "Title": "testdata2",
         "Researcher": "John Smith",
-        "Upload": [
-            "Jane Doe",
-            "2018-08-23"
-        ],
-        "Experiment": [
-            "2018-09-21",
-            "Mass Spec",
-            "N/A"
-        ]
+        "Uploaded By": "Jane Doe",
+        "Uploaded On": "2018-08-31",
+        "Experiment Date": "2018-09-21",
+        "Experiment Type": "Mass Spec",
+        "Experiment Conditions": "N/A"
     },
     "Data": {
         "Data #": [

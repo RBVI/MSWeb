@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3
 import json, os, cgi, enable_cgitb, hashlib
+from collections import OrderedDict
 def hashJSON(jsonlist):
     hashes = {}
     for json in jsonlist:
@@ -25,10 +26,10 @@ def main():
             jsonlist.append(metadata)
     # -- writes json metadata and hash of file to index.json --
     with open(os.path.join(os.pardir, "data", "index.json"), "w") as fp:
-        json.dump(jsonlist, fp, indent=4)
+        json.dump(jsonlist, fp, indent=4, sort_keys=False)
     # -- writes hashes and filenames to hashes.json -- 
     with open(os.path.join(os.pardir, "data", "hashes.json"), "w") as fp:
-        json.dump(hashes, fp, indent=4)
+        json.dump(hashes, fp, indent=4, sort_keys=False)
     os.umask(initUmask)
     # -- reports end of indexing to user depending on command line or cgi --
     if 'REQUEST_METHOD' in os.environ:

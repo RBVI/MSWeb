@@ -2,6 +2,7 @@
 import json, os, sys, cgi, datetime, enable_cgitb
 from indexJSON import hashJSON
 from indexJSON import main as jsonIndex
+from collections import OrderedDict
 def getArgs(argv):
     args = {}
     while argv:
@@ -115,17 +116,23 @@ def main():
                 data_parsed[0][0] = "Data #"
                 #data_parsed = data_parsed[:20] #debug, limits to 20 data points
                 data_transpose = list(zip(*data_parsed))
-                data = {}
+                data = OrderedDict()
                 for item in data_transpose:
                     data[item[0]] = item[1:]
-                metadata = {}
+                metadata = OrderedDict()
                 metadata["Title"] = args["uploadtitle"]
                 metadata["Researcher"] = args["uploadresearcher"]
-                metadata["Upload"] = ["Anonymous", datetime.datetime.today().strftime('%Y-%m-%d')] #handles username of uploader later, right now enter 'Anonymous'
-                metadata["Experiment"] = [args["uploadexperimentdate"], args["uploadexperimenttype"], args["uploadexperimentcond"]]
+                metadata["Uploaded By"] = "Anonymous" #handles username of uploader later, right now enter 'Anonymous'
+                metadata["Uploaded On"] = datetime.datetime.today().strftime('%Y-%m-%d')
+                metadata["Experiment Date"] = args["uploadexperimentdate"]
+                metadata["Experiment Type"] = args["uploadexperimenttype"]
+                metadata["Experiment Conditions"] = args["uploadexperimentcond"]
                 if not os.path.exists(os.path.join(os.pardir, "data", "parsed-data", os.path.splitext(form["uploadfile"].filename)[0]+".json")):
                     with open(os.path.join(os.pardir, "data", "parsed-data", os.path.splitext(form["uploadfile"].filename)[0]+".json"), 'w') as fp:
-                        json.dump({"Metadata":metadata, "Data":data}, fp, indent=4)
+                        output = OrderedDict()
+                        output["Metadata"] = metadata
+                        output["Data"] = data
+                        json.dump(output, fp, indent=4, sort_keys=False)
                     os.umask(initUmask)
                     jsonIndex() #reindexes index.json and hashes.json
                     returnSuccess(metadata, form) #returns success html page
@@ -162,25 +169,30 @@ def main():
             data_parsed[0][0] = "Data #"
             #data_parsed = data_parsed[:20] #debug, limits to 20 data points
             data_transpose = list(zip(*data_parsed))
-            data = {}
+            data = OrderedDict()
             for item in data_transpose:
                 data[item[0]] = item[1:]
             # -- declaration of metadata begins -- 
-            metadata = {}
+            metadata = OrderedDict()
             metadata["Title"] = input("Enter data title: ")
             metadata["Researcher"] = input("Enter researcher name: ")
             uploadby = input("Enter name of uploader: ")
             uploadon = datetime.datetime.today().strftime('%Y-%m-%d')
-            metadata["Upload"] = [uploadby, uploadon]
+            metadata["Uploaded By"] = uploadby
+            metadata["Uploaded On"] = uploadon
             expdate = input("Enter experiment date in YYYY-MM-DD format: ")
             exptype = input("Enter experiment type: ")
             expcond = input("Enter experiment conditions: ")
-            metadata["Experiment"] = [expdate, exptype, expcond]
+            metadata["Experiment Date"] = expdate
+            metadata["Experiment Type"] = exptype
+            metadata["Experiment Conditions"] = expcond
             # -- dumps metadata and data to json file in parsed-data directory -- 
-            outfile = os.path.splitext(infilename)[0].split("/")
-            outfile[2] = "parsed-data"
-            with open("/".join(outfile)+".json", "w") as fp:
-                json.dump({"Metadata":metadata, "Data":data}, fp, indent=4)
+            outfile = os.path.splitext(os.path.basename(infilename))[0]
+            with open(os.path.join(os.pardir, "data", "parsed-data", outfile+".json"), "w") as fp:
+                output = OrderedDict()
+                output["Metadata"] = metadata
+                output["Data"] = data
+                json.dump(output, fp, indent=4, sort_keys=False)
             jsonIndex() #reindexes index.json and hashes.json
             print("Data parse successful - parsed " + infilename + " and wrote result to parsed-data as " + os.path.splitext(infilename)[0] + ".json")
         else:

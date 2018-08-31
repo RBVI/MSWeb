@@ -30,7 +30,33 @@
     <body>
         <!-- WEST DIV -->
         <div class="ui-layout-west" id="west">
-            <h1>MSWeb v.0.0.1</h1>
+            <h1 class="msweb-title">MSWeb v.0.0.1</h1>
+            <fieldset class="msweb-ctrlgrp" id="search">
+                <label for="searchbutton">Search Experiments</label>
+                <input name="search">
+                <button id="searchbutton">Search</button>
+            </fieldset>
+            <fieldset class="msweb-ctrlgrp" id="expfilters">
+                <h3>Experiment Filters</h3>
+                <label for="title">Title</label>
+                <input name="title">
+                <label for="researcher">Researcher</label>
+                <input name="researcher">
+                <label for="uploader">Uploader</label>
+                <input name="uploader">
+                <label for="uploaddate">Upload Date</label>
+                <input name="uploaddate">
+                <label for="experimenttype">Experiment Type</label>
+                <input name="experimenttype">
+                <label for="experimentdate">Experiment Date</label>
+                <input name="experimentdate">
+                <label for="experimentcond">Experiment Conditions</label>
+                <input name="experimentcond">
+            </fieldset>
+            <fieldset class="msweb-ctrlgrp" id="datafilters">
+                <h3>Data Filters</h3>
+                <p>No experiment selected! Filters will be loaded when experiment(s) are selected.</p>
+            </fieldset>
         </div>
         <!-- CENTER DIV -->
         <div class="ui-layout-center" id="center">
@@ -41,13 +67,15 @@
                     <li><a href="#plots">Plots</a></li>
                 </ul>
                 <div class="msweb-tab" id="experiments">
-                    <p>test1</p>
+                    <h3>List of Experiments</h3>
+                    <table class="tablesorter-blue" id="experimenttable"></table>
+                    <p class="msweb-eoel">End of Experiment List.</p>
                 </div>
                 <div class="msweb-tab" id="data">
-                    <p>test2</p>
+                    <h3>Experimental Data</h3>
                 </div>
                 <div class="msweb-tab" id="plots">
-                    <p>test3</p>
+                    
                 </div>
             </div>
         </div>

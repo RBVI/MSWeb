@@ -1,3 +1,35 @@
+/* MSWeb CSS classes */
 .msweb-tab {
     width:auto;
+}
+.msweb-eoel {
+    text-align: center;
+    font-size: 10px;
+}
+.msweb-title {
+    border: 2px dotted black;
+    color: #003eff;
+}
+.msweb-ctrlgrp {
+    margin-bottom: 15px;
+    width: 92%;
+    float: left;
+}
+.msweb-ctrlgrp input {
+    width:100%
+}
+/* Page specific content */
+#tabs {
+    height: 99%;
+}
+#searchbutton {
+    float: right;
+}
+label, input {
+    width: auto;
+    display: block;
+}
+h3 {
+    padding: 0px;
+    margin: 10px;
 }
