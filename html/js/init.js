@@ -2,10 +2,37 @@
 // declare layout-transcending functions here
 var datasetIndex = [];
 var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions"]
+var selectedExperiments = [];
 function retrieveIndex(){
     $.ajaxSetup({async: false});
     $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
+}
+function selectExp(hash) {
+    if(selectedExperiments.indexOf(hash)<0) {
+        selectedExperiments.push(hash);
+        center.updateSelected(selectedExperiments);
+    } else {
+        alert("Experiment already selected! Choose another experiment");
+    }
+}
+function deselectExp(hash) {
+    var index = selectedExperiments.indexOf(hash[0]);
+    selectedExperiments.splice(index, 1);
+    center.updateSelected(selectedExperiments);
+}
+function getTitle(hash) {
+    var title;
+    for(var i=0;i<datasetIndex.length;i++) {
+        if(hash==datasetIndex[i]["Hash"]) {
+            title = datasetIndex[i]["Title"]
+        }
+    } 
+    if(typeof title !== "undefined") {
+        return title;
+    } else {
+        return "Experiment title not found!";
+    }
 }
 // function to initialize layout with jquery calls
 function initLayout() {
