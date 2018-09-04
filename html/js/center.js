@@ -3,7 +3,8 @@ var center = function() {
     // call previously declared functions, do not declare functions in init()
     function init() {
         populateExperimentTable(metadataKeys, datasetIndex);
-        $(".tablesorter-blue").tablesorter();
+        $(".tablesorter-blue").tablesorter({widgets:["zebra"]});
+        $(".tablesorter-blue").tablesorterPager({container: $("#exppager")});
         updateSelected(selectedExperiments);
         console.log("center.js loaded and initialized");
     }

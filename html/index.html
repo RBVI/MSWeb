@@ -9,10 +9,11 @@
 		<script type="text/javascript" src="js/app~index.bundle.js"></script>
         <script type="text/javascript" src="js/app.bundle.js"></script>
         <!-- JQUERY -->
-        <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
         <script type="text/javascript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
         <script type="text/javascript" src="js/jquery.tablesorter.combined.js"></script>
+        <script type="text/javascript" src="js/jquery.tablesorter.pager.js"></script>
         <script type="text/javascript" src="js/plotly-latest.min.js"></script>
         <script type="text/javascript" src="js/west.js"></script>
         <script type="text/javascript" src="js/center.js"></script>
@@ -23,6 +24,7 @@
         <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.tablesorter.pager.css" type="text/css">
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ENDS, REST OF TITLE -->
         <title>MSWeb Preview</title>
@@ -30,7 +32,7 @@
     <body>
         <!-- WEST DIV -->
         <div class="ui-layout-west" id="west">
-            <h1 class="msweb-title">MSWeb v.0.0.2</h1>
+            <h1 class="msweb-title">MSWeb v.0.0.3</h1>
             <fieldset class="msweb-ctrlgrp" id="search">
                 <label for="searchbutton">Search Experiments</label>
                 <input name="search">
@@ -69,6 +71,7 @@
                 <div class="msweb-tab" id="experiments">
                     <h3>List of Experiments</h3>
                     <table class="tablesorter-blue" id="experimenttable"></table>
+                    <div id="exppager" class="pager"></div>
                     <p class="msweb-eoel">End of Experiment List.</p>
                     <p class="msweb-selected"><strong>Selected Experiments:</strong></p>
                 </div>
