@@ -6,11 +6,11 @@
     text-align: center;
     font-size: 10px;
 }
-.msweb-title {
+.msweb-title /* title in top left of page */{
     border: 2px dotted black;
-    color: #003eff;
+    color: #527eff;
 }
-.msweb-ctrlgrp {
+.msweb-ctrlgrp /* controlgroup for filters */{
     margin-bottom: 15px;
     width: 92%;
     float: left;
@@ -18,8 +18,15 @@
 .msweb-ctrlgrp input {
     width:100%
 }
-.msweb-selected {
+.msweb-selectedlist, .msweb-selectedrows {
     font-size: 15px;
+    margin: 5px;
+}
+tr.msweb-selected-exp td /* styles selected rows in experiment table */{
+    background-color: rgb(137, 202, 228);
+}
+.msweb-status {
+    border: 1px solid lightgrey;
 }
 /* Page specific content */
 #tabs {

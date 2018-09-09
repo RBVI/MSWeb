@@ -3,8 +3,8 @@ var center = function() {
     // call previously declared functions, do not declare functions in init()
     function init() {
         populateExperimentTable(metadataKeys, datasetIndex);
-        $(".tablesorter-blue").tablesorter({widgets:["zebra"]});
-        $(".tablesorter-blue").tablesorterPager({container: $("#exppager")});
+        $(".tablesorter-blue").tablesorter({widgets: ["pager"]});
+        //$(".tablesorter-blue").tablesorterPager({container: $("#exppager")});
         updateSelected(selectedExperiments);
         console.log("center.js loaded and initialized");
     }
@@ -14,35 +14,40 @@ var center = function() {
         for (var i=0;i<keys.length;i++) {
             $("#experimenttable > thead > tr").append("<th>"+keys[i]+"</th>");
         }
-        $("#experimenttable > thead > tr").append("<th></th>")
         $("#experimenttable").append("<tbody></tbody>");
         for(var i=0;i<data.length;i++) {
             var row = $("<tr></tr>");
+            row.click(function() {
+                if($(this).hasClass("msweb-selected-exp")) {
+                    deselectExp($(this).attr("id"));
+                } else {
+                    selectExp($(this).attr("id"))
+                }
+                $(this).toggleClass("msweb-selected-exp");
+            });
             for(var j=0;j<keys.length;j++) {
                 row.append("<td>"+data[i][keys[j]]+"</td>");
             }
-            var button = $("<td></td>")
-            button.append("<button>Select</button>").attr("onclick", "selectExp('"+data[i]["Hash"]+"')");
-            row.append(button);
             row.attr("id", data[i]["Hash"])
             $("#experimenttable > tbody").append(row);
         }
     }
+    function updateStatus(selected) {
+        center.updateSelected(selectedExperiments);
+    }
     function updateSelected(selected) {
-        $(".msweb-selected").empty();
-        $(".msweb-selected").append("<strong>Selected Experiments: </strong>");
-        $(".msweb-selected").attr("title", "Click experiment to remove\n from selected list.").tooltip();
+        $(".msweb-selectedlist").empty();
+        $(".msweb-selectedlist").append("<strong>Selected Experiments: </strong>");
         if (selected.length>0) {
             var last = selected[selected.length-1];
             for(var i=0;i<selected.length;i++) {
-                var a = $("<a>"+getTitle(selected[i])+"</a>").attr("href","#").attr("onclick", "deselectExp('"+selected[i]+"')");
-                $(".msweb-selected").append(a);
+                $(".msweb-selectedlist").append(getTitle(selected[i]));
                 if(selected[i]!==last) {
-                    $(".msweb-selected").append(", ");
+                    $(".msweb-selectedlist").append(", ");
                 }
             }
         } else {
-            $(".msweb-selected").append("No experiments selected.");
+            $(".msweb-selectedlist").append("No experiments selected.");
         }
     }
     return {
