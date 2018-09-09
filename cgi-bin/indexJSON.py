@@ -23,6 +23,8 @@ def main():
             jsondata = json.load(json_file)
             metadata = jsondata["Metadata"]
             metadata["Hash"] = hashlib.sha256(jsonfile.encode("utf-8")).hexdigest()
+            metadata["Columns"] = len(jsondata["Data"])
+            metadata["Rows"] = len(next(iter(jsondata["Data"].values())))
             jsonlist.append(metadata)
     # -- writes json metadata and hash of file to index.json --
     with open(os.path.join(os.pardir, "data", "index.json"), "w") as fp:

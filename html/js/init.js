@@ -1,8 +1,9 @@
 // put JS code that needs to connect two layout elements together in here
 // declare layout-transcending functions here
 var datasetIndex = [];
-var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions"]
+var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions", "Columns", "Rows"]
 var selectedExperiments = [];
+var selectedRows = 0;
 function retrieveIndex(){
     $.ajaxSetup({async: false});
     $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
@@ -11,15 +12,19 @@ function retrieveIndex(){
 function selectExp(hash) {
     if(selectedExperiments.indexOf(hash)<0) {
         selectedExperiments.push(hash);
-        center.updateSelected(selectedExperiments);
+        selectedRows = selectedRows + getRows(hash);
+        center.updateStatus(selectedExperiments);
     } else {
         alert("Experiment already selected! Choose another experiment");
     }
 }
 function deselectExp(hash) {
-    var index = selectedExperiments.indexOf(hash[0]);
-    selectedExperiments.splice(index, 1);
-    center.updateSelected(selectedExperiments);
+    var index = selectedExperiments.indexOf(hash);
+    if (index>=0) {
+        selectedExperiments.splice(index, 1);
+        selectedRows = selectedRows - getRows(hash);
+        center.updateStatus(selectedExperiments);
+    }
 }
 function getTitle(hash) {
     var title;
@@ -32,6 +37,19 @@ function getTitle(hash) {
         return title;
     } else {
         return "Experiment title not found!";
+    }
+}
+function getRows(hash) {
+    var rows = 0;
+    for(var i=0;i<datasetIndex.length;i++) {
+        if(hash==datasetIndex[i]["Hash"]) {
+            rows = parseInt(datasetIndex[i]["Rows"]);
+        }
+    }
+    if (typeof rows !== "undefined") {
+        return rows;
+    } else {
+        return 0;
     }
 }
 // function to initialize layout with jquery calls

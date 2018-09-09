@@ -5,7 +5,8 @@ var center = function() {
         populateExperimentTable(metadataKeys, datasetIndex);
         $(".tablesorter-blue").tablesorter({widgets: ["pager"]});
         //$(".tablesorter-blue").tablesorterPager({container: $("#exppager")});
-        updateSelected(selectedExperiments);
+        //updateSelected(selectedExperiments);
+        updateStatus(selectedExperiments);
         console.log("center.js loaded and initialized");
     }
     function populateExperimentTable(keys, data) {
@@ -33,7 +34,17 @@ var center = function() {
         }
     }
     function updateStatus(selected) {
-        center.updateSelected(selectedExperiments);
+        updateSelected(selected);
+        updateRows(selected);
+    }
+    function updateRows(selected) {
+        $(".msweb-selectedrows").empty();
+        $(".msweb-selectedrows").append("<strong>Number of rows in selected experiments: </strong>");
+        if(selectedRows == 0){
+            $(".msweb-selectedrows").append("No experiments selected.");
+        } else {
+            $(".msweb-selectedrows").append(selectedRows);
+        }
     }
     function updateSelected(selected) {
         $(".msweb-selectedlist").empty();
@@ -53,6 +64,8 @@ var center = function() {
     return {
         init: init,
         populateExperimentTable, populateExperimentTable,
-        updateSelected: updateSelected
+        updateSelected: updateSelected,
+        updateStatus: updateStatus,
+        updateRows: updateRows
     }
 }();
