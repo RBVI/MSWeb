@@ -3,9 +3,41 @@ var center = function() {
     // call previously declared functions, do not declare functions in init()
     function init() {
         populateExperimentTable(metadataKeys, datasetIndex);
-        $(".tablesorter-blue").tablesorter({widgets: ["pager"]});
-        //$(".tablesorter-blue").tablesorterPager({container: $("#exppager")});
-        //updateSelected(selectedExperiments);
+        /*var pagerOptions = {
+            container:$("#exppager"),
+            updateArrows: true,
+            page: 0,
+            size: 30,
+            fixedHeight: true,
+            cssDisabled: "disabled",
+            pageReset: 0,
+        }; */
+        $(".tablesorter-blue").tablesorter({
+            widgets: ["pager"],
+            widgetOptions: {
+                pager_css: {
+                    container: "tablesorter-pager",
+                    errorRow: "tablesorter-errorRow",
+                    disabled: "disabled"
+                },
+                pager_selectors: {
+                    container: "#exppager",
+                    first: "#exp-first",
+                    prev: "#exp-prev",
+                    next: "#exp-next",
+                    last: "#exp-last",
+                    pageDisplay: "#exp-pagedisplay",
+                    pageSize: "#exp-pagesize"
+                },
+                pager_output: "Showing {startRow} - {endRow} / {totalRows} rows",
+                pager_updateArrows: true,
+                pager_startPage: 0,
+                pager_pageReset: 0,
+                pager_size: 20,
+
+            }
+        });
+        //$(".tablesorter-blue").tablesorterPager(pagerOptions);
         updateStatus(selectedExperiments);
         console.log("center.js loaded and initialized");
     }

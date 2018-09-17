@@ -1,13 +1,35 @@
 // put JS code that needs to connect two layout elements together in here
 // declare layout-transcending functions here
 var datasetIndex = [];
+var experimentalData = [];
 var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions", "Columns", "Rows"]
 var selectedExperiments = [];
 var selectedRows = 0;
 function retrieveIndex(){
     $.ajaxSetup({async: false});
-    $.getJSON( "/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
+    $.getJSON("/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
+}
+function retrieveData(hashes) {
+    if(typeof hashes == "undefined") {
+        console.log("No data specified!");
+        return undefined;
+    } else if(hashes.length>0) {
+        var output = [];
+        if(hashes.length>1) {
+            for(var i=0;i>hashes.length;i++) {
+                var tempData = {};
+                $.getJSON("/MSWeb/cgi-bin/retrieveJSON.py?hash="+hashes[i], function(data){tempData = data});
+                output.push(tempData);
+            }
+            return output;
+        } else {
+            var tempData = {};
+            $.getJSON("MSWeb/cgi-bin/retrieveJSON.py?hash="+hashes[0], function(data){tempData = data});
+            output.push(tempData);
+            return output;
+        }
+    }
 }
 function selectExp(hash) {
     if(selectedExperiments.indexOf(hash)<0) {

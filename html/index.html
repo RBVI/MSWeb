@@ -13,7 +13,8 @@
         <script type="text/javascript" src="js/jquery-ui-1.12.1.min.js"></script>
         <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
         <script type="text/javascript" src="js/jquery.tablesorter.combined.js"></script>
-        <script type="text/javascript" src="js/jquery.tablesorter.pager.js"></script>
+        <!-- <script type="text/javascript" src="js/jquery.tablesorter.pager.js"></script> -->
+        <script type="text/javascript" src="js/widget-pager.js"></script>
         <script type="text/javascript" src="js/plotly-latest.min.js"></script>
         <script type="text/javascript" src="js/west.js"></script>
         <script type="text/javascript" src="js/center.js"></script>
@@ -24,7 +25,7 @@
         <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.tablesorter.pager.css" type="text/css">
+        <!-- <link rel="stylesheet" href="css/jquery.tablesorter.pager.css" type="text/css"> -->
         <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
         <!-- CSS ENDS, REST OF TITLE -->
         <title>MSWeb Preview</title>
@@ -71,7 +72,21 @@
                 <div class="msweb-tab" id="experiments">
                     <h3>List of Experiments</h3>
                     <table class="tablesorter-blue" id="experimenttable"></table>
-                    <div id="exppager" class="pager"></div>
+                    <div id="exppager" class="pager">
+                        <form>
+                            <img src="icons/first.png" id="exp-first"/>
+                            <img src="icons/prev.png" id="exp-prev"/>
+                            <span class="exp-pagedisplay" data-pager-output-filtered="Showing {startRow} - {endRow} / {totalRows} rows"></span>
+                            <img src="icons/next.png" id="exp-next"/>
+                            <img src="icons/last.png" id="exp-last"/>
+                            <select class="exp-pagesize">
+                                <option value="20">20</option>
+                                <option value="40">40</option>
+                                <option value="60">60</option>
+                                <option value="all">All Rows</option>
+                            </select>
+                        </form>
+                    </div>
                     <p class="msweb-eoel">End of Experiment List.</p>
                     <div class="msweb-status" id="expstatus">
                         <p class="msweb-selectedlist"><strong>Selected Experiments:</strong></p>
