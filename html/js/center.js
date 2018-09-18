@@ -3,15 +3,6 @@ var center = function() {
     // call previously declared functions, do not declare functions in init()
     function init() {
         populateExperimentTable(metadataKeys, datasetIndex);
-        /*var pagerOptions = {
-            container:$("#exppager"),
-            updateArrows: true,
-            page: 0,
-            size: 30,
-            fixedHeight: true,
-            cssDisabled: "disabled",
-            pageReset: 0,
-        }; */
         $(".tablesorter-blue").tablesorter({
             widgets: ["pager"],
             widgetOptions: {
@@ -37,7 +28,6 @@ var center = function() {
 
             }
         });
-        //$(".tablesorter-blue").tablesorterPager(pagerOptions);
         updateStatus(selectedExperiments);
         console.log("center.js loaded and initialized");
     }
