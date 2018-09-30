@@ -83,11 +83,20 @@ var center = function() {
             $(".msweb-selectedlist").append("No experiments selected.");
         }
     }
+    function initReactChartEditor(){
+        dataSources = {
+            col1: [1, 2, 3],
+            col2: [4, 3, 2],
+            col3: [17, 13, 9]
+        };
+        reactChartEditor = ReactDOM.render(React.createElement(app.App.default, { dataSources: dataSources }), document.getElementById("south"));
+    }
     return {
         init: init,
         populateExperimentTable, populateExperimentTable,
         updateSelected: updateSelected,
         updateStatus: updateStatus,
-        updateRows: updateRows
+        updateRows: updateRows,
+        initReactChartEditor: initReactChartEditor
     }
 }();

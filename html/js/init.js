@@ -5,11 +5,13 @@ var experimentalData = [];
 var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions", "Columns", "Rows"]
 var selectedExperiments = [];
 var selectedRows = 0;
+var reactChartEditor;
 function retrieveIndex(){
     $.ajaxSetup({async: false});
     $.getJSON("/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
 }
+
 function retrieveData(hashes) {
     if(typeof hashes == "undefined") {
         console.log("No data specified!");
