@@ -2,35 +2,34 @@
 // declare layout-transcending functions here
 var datasetIndex = [];
 var experimentalData = [];
-var metadataKeys = ["Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions", "Columns", "Rows"]
+var metadataKeys = ["Hash", "Title", "Researcher", "Uploaded By", "Uploaded On", "Experiment Type", "Experiment Date", "Experiment Conditions", "Columns", "Rows"]
 var selectedExperiments = [];
 var selectedRows = 0;
 var reactChartEditor;
 function retrieveIndex(){
+    $("body").css("cursor", "progress");
     $.ajaxSetup({async: false});
     $.getJSON("/MSWeb/cgi-bin/retrieveIndex.py", function(data){datasetIndex = data});
     $.ajaxSetup({async: true});
+    $("body").css("cursor", "default");
 }
 
 function retrieveData(hashes) {
     if(typeof hashes == "undefined") {
-        console.log("No data specified!");
         return undefined;
-    } else if(hashes.length>0) {
+    } else if (hashes.length > 0) {
         var output = [];
-        if(hashes.length>1) {
-            for(var i=0;i>hashes.length;i++) {
-                var tempData = {};
-                $.getJSON("/MSWeb/cgi-bin/retrieveJSON.py?hash="+hashes[i], function(data){tempData = data});
-                output.push(tempData);
-            }
-            return output;
-        } else {
+        $("body").css("cursor", "progress");
+        $.ajaxSetup({async: false});
+        for (var i = 0; i < hashes.length; i++) {
             var tempData = {};
-            $.getJSON("MSWeb/cgi-bin/retrieveJSON.py?hash="+hashes[0], function(data){tempData = data});
+            $.getJSON("/MSWeb/cgi-bin/retrieveJSON.py?hash="+hashes[i],
+                      function(data) { tempData = data; });
             output.push(tempData);
-            return output;
         }
+        $.ajaxSetup({async: true});
+        $("body").css("cursor", "default");
+        return output;
     }
 }
 function selectExp(hash) {
@@ -82,8 +81,6 @@ function initLayout() {
         name: "main",
         west__size: "20%"
     });
-    $("#tabs").tabs();
-    $(".msweb-ctrlgrp").controlgroup();
 }
 // only call previously declared functions here, do NOT declare functions here
 function init() {

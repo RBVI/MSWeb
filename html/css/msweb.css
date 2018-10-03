@@ -1,0 +1,30 @@
+/* MSWeb CSS classes */
+.msweb-tab {
+    width:auto;
+}
+.msweb-title /* title in top left of page */{
+    border: 2px dotted black;
+    color: #527eff;
+}
+.msweb-selectedlist, .msweb-selectedrows {
+    font-size: 15px;
+    margin: 5px;
+}
+.msweb-status {
+    border: 1px solid lightgrey;
+}
+/* Page specific content */
+.form-group label, .form-group input {
+    width: 100%;
+    display: block;
+}
+h3 {
+    padding: 0px;
+    margin: 10px;
+}
+.ui-tooltip {
+    white-space: pre-line;
+}
+.bootgrid-table {
+  table-layout: auto;
+}

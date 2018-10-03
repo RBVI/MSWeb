@@ -2,100 +2,86 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <!-- JS STARTS -->
+        <!-- JQUERY -->
+        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+        <script type="text/javascript" src="js/jquery.bootgrid.min.js"></script>
+        <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
+        <!-- PLOTLY -->
         <script type="text/javascript" src="js/react.production.min.js"></script>
         <script type="text/javascript" src="js/react-dom.production.min.js"></script>
         <script type="text/javascript" src="js/vendors~app~index.bundle.js"></script>
 		<script type="text/javascript" src="js/app~index.bundle.js"></script>
         <script type="text/javascript" src="js/app.bundle.js"></script>
-        <!-- JQUERY -->
-        <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-        <script type="text/javascript" src="js/jquery-ui-1.12.1.min.js"></script>
-        <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
-        <script type="text/javascript" src="js/jquery.tablesorter.combined.js"></script>
-        <script type="text/javascript" src="js/widget-pager.js"></script>
         <script type="text/javascript" src="js/plotly-latest.min.js"></script>
+        <!-- MSWEB -->
         <script type="text/javascript" src="js/west.js"></script>
         <script type="text/javascript" src="js/center.js"></script>
         <script type="text/javascript" src="js/init.js"></script>
         <!-- JS ENDS, CSS BEGINS -->
-        <link rel="stylesheet" href="css/jquery-ui.min.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery-ui.structure.min.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery-ui.theme.min.css" type="text/css">
         <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
-        <link rel="stylesheet" href="css/jquery.tablesorter-theme.blue.css" type="text/css">
-        <link rel="stylesheet" href="css/stylesheet.css" type="text/css">
+        <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css" type="text/css">
+        <link rel="stylesheet" href="css/jquery.bootgrid.min.css" type="text/css">
+        <link rel="stylesheet" href="css/msweb.css" type="text/css">
         <!-- CSS ENDS, REST OF TITLE -->
         <title>MSWeb Preview</title>
     </head>
     <body>
         <!-- WEST DIV -->
         <div class="ui-layout-west" id="west">
-            <h1 class="msweb-title">MSWeb v.0.0.4</h1>
-            <fieldset class="msweb-ctrlgrp" id="search">
-                <label for="searchbutton">Search Experiments</label>
+            <h1 class="msweb-title">MSWeb v.0.0.5</h1>
+            <div class="form-group" id="search">
+                <label for="searchbutton">Search Experiments
                 <input name="search">
-                <button id="searchbutton">Search</button>
-            </fieldset>
-            <fieldset class="msweb-ctrlgrp" id="expfilters">
-                <h3>Experiment Filters</h3>
-                <label for="title">Title</label>
-                <input name="title">
-                <label for="researcher">Researcher</label>
-                <input name="researcher">
-                <label for="uploader">Uploader</label>
-                <input name="uploader">
-                <label for="uploaddate">Upload Date</label>
-                <input name="uploaddate">
-                <label for="experimenttype">Experiment Type</label>
-                <input name="experimenttype">
-                <label for="experimentdate">Experiment Date</label>
-                <input name="experimentdate">
-                <label for="experimentcond">Experiment Conditions</label>
-                <input name="experimentcond">
-            </fieldset>
-            <fieldset class="msweb-ctrlgrp" id="datafilters">
-                <h3>Data Filters</h3>
-                <p>No experiment selected! Filters will be loaded when experiment(s) are selected.</p>
-            </fieldset>
+                <button id="searchbutton">Search</button></label>
+            </div>
+            <h3>Experiment Filters</h3>
+            <div class="form-group" id="expfilters">
+                <label for="title">Title
+                <input name="title"></label>
+                <label for="researcher">Researcher
+                <input name="researcher"></label>
+                <label for="uploader">Uploader
+                <input name="uploader"></label>
+                <label for="uploaddate">Upload Date
+                <input name="uploaddate"></label>
+                <label for="experimenttype">Experiment Type
+                <input name="experimenttype"></label>
+                <label for="experimentdate">Experiment Date
+                <input name="experimentdate"></label>
+                <label for="experimentcond">Experiment Conditions
+                <input name="experimentcond"></label>
+            </div>
+            <h3>Data Filters</h3>
+            <div class="form-group" id="datafilters">
+                <p>Filters shown when Data tab is selected.</p>
+            </div>
         </div>
         <!-- CENTER DIV -->
         <div class="ui-layout-center" id="center">
-            <div id="tabs">
-                <ul>
-                    <li><a href="#experiments">Experiments</a></li>
-                    <li><a href="#data">Data</a></li>
-                    <li><a href="#plots">Plots</a></li>
-                </ul>
-                <div class="msweb-tab" id="experiments">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" id="tab_experiments" href="#experiments">
+                    Experiments</a></li>
+                <li><a data-toggle="tab" id="tab_data" href="#data">
+                    Data</a></li>
+                <li><a data-toggle="tab" id="tab_plots" href="#plots">
+                    Plots</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="experiments" class="tab-pane fade in active">
                     <h3>List of Experiments</h3>
-                    <table class="tablesorter-blue" id="experimenttable"></table>
-                    <div id="exppager" class="pager">
-                        <form>
-                            <img src="icons/first.png" id="exp-first"/>
-                            <img src="icons/prev.png" id="exp-prev"/>
-                            <span class="exp-pagedisplay" data-pager-output-filtered="Showing {startRow} - {endRow} / {totalRows} rows"></span>
-                            <img src="icons/next.png" id="exp-next"/>
-                            <img src="icons/last.png" id="exp-last"/>
-                            <select class="exp-pagesize">
-                                <option value="20">20</option>
-                                <option value="40">40</option>
-                                <option value="60">60</option>
-                                <option value="all">All Rows</option>
-                            </select>
-                        </form>
-                    </div>
-                    <p class="msweb-eoel">End of Experiment List.</p>
+                    <table class="table table-condensed table-hover table-striped"
+                           id="experimenttable"></table>
                     <div class="msweb-status" id="expstatus">
                         <p class="msweb-selectedlist"><strong>Selected Experiments:</strong></p>
                         <p class="msweb-selectedrows"><strong>Number of rows in selected experiments:</strong></p>
                     </div>
                 </div>
-                <div class="msweb-tab" id="data">
-                    <h3>Experimental Data</h3>
+                <div id="data" class="tab-pane fade">
+                    <h3>Experiment Data</h3>
                 </div>
-                <div class="msweb-tab" id="plots">
-                    
+                <div id="plots" class="tab-pane fade">
+                    <h3>Experiment Plots</h3>
                 </div>
             </div>
         </div>
