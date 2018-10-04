@@ -1,6 +1,6 @@
 var center = function() {
 
-    GridOptions = {
+    ExperimentsGridOptions = {
         selection: true,
         multiSelect: true,
         keepSelection: true,
@@ -12,12 +12,29 @@ var center = function() {
         },
         */
     };
+    DataGridOptions = {
+        selection: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+        url: "/MSWeb/cgi-bin/bootgridJSON.py",
+        ajax: true,
+        formatters: {
+            url: function (column, row) {
+                var s = row[column.id];
+                return '<a href="' + s + '" target="_blank">link</a>';
+            }
+        },
+        post: function () {         // Must be replaced before use
+            return { id: "experiment_hash" };
+        },
+    };
 
     // put code in init() if you need it to run at runtime
     // call previously declared functions, do not declare functions in init()
     function init() {
         populateExperimentTable(metadataKeys, datasetIndex);
-        $("#experimenttable").bootgrid(GridOptions)
+        $("#experimenttable").bootgrid(ExperimentsGridOptions)
             .on("selected.rs.jquery.bootgrid", function(e, rows) {
                 selectExp(rows[0]["Hash"]); })
             .on("deselected.rs.jquery.bootgrid", function(e, rows) {
@@ -136,7 +153,7 @@ var center = function() {
             var hash = dataTabExperiments[i];
             if (selectedExperiments.indexOf(hash) == -1) {
                 // Remove rows from experiment
-                delete dataTabRows[hash];
+                delete dataTabExpContents[hash];
                 changed = true;
             } else {
                 newExps.push(hash);
@@ -147,7 +164,9 @@ var center = function() {
             if (newExps.indexOf(hash) == -1) {
                 newExps.push(hash);
                 // Add rows from experiment
+                console.time("retrieveData");
                 var exp = retrieveData([hash])[0];
+                console.timeEnd("retrieveData");
                 var data = exp["Data"];
                 var columns = [];
                 for (var c in data)
@@ -174,9 +193,10 @@ var center = function() {
         populateDataTable(dataTabExperiments, dataTabExpContents);
     }
 
-    /* NOT USED: Combine all experiments into a single table */
-    /*
+    /* Combine all experiments into a single table */
+    /* NOT USED
     function populateDataTable(hashes, exps) {
+        console.time("create table");
         var table = $("<table/>", { id: "datatable",
                                     class: "table table-condensed " +
                                            "table-hover table-striped" });
@@ -216,17 +236,24 @@ var center = function() {
             }
         }
         table.append(tbody);
+        console.timeEnd("create table");
+        console.time("add table");
         $("#data").empty().append(table);
-        table.bootgrid(GridOptions);
+        console.timeEnd("add table");
+        console.time("grid table");
+        table.bootgrid(DataGridOptions);
+        console.timeEnd("grid table");
     }
     */
 
     /* Generate a table for each experiment */
+    /* NOT USED
     function populateDataTable(hashes, exps) {
         $("#data").empty();
         for(var i = 0; i < hashes.length; i++) {
             var exp = exps[hashes[i]];
             // Create table element
+            console.time("create table");
             var table = $("<table/>", { id: "datatable_" + hashes[i],
                                         class: "table table-condensed " +
                                                "table-hover table-striped" });
@@ -253,9 +280,64 @@ var center = function() {
                 tbody.append(tr);
             }
             table.append(tbody);
+            console.timeEnd("create table");
+            console.time("add table");
             $("#data").append(table);
-            table.bootgrid(GridOptions);
+            console.timeEnd("add table");
+            console.time("grid table");
+            table.bootgrid(DataGridOptions);
+            console.timeEnd("grid table");
         }
+    }
+    */
+
+    /* Generate a table for each experiment using server-side population */
+    function populateDataTable(hashes, exps) {
+        $("#data").empty();
+        for(var i = 0; i < hashes.length; i++) {
+            var hash = hashes[i];
+            // Create table element
+            console.time("create table");
+            var table = $("<table/>", { id: "datatable_" + hashes[i],
+                                        class: "table table-condensed " +
+                                               "table-hover table-striped" });
+            var columns = _retrieveColumns(hash);
+            var tr = $("<tr/>");
+            tr.append($("<th/>", { "data-column-id": "RowIndex",
+                                   "data-type": "numeric",
+                                   "data-visible": false,
+                                   "data-identifier": true }));
+            $.each(columns, function(n, columnData) {
+                var columnName = columnData[0];
+                var attr = { "data-column-id": columnName };
+                var columnType = columnData[1];
+                if (columnType == "numeric")
+                    attr["data-type"] = "numeric"
+                else if (columnType == "url")
+                    attr["data-formatter"] = "url"
+                tr.append($("<th/>", attr).text(columnName));
+            });
+            table.append($("<thead/>").append(tr));
+            console.timeEnd("create table");
+            console.time("add table");
+            $("#data").append(table);
+            console.timeEnd("add table");
+            console.time("grid table");
+            DataGridOptions.post = function() { return {id: hash}; };
+            table.bootgrid(DataGridOptions);
+            console.timeEnd("grid table");
+        }
+    }
+
+    function _retrieveColumns(hash) {
+        var output = null;
+        $("body").css("cursor", "progress");
+        $.ajaxSetup({async: false});
+        $.getJSON("/MSWeb/cgi-bin/bootgridJSON.py", {id: hash},
+                  function(data) { output = data; });
+        $.ajaxSetup({async: true});
+        $("body").css("cursor", "default");
+        return output;
     }
 
 
@@ -277,8 +359,11 @@ var center = function() {
         var plotlyOptions = {
             dataSources: dataSources
         };
+        /*
+         * TODO: Need to reinitialize widget or destroy and recreate.
         if (plotlyEditor)
             plotlyEditor.destroy();
+        */
         plotlyEditor = React.createElement(app.App.default, plotlyOptions);
         var root = $("<div/>", { id: "plotly_editor" });
         $("#plots").empty().append(root);

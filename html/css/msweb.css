@@ -3,7 +3,7 @@
     width:auto;
 }
 .msweb-title /* title in top left of page */{
-    border: 2px dotted black;
+    /* border: 2px dotted black; */
     color: #527eff;
 }
 .msweb-selectedlist, .msweb-selectedrows {
@@ -26,5 +26,13 @@ h3 {
     white-space: pre-line;
 }
 .bootgrid-table {
-  table-layout: auto;
+    table-layout: auto;
+}
+.tab-content {
+    height: 95%;
+    width: 100%;
+}
+#plots, #plotly_editor, #plotly_editor .app {
+    height: 100%;
+    width: 100%;
 }
