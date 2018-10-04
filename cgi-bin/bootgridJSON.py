@@ -7,35 +7,41 @@ def main():
 def process(form):
     with open(os.path.join(os.pardir, "data", "hashes.json")) as fp:
         hashes = json.load(fp)
-    jsonName = hashes[form.getvalue("id")]
-    with open(os.path.join(os.pardir, "data", "parsed-data", jsonName)) as fp:
-        expFile = json.load(fp)
-    fullData = expFile["Data"]
+    hash = hashes[form.getvalue("id")]
+    with open(os.path.join(os.pardir, "data", "parsed-data", hash)) as fp:
+        exp_file = json.load(fp)
+    full_data = exp_file["Data"]
     print("Content-Type: application/json")
     print("")
     if "current" not in form:
         # Return 2-tuples of column (name, type) where
         # type is one of "numeric", "url", "string" or "unknown" (default)
-        print(json.dumps(columns(fullData)))
+        print(json.dumps(columns(full_data)))
     else:
         import re
-        size = len(fullData[next(iter(fullData))])
-        expData = reformat(fullData, size)
+        size = len(full_data[next(iter(full_data))])
+        exp_data = reformat(full_data, size)
         # If there is a search criterion, apply it
         search = form.getvalue("searchPhrase")
         if search:
             search = search.strip()
             if search:
-                expData = search_data(expData, search)
+                exp_data = search_data(exp_data, search)
         # If there are sort criteria, apply them
-        sort_order = {}
+        sort_by = None
+        sort_order = None
         pat = re.compile("""sort\[(.*)\]""")
         for key in form.keys():
             m = pat.match(key)
             if m is not None:
-                sort_order[m.group(1)] = form.getvalue(key)
+                sort_by = m.group(1)
+                sort_order = form.getvalue(key)
         if sort_order:
-            expData = sort_data(expData, sort_order)
+            if guess_type(full_data[sort_by]) == "numeric":
+                converter = float
+            else:
+                converter = None
+            exp_data = sort_data(exp_data, sort_by, sort_order, converter)
         # Get range of rows to return
         current = int(form.getvalue("current"))
         row_count = int(form.getvalue("rowCount"))
@@ -44,40 +50,48 @@ def process(form):
             "total": size,
             "current": current,
             "rowCount": row_count,
-            "rows": expData[current:current + row_count],
+            "rows": exp_data[current:current + row_count],
         }
         print(json.dumps(response))
 
 
-def columns(data):
-    from numbers import Number
+def columns(full_data):
     cols = []
-    for name, cells in data.items():
+    for name, cells in full_data.items():
         # Try to guess the column type
-        value = cells[0]
-        if value is None:
-            value = cells[-1]
-        if isinstance(value, Number):
-            columnType = "numeric"
-        elif isinstance(value, str):
-            if value.startswith("http"):
-                columnType = "url"
-            else:
-                columnType = "string"
-        else:
-            columnType = "unknown"
-        cols.append([name, columnType])
+        column_type = guess_type(cells)
+        cols.append([name, column_type])
     return sorted(cols)
+
+
+def guess_type(cells):
+    mid = len(cells) // 2
+    indices = [0, mid, -1]
+    try:
+        for n in indices:
+            float(cells[n])
+    except ValueError:
+        pass
+    else:
+        return "numeric"
+    count = sum([1 if cells[n].startswith("http") else 0 for n in indices])
+    if count > len(indices) - 1:
+        return "url"
+    return "string"
 
 
 def search_data(data, pat):
     return data
 
 
-def sort_data(data, sort_order):
-    def key(datum):
-        return [datum[k] for k in sort_order]
-    return sorted(data, key=key)
+def sort_data(data, sort_by, sort_order, converter):
+    if converter:
+        def key(datum):
+            return converter(datum[sort_by])
+    else:
+        def key(datum):
+            return datum[sort_by]
+    return sorted(data, key=key, reverse=(sort_order == "desc"))
 
 
 def reformat(data, size):
