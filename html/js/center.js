@@ -42,20 +42,42 @@ var center = function() {
         $("#center").on("shown.bs.tab", function(e) {
             var tabId = e.target["id"];
             if (tabId == "tab_experiments") {
-                console.log("Experiments tab");
                 experimentsTabShow();
             } else if (tabId == "tab_data") {
-                console.log("Data tab");
                 dataTabShow();
             } else if (tabId == "tab_plots") {
-                console.log("Plots tab");
                 plotsTabShow();
             } else {
                 alert("Unknown tab!");
             }
         });
+        $("#download").click(function(e) {
+            download_raw();
+        });
+        $("#showdata").click(function(e) {
+            activate_tab("tab_data");
+        });
+        $("#showplot").click(function(e) {
+            activate_tab("tab_plots");
+        });
         updateStatus(selectedExperiments);
         console.log("center.js loaded and initialized");
+    }
+
+    function download_raw() {
+        if (selectedExperiments.length < 1) {
+            alert("No experiments selected");
+            return;
+        }
+        var hashes = [];
+        for (var i = 0; i < selectedExperiments.length; i++)
+            hashes.push("hash=" + selectedExperiments[i])
+        var url = "/MSWeb/cgi-bin/downloadData.py?" + hashes.join('&');
+        window.location.href = url;
+    }
+
+    function activate_tab(tab) {
+        $('#' + tab).tab("show");
     }
 
     /*
