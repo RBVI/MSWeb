@@ -1,0 +1,30 @@
+.frontpage-title {
+    float:right;
+    margin-right: 1em;
+}
+html, body, #frontpage, #expanalyze, #expedit {
+    height: 100%;
+    width: 100%;
+}
+#upload-metadata-fieldset .grid {
+    display: grid;
+    grid-template-columns: 9em 1fr;
+}
+#upload-metadata-fieldset label {
+    font-weight: bold;
+    text-align: right;
+    margin-right: 0.5em;
+}
+#upload-metadata-fieldset {
+    margin-bottom: 1em;
+}
+#upload-button {
+    vertical-align: middle;
+}
+#upload-file-name {
+    font-weight: bold;
+}
+.exp-delete-button {
+    border-radius: .5em;
+    background: dark gray;
+}

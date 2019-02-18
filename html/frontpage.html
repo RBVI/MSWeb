@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- vim: set expandtab shiftwidth=2 softtabstop=2: -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>MSWeb Preview</title>
+    <!-- Scripts -->
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+    <script type="text/javascript" src="js/jquery.bootgrid.min.js"></script>
+    <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
+    <script type="text/javascript" src="js/frontpage.js"></script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
+    <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css" type="text/css">
+    <link rel="stylesheet" href="css/jquery.bootgrid.min.css" type="text/css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/msweb.css" type="text/css">
+    <link rel="stylesheet" href="css/frontpage.css" type="text/css">
+  </head>
+  <body>
+    <div class="msweb-title frontpage-title">
+      <h4>MSWeb v0.1</h4>
+    </div>
+    <div id="frontpage">
+      <ul class="nav nav-tabs">
+        <li class="active">
+          <a data-toggle="tab" id="tab_analyze" href="#expanalyze">
+          Analyze</a></li>
+        <li>
+          <a data-toggle="tab" id="tab_edit" href="#expedit">
+          Edit</a></li>
+      </ul>
+      <div class="tab-content">
+        <div id="expanalyze" class="tab-pane fade in active">
+          <table class="table table-condensed table-hover table-striped"
+               id="experimenttable"></table>
+          <div>
+            <button id="download">Download</button>
+            <button id="showdata">Show Data</button>
+            <button id="showplot">Show Plot</button>
+          </div>
+        </div>
+        <div id="expedit" class="tab-pane fade">
+          <div class="ui-layout-north" id="upload-entries">
+            <form id="upload-file-form">
+              <div class="file-input" id="upload-drop">
+                Drag-and-drop file here, or click to browse
+                <input type="file"
+                       id="upload-file" name="upload-file">
+                <br>
+                Selected file: <span id="upload-file-name">none</span>
+              </div>
+              <button id="upload-button" disabled>Upload</button>
+              <span id="upload-status"></span>
+            </form>
+            <table class="table table-condensed table-hover table-striped"
+                   id="upload-entries-table"></table>
+          </div>
+          <div class="ui-layout-center" id="upload-metadata">
+            <form id="upload-metadata-form">
+              <fieldset id="upload-metadata-fieldset" disabled>
+                <legend>Upload Metadata</legend>
+                <div class="grid"></div>
+              </fieldset>
+              <button id="upload-metadata-button">Update</button>
+              <button id="upload-revert-metadata-button">Revert</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
