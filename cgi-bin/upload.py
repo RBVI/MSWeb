@@ -11,10 +11,10 @@ UploadFields = [
     #   ((key, value), ...)
     ( "Title", "text", "title", (
         ("placeholder", "title of experiment"), )),
+    ( "Experiment Type", "exptype", "exptype", (
+        ("placeholder", "type of experiment"), )),
     ( "Researcher", "text", "researcher", (
         ("placeholder", "name of requester"), )),
-    ( "Experiment Type", "text", "exptype", (
-        ("placeholder", "type of experiment"), )),
     ( "Experiment Date", "date", "expdate", (
         ("placeholder", "date of experiment"), )),
     ( "Notes", "textarea", "expnotes", (

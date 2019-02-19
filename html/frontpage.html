@@ -62,11 +62,12 @@
               <fieldset id="edit-vocabulary-fieldset">
                 <legend>Edit Controlled Vocabulary</legend>
                 <div class="grid">
-                  <label for="exptype">Experiment Type</label>
+                  <label for="exptype-vocab">Experiment Type</label>
                   <div class="input-group dropdown">
                     <input type="text" class="form-control dropdown-toggle"
-                           id="exptype" placeholder="experiment type name">
-                    <ul id="exptype-list" class="dropdown-menu"></ul>
+                           id="exptype-vocab"
+                           placeholder="experiment type name">
+                    <ul id="exptype-vocab-list" class="dropdown-menu"></ul>
                     <span role="button"
                           class="input-group-addon dropdown-toggle"
                           data-toggle="dropdown"
@@ -77,11 +78,12 @@
                   <button id="add-experiment-type">Add</button>
                   <button id="remove-experiment-type">Remove</button>
 
-                  <label for="runcat">Run Category</label>
+                  <label for="runcat-vocab">Run Category</label>
                   <div class="input-group dropdown">
                     <input type="text" class="form-control dropdown-toggle"
-                           id="runcat" placeholder="run category name">
-                    <ul id="runcat-list" class="dropdown-menu"></ul>
+                           id="runcat-vocab"
+                           placeholder="run category name">
+                    <ul id="runcat-vocab-list" class="dropdown-menu"></ul>
                     <span role="button"
                           class="input-group-addon dropdown-toggle"
                           data-toggle="dropdown"
@@ -99,8 +101,8 @@
                 <legend>Edit Experiment</legend>
                 <div class="grid"></div>
               </fieldset>
-              <button id="edit-metadata-button">Update</button>
-              <button id="edit-revert-metadata-button">Revert</button>
+              <button id="edit-metadata-button" disabled>Update</button>
+              <button id="edit-revert-metadata-button" disabled>Revert</button>
             </form>
           </div>
         </div>

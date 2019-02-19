@@ -5,14 +5,15 @@
 // Main page:
 //      ~~Change tab names to Analyze and Edit
 // Edit tab experiments table:
-//      Replace incomplete uploads with all experiments + status
-//          (Sort by "status" to see incomplete uploads together)
+//      ~~Replace incomplete uploads with all experiments + status
+//      ~~    (Sort by "status" to see incomplete uploads together)
 //      ~~Add delete experiment button with popup confirmation
 //      ~~Replace Experiment Condition with Notes
 // Edit tab upload form:
-//      Add controls for experiment type vocabulary
-//      Add controls for run category vocabulary
-//      Add runs table for setting category and date
+//      ~~Add controls for experiment type vocabulary
+//      ~~Add controls for run category vocabulary
+//      Make editing experiment attributes work
+//      Add editable runs table for setting category and date
 // Analyze tab:
 //      ???
 //
@@ -331,6 +332,8 @@ frontpage = (function(){
     //
     var edit_experiment_selected = function(ev, rows) {
         $("#edit-metadata-fieldset").removeAttr("disabled");
+        $("#edit-metadata-button").removeAttr("disabled");
+        $("#edit-revert-metadata-button").removeAttr("disabled");
         show_metadata(rows[0].id);
     }
 
@@ -341,6 +344,8 @@ frontpage = (function(){
     //
     var edit_experiment_deselected = function(ev, rows) {
         $("#edit-metadata-fieldset").attr("disabled", "disabled");
+        $("#edit-metadata-button").attr("disabled", "disabled");
+        $("#edit-revert-metadata-button").attr("disabled", "disabled");
     }
 
     //
@@ -375,6 +380,8 @@ frontpage = (function(){
     //
 
     var controlled_vocabulary;
+    var cv_exptypes = [ "exptype-vocab" ];
+    var cv_runcats = [ "runcat-vocab" ];
 
     // 
     // init_controlled_vocabulary:
@@ -389,8 +396,8 @@ frontpage = (function(){
                               .click(add_run_category);
         $("#remove-run-category").attr("disabled", "disabled")
                                  .click(remove_run_category);
-        $("#exptype").on("input", experiment_type_changed);
-        $("#runcat").on("input", run_category_changed);
+        $("#exptype-vocab").on("input", experiment_type_changed);
+        $("#runcat-vocab").on("input", run_category_changed);
         reload_controlled_vocabulary();
         experiment_type_changed();  // in case browser kept input history
         run_category_changed();
@@ -414,14 +421,21 @@ frontpage = (function(){
     //   Add elements for selecting and adding controlled vocabulary terms
     //
     var fill_controlled_vocabulary = function(data) {
-        fill_list("exptype", data.results.experiment_types);
-        fill_list("runcat", data.results.run_categories);
+        $.each(cv_exptypes, function(index, eid) {
+            fill_list(eid, data.results.experiment_types);
+        });
+        $.each(cv_runcats, function(index, eid) {
+            fill_list(eid, data.results.run_categories);
+        });
         controlled_vocabulary = data.results;
         experiment_type_changed();
         run_category_changed();
     }
 
     var fill_list = function(eid, list) {
+        // eid is the root (e.g., "exptype")
+        // Fill in list eid-list (e.g., "exptype-list") and
+        // add callback to update eid-vocab (e.g., "exptype-vocab")
         if (list.length == 0)
             list = [ "None" ];
         var ul_id = "#" + eid + "-list"
@@ -458,11 +472,31 @@ frontpage = (function(){
     }
 
     //
+    // add_exptype_input
+    //   Add a new input element for experiment type
+    //
+    var add_exptype_input = function(input_id) {
+        if (controlled_vocabulary)
+            fill_list(input_id, controlled_vocabulary.experiment_types);
+        cv_exptypes.push(input_id);
+    }
+
+    //
+    // add_runcat_input
+    //   Add a new input element for run category
+    //
+    var add_runcat_input = function(input_id) {
+        if (controlled_vocabulary)
+            fill_list(input_id, controlled_vocabulary.run_categories);
+        cv_runcats.push(input_id);
+    }
+
+    //
     // experiment_type_changed:
     //   Event callback when user changes value of experiment input field
     //
     var experiment_type_changed = function() {
-        vocab_changed($("#exptype").val(), "experiment-type",
+        vocab_changed($("#exptype-vocab").val(), "experiment-type",
                       "experiment_types");
     }
 
@@ -471,7 +505,7 @@ frontpage = (function(){
     //   Event callback when user changes value of category input field
     //
     var run_category_changed = function(ev) {
-        vocab_changed($("#runcat").val(), "run-category",
+        vocab_changed($("#runcat-vocab").val(), "run-category",
                       "run_categories");
     }
 
@@ -502,7 +536,7 @@ frontpage = (function(){
     //   Upload a new experiment type to server
     //
     var add_experiment_type = function() {
-        vocab_server("add_experiment_type", $("#exptype").val());
+        vocab_server("add_experiment_type", $("#exptype-vocab").val());
     }
 
     //
@@ -510,7 +544,7 @@ frontpage = (function(){
     //   Upload a new experiment type to server
     //
     var remove_experiment_type = function() {
-        vocab_server("remove_experiment_type", $("#exptype").val());
+        vocab_server("remove_experiment_type", $("#exptype-vocab").val());
     }
 
     //
@@ -518,7 +552,7 @@ frontpage = (function(){
     //   Upload a new run category to server
     //
     var add_run_category = function() {
-        vocab_server("add_run_category", $("#runcat").val());
+        vocab_server("add_run_category", $("#runcat-vocab").val());
     }
 
     //
@@ -526,7 +560,7 @@ frontpage = (function(){
     //   Upload a new run category to server
     //
     var remove_run_category = function() {
-        vocab_server("remove_run_category", $("#runcat").val());
+        vocab_server("remove_run_category", $("#runcat-vocab").val());
     }
 
     //
@@ -536,12 +570,15 @@ frontpage = (function(){
     //
 
     var metadata_fields;
+    var metadata_exp_id;
 
     //
     // init_metadata_form:
     //   Display metadata upload form
     //
     var init_metadata_form = function() {
+        $("#edit-metadata-button").click(update_metadata);
+        $("#edit-revert-metadata-button").click(revert_metadata);
         $.ajax({
             dataType: "json",
             url: BaseURL + "/cgi-bin/upload.py?action=metadata_fields",
@@ -560,17 +597,44 @@ frontpage = (function(){
             var input_id = val[2];
             var label = $("<label/>", { "for": input_id }).text(val[0]);
             var input;
-            if (input_type == "textarea")
-                input = $("<textarea/>");
+            if (input_type == "exptype") {
+                v = add_input_vocab(input_id);
+                container = v[0];
+                input = v[1];
+                add_exptype_input(input_id);
+            } else if (input_type == "runcat") {
+                v = add_input_vocab(input_id);
+                container = v[0];
+                input = v[1];
+                add_runcat_input(input_id);
+            } else if (input_type == "textarea")
+                container = input = $("<textarea/>");
             else
-                input = $("<input/>", { "type": input_type });
+                container = input = $("<input/>", { "type": input_type });
             input.prop("id", input_id);
             $.each(val[3], function(index, value) {
                 input.prop(value[0], value[1]);
             });
-            div.append(label).append(input);
+            div.append(label).append(container);
         });
         metadata_fields = data.results;
+    }
+
+    var add_input_vocab = function(name) {
+        var div = $("<div/>", { "class": "input-group dropdown" });
+        var input = $("<input/>", { "type": "text",
+                                    "class": "form-control dropdown-toggle" });
+        var ul_id = name + "-list";
+        var ul = $("<ul/>", { "id": ul_id,
+                              "class": "dropdown-menu" });
+        var span = $("<span/>", { role: "button",
+                                  "class": "input-group-addon dropdown-toggle",
+                                  "data-toggle": "dropdown",
+                                  "aria-haspopup": "true",
+                                  "aria-expanded": "false" });
+        span.append($("<span/>", { "class": "fa fa-caret-down" }));
+        div.append(input).append(ul).append(span);
+        return [ div, input ];
     }
 
     //
@@ -578,12 +642,31 @@ frontpage = (function(){
     //   Display experiment attribute values in metadata form
     //
     var show_metadata = function(exp_id) {
+        metadata_exp_id = exp_id;
         var exp = experiments[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
             var field_value = exp[input_id];
+            console.log("set " + input_id + " to " + field_value);
             $("#" + input_id).val(field_value);
         });
+    }
+
+    //
+    // update_metadata:
+    //   Send current metadata values to server
+    //
+    var update_metadata = function() {
+        // TODO: more here
+        console.log("update_metadata");
+    }
+
+    //
+    // revert_metadata:
+    //   Revert metadata values to unchanged values
+    //
+    var revert_metadata = function() {
+        show_metadata(metadata_exp_id);
     }
 
     // -----------------------------------------------------------------
