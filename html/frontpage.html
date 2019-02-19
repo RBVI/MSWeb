@@ -58,9 +58,38 @@
                    id="upload-entries-table"></table>
           </div>
           <div class="ui-layout-center" id="upload-metadata">
+            <form id="upload-vocabulary-form">
+              <fieldset id="upload-vocabulary-fieldset">
+                <legend>Edit Controlled Vocabulary</legend>
+                <div class="grid">
+                  <label for="exptype">Experiment Type</label>
+                  <input type="text" id="exptype">
+                  <button id="upload-experiment-type">Add</button>
+                  <div class="dropdown show">
+                    <button class="btn btn-secondary dropdown-toggle" href="#"
+                       type="button" id="exptype-menu" data-toggle="dropdown"
+                       aria-haspopup="true" area-expanded="false">
+                       Known Types</button>
+                    <div class="dropdown-menu" aria-labelledby="exptype-menu"
+                         id="exptype-list"></div>
+                  </div>
+                  <label for="runcat">Run Category</label>
+                  <input type="text" id="runcat">
+                  <button id="upload-run-category">Add</button>
+                  <div class="dropdown show">
+                    <button class="btn btn-secondary dropdown-toggle" href="#"
+                       type="button" id="runcat-menu" data-toggle="dropdown"
+                       aria-haspopup="true" area-expanded="false">
+                       Known Categories</button>
+                    <div class="dropdown-menu" aria-labelledby="runcat-menu"
+                         id="runcat-list"></div>
+                  </div>
+                </div>
+              </fieldset>
+            </form>
             <form id="upload-metadata-form">
               <fieldset id="upload-metadata-fieldset" disabled>
-                <legend>Upload Metadata</legend>
+                <legend>Edit Experiment</legend>
                 <div class="grid"></div>
               </fieldset>
               <button id="upload-metadata-button">Update</button>

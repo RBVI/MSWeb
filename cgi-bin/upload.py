@@ -48,9 +48,9 @@ def do_metadata_fields(out, form):
 
 
 def do_file_upload(out, form):
-    datafile = form["datafile"]
+    datafile = form.getfirst("datafile")
     if not datafile.file:
-        _send_failed(out, "no file submitted")
+        _send_failed(out, "no file given")
         return
     import os.path, os, datetime
     from msweb_lib import datastore, parse_combined
@@ -72,6 +72,37 @@ def do_file_upload(out, form):
     _send_success(out, None)
 
 
+def do_add_experiment_type(out, form):
+    etype = form.getfirst("exp_type")
+    if not etype:
+        _send_failed(out, "no experiment type given")
+        return
+    from msweb_lib import datastore
+    ds = datastore.DataStore(DataStorePath)
+    ds.add_experiment_type(etype)
+    ds.write_index()
+    _send_success(out, None)
+
+
+def do_add_run_category(out, form):
+    rcat = form.getfirst("run_cat")
+    if not rcat:
+        _send_failed(out, "no run category given")
+        return
+    from msweb_lib import datastore
+    ds = datastore.DataStore(DataStorePath)
+    ds.add_run_category(etype)
+    ds.write_index()
+    _send_success(out, None)
+
+
+def do_controlled_vocabulary(out, form):
+    from msweb_lib import datastore
+    ds = datastore.DataStore(DataStorePath)
+    _send_success(out, {"experiment_types": ds.experiment_types,
+                        "run_categories": ds.run_categories})
+
+
 def do_incomplete_uploads(out, form):
     from msweb_lib import datastore
     ds = datastore.DataStore(DataStorePath)
@@ -80,6 +111,21 @@ def do_incomplete_uploads(out, form):
         if not exp.get("complete", False):
             uploads[exp_id] = exp
     _send_success(out, uploads)
+
+
+def do_all_experiments(out, form):
+    from msweb_lib import datastore
+    ds = datastore.DataStore(DataStorePath)
+    experiments = {}
+    # We can modify the "ds.experiments" dictionaries
+    # because we exit right afterwards as a CGI script.
+    # If we are more persistent, we need to make a
+    # copy rather than modify the data (although storing
+    # a "status" field may not be a bad thing).
+    for exp_id, exp in ds.experiments.items():
+        exp["status"] = ds.experiment_status(exp)
+        experiments[exp_id] = exp
+    _send_success(out, experiments)
 
 
 def do_delete_experiment(out, form):
@@ -107,7 +153,7 @@ def do_delete_experiment(out, form):
         os.remove(raw)
     except OSError:
         pass
-    _send_success(out, {"deleted_experiment": exp_id})
+    _send_success(out, None)
 
 
 def _send_failed(out, reason, cause="unspecified"):

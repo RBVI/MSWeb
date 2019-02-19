@@ -6,15 +6,29 @@ html, body, #frontpage, #expanalyze, #expedit {
     height: 100%;
     width: 100%;
 }
+#upload-vocabulary-fieldset .grid {
+    display: grid;
+    grid-template-columns: 9em 1fr 5em 10em;
+}
 #upload-metadata-fieldset .grid {
     display: grid;
     grid-template-columns: 9em 1fr;
 }
+#upload-vocabulary-fieldset label,
 #upload-metadata-fieldset label {
     font-weight: bold;
     text-align: right;
-    margin-right: 0.5em;
+    padding-right: 0.5em;
 }
+#upload-vocabulary-fieldset input {
+    padding: 0px 4px;
+    margin: 0px;
+}
+#upload-vocabulary-fieldset button {
+    padding: 0px 4px;
+    margin: 0px;
+}
+#upload-vocabulary-fieldset,
 #upload-metadata-fieldset {
     margin-bottom: 1em;
 }
@@ -26,5 +40,5 @@ html, body, #frontpage, #expanalyze, #expedit {
 }
 .exp-delete-button {
     border-radius: .5em;
-    background: dark gray;
+    background: darkgray;
 }

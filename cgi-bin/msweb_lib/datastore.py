@@ -32,6 +32,8 @@ correspondence of files in the two data directories.
 #       "creator": "MSWeb",
 #       "version": 1,
 #       "uid": 3,
+#       "experiment_types": [ "T1" ],           # controlled vocab
+#       "run_categories": [ "C1" ],             # controlled vocab
 #       "datadirs": [ "raw", "cooked" ],        # version-dependent
 #       "experiments": {                        # version-dependent
 #           "1": {
@@ -83,6 +85,8 @@ class DataStore:
             self.uid = 1
             self.raw_dir = "raw"
             self.cooked_dir = "cooked"
+            self.experiment_types = []
+            self.run_categories = []
             self.experiments = {}
         else:
             with open(index_file) as f:
@@ -93,6 +97,8 @@ class DataStore:
                 raise ValueError("incorrect 'Version' number")
             self.uid = index_data["uid"]
             self.raw_dir, self.cooked_dir = index_data["datadirs"]
+            self.experiment_types = index_data.get("experiment_types", [])
+            self.run_categories = index_data.get("run_categories", [])
             self.experiments = index_data["experiments"]
 
     def write_index(self):
@@ -106,6 +112,17 @@ class DataStore:
         import os.path, json
         with open(os.path.join(self.base_dir, self.IndexFile), "w") as f:
             json.dump(index_data, f)
+
+    def experiment_status(self, exp):
+        # TODO: make sure metadata are filled in and
+        # all runs have categories assigned
+        return "incomplete"
+
+    def add_experiment_type(self, etype):
+        self.experiment_types.append(etype)
+
+    def run_category(self, rcat):
+        self.run_categories.append(rcat)
 
     def add_experiment(self, data):
         exp_id = str(self.uid)

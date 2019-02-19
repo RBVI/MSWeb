@@ -6,8 +6,7 @@
 //      ~~Change tab names to Analyze and Edit
 // Edit tab experiments table:
 //      Replace incomplete uploads with all experiments + status
-//          (Maybe add controls to select which what to display,
-//          or just use table controls)
+//          (Sort by "status" to see incomplete uploads together)
 //      ~~Add delete experiment button with popup confirmation
 //      ~~Replace Experiment Condition with Notes
 // Edit tab upload form:
@@ -66,30 +65,16 @@ frontpage = (function(){
                          .on("dragenter", stop_default)
                          .on("drop", file_dropped);
         $("#upload-file").change(file_selected);
-        $("#upload-button").click(file_upload).attr("disabled", "disabled");
+        $("#upload-button").click(upload_file).attr("disabled", "disabled");
 
         // Show experiments
         init_edit_table();
-        reload_edit_table();
-
-        // Setup metadata elements
-        $.ajax({
-            dataType: "json",
-            url: BaseURL + "/cgi-bin/upload.py?action=metadata_fields",
-            success: fill_metadata_form,
-        });
+        init_controlled_vocabulary();
+        init_metadata_form();
 
         /* Reset tab callback */
         tab_funcs.tab_edit = show_tab_edit;
         show_tab_edit();
-    }
-
-    var reload_edit_table = function() {
-        $.ajax({
-            dataType: "json",
-            url: BaseURL + "/cgi-bin/upload.py?action=incomplete_uploads",
-            success: fill_edit_table,
-        });
     }
 
     //
@@ -164,10 +149,10 @@ frontpage = (function(){
     }
 
     //
-    // file_upload:
+    // upload_file:
     //   Upload selected file to server
     //
-    var file_upload = function(ev) {
+    var upload_file = function(ev) {
         stop_default(ev);
         if (!selected_file) {
             alert("Please select a file to upload");
@@ -207,12 +192,12 @@ frontpage = (function(){
     //
     var upload_complete = function(ev) {
         var answer = JSON.parse(ev.target.responseText);
-        if (answer.status == "success") {
+        if (answer.status != "success") {
+            show_error(answer.status, answer.reason, answer.cause);
+            set_upload_status("error: " + answer.reason);
+        } else {
             set_upload_status("finished");
             reload_edit_table();
-        } else {
-            set_upload_status("error: " + answer.reason);
-            console.log(answer.cause);
         }
     }
 
@@ -240,7 +225,13 @@ frontpage = (function(){
         $("#upload-status").text(msg);
     }
 
-    var UploadTableOptions = {
+    //
+    // --------------------------------------------------------------------
+    // Experiments
+    // --------------------------------------------------------------------
+    //
+
+    var EditTableOptions = {
         selection: true,
         rowSelect: true,
         multiSelect: false,
@@ -254,7 +245,7 @@ frontpage = (function(){
             }
         }
     }
-    var known_experiments = {}      // Last set of experiments from server
+    var experiments = {}      // Last set of experiments from server
 
     //
     // init_edit_table:
@@ -264,12 +255,13 @@ frontpage = (function(){
         var columns = [
             ["Upload Date", "uploaddate"],
             ["Uploader", "uploader"],
+            ["Status", "status"],
             ["File Name", "datafile"],
         ];
         var htr = $("<tr/>");
-        htr.append($("<th/>", { "data-type": "numeric",
-                                "data-column-id": "id",
+        htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
+                                "data-type": "numeric",
                                 "data-visible": false }).text("Id"));
         htr.append($("<th/>", { "data-column-id": "actions",
                                 "data-formatter": "actions",
@@ -280,14 +272,14 @@ frontpage = (function(){
         });
         var tbl = $("#upload-entries-table");
         tbl.append($("<thead/>").append(htr))
-           .bootgrid(UploadTableOptions)
-           .on("selected.rs.jquery.bootgrid", upload_selected)
-           .on("deselected.rs.jquery.bootgrid", upload_deselected)
+           .bootgrid(EditTableOptions)
+           .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
+           .on("deselected.rs.jquery.bootgrid", edit_experiment_deselected)
            .on("loaded.rs.jquery.bootgrid", function() {
                 tbl.find(".exp-delete").on("click", function(ev) {
                     stop_default(ev);
                     var exp_id = ev.target.dataset.rowId
-                    var exp = known_experiments[exp_id];
+                    var exp = experiments[exp_id];
                     var msg = "Really delete experiment";
                     if (exp.title)
                         msg += ' "' + exp.title + '"';
@@ -300,18 +292,31 @@ frontpage = (function(){
                         delete_experiment(exp_id);
                 });
             });
+        reload_edit_table();
+    }
+
+    //
+    // reload_edit_table:
+    //   Upload list of experiments in edit table
+    //
+    var reload_edit_table = function() {
+        $.ajax({
+            dataType: "json",
+            url: BaseURL + "/cgi-bin/upload.py?action=all_experiments",
+            success: fill_edit_table,
+        });
     }
 
     //
     // fill_edit_table:
-    //   Display the list of incomplete uploads in table
+    //   Display the list of experiments in edit table
     //
     var fill_edit_table = function(data) {
         var tbl = $("#upload-entries-table");
         tbl.bootgrid("clear");
         var rows = [];
         $.each(data.results, function(exp_id, exp) {
-            var row = Object.assign({id: exp_id}, exp);
+            var row = Object.assign({id: parseInt(exp_id)}, exp);
             rows.push(row);
         });
         tbl.bootgrid("append", rows);
@@ -319,10 +324,10 @@ frontpage = (function(){
         // Update and save information for later updates
         var new_experiments = [];
         $.each(data.results, function(exp_id, exp) {
-            if (!(exp_id in known_experiments))
+            if (!(exp_id in experiments))
                 new_experiments.push(exp_id);
         });
-        known_experiments = data.results;
+        experiments = data.results;
         if (new_experiments.length == 1)
             // Select if there is exactly one new experiment
             // (i.e., the one we just uploaded)
@@ -330,24 +335,191 @@ frontpage = (function(){
     }
 
     //
-    // upload_selected:
+    // edit_experiment_selected:
     //   Event callback when user clicks on a row in uploads tables
     //
-    var upload_selected = function(ev, rows) {
+    var edit_experiment_selected = function(ev, rows) {
         $("#upload-metadata-fieldset").removeAttr("disabled");
         show_metadata(rows[0].id);
     }
 
     //
-    // upload_deselected:
+    // edit_experiment_deselected:
     //   Event callback when user deselects row in uploads table or
     //   selects a different row
     //
-    var upload_deselected = function(ev, rows) {
+    var edit_experiment_deselected = function(ev, rows) {
         $("#upload-metadata-fieldset").attr("disabled", "disabled");
     }
 
+    //
+    // delete_experiment:
+    //   Delete experiment on server
+    //
+    var delete_experiment = function(exp_id) {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL + "/cgi-bin/upload.py",
+            data: {
+                action: "delete_experiment",
+                exp_id: exp_id,
+            },
+            success: function(data) {
+                if (data.status != "success") {
+                    show_error(data.status, data.reason, data.cause);
+                } else {
+                    var new_data = Object.assign({}, experiments);
+                    delete new_data[exp_id];
+                    fill_edit_table({ results: new_data });
+                }
+            },
+        });
+    }
+
+    //
+    // --------------------------------------------------------------------
+    // Controlled vocabulary
+    // --------------------------------------------------------------------
+    //
+
+    var controlled_vocabulary;
+
+    // 
+    // init_controlled_vocabulary:
+    //   Initialize controlled vocabulary elements
+    //
+    var init_controlled_vocabulary = function() {
+        $("#upload-experiment-type").attr("disabled", "disabled")
+                                    .click(add_experiment_type);
+        $("#upload-run-category").attr("disabled", "disabled")
+                                 .click(add_run_category);
+        $("#exptype").change(experiment_type_changed);
+        $("#runcat").change(run_category_changed);
+        reload_controlled_vocabulary();
+        experiment_type_changed();  // in case browser kept input history
+        run_category_changed();
+    }
+
+    //
+    // reload_controlled_vocabulary:
+    //   Update list of known controlled vocabulary terms
+    //
+    var reload_controlled_vocabulary = function() {
+        // Setup controlled vocabulary and metadata elements
+        $.ajax({
+            dataType: "json",
+            url: BaseURL + "/cgi-bin/upload.py?action=controlled_vocabulary",
+            success: fill_controlled_vocabulary,
+        });
+    }
+
+    //
+    // fill_controlled_vocabulary:
+    //   Add elements for selecting and adding controlled vocabulary terms
+    //
+    var fill_controlled_vocabulary = function(data) {
+        fill_list($("#exptype-list"), data.results.experiment_types);
+        fill_list($("#runcat-list"), data.results.run_categories);
+    }
+
+    var fill_list = function(div, list) {
+        if (list.length == 0)
+            list = [ "None" ];
+        div.empty();
+        $.each(list, function(index, val) {
+            var a = $("<a/>", { href: "#", class: "dropdown-item" }).text(val);
+            div.append(a);
+        });
+    }
+
+    //
+    // experiment_type_changed:
+    //   Event callback when user changes value of experiment input field
+    //
+    var experiment_type_changed = function(ev) {
+        var v = $("#exptype").val();
+        if (v)
+            $("#upload-experiment-type").removeAttr("disabled")
+        else
+            $("#upload-experiment-type").attr("disabled", "disabled")
+    }
+
+    //
+    // add_experiment_type:
+    //   Upload a new experiment type to server
+    //
+    var add_experiment_type = function() {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL + "/cgi-bin/upload.py",
+            data: {
+                action: "add_experiment_type",
+                exp_type: $("#exptype").val(),
+            },
+            success: function(data) {
+                if (data.status != "success")
+                    show_error(data.status, data.reason, data.cause);
+                else
+                    reload_controlled_vocabulary();
+            },
+        });
+    }
+
+    //
+    // run_category_changed:
+    //   Event callback when user changes value of category input field
+    //
+    var run_category_changed = function(ev) {
+        var v = $("#runcat").val();
+        if (v)
+            $("#upload-run-category").removeAttr("disabled")
+        else
+            $("#upload-run-category").attr("disabled", "disabled")
+    }
+
+    //
+    // add_run_category:
+    //   Upload a new run category to server
+    //
+    var add_run_category = function() {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL + "/cgi-bin/upload.py",
+            data: {
+                action: "add_experiment_type",
+                exp_type: $("#exptype").val(),
+            },
+            success: function(data) {
+                if (data.status != "success")
+                    show_error(data.status, data.reason, data.cause);
+                else
+                    reload_controlled_vocabulary();
+            },
+        });
+    }
+
+    //
+    // --------------------------------------------------------------------
+    // Metadata upload form
+    // --------------------------------------------------------------------
+    //
+
     var metadata_fields;
+
+    //
+    // init_metadata_form:
+    //   Display metadata upload form
+    //
+    var init_metadata_form = function() {
+        $.ajax({
+            dataType: "json",
+            url: BaseURL + "/cgi-bin/upload.py?action=metadata_fields",
+            success: fill_metadata_form,
+        });
+    }
 
     //
     // fill_metadata_form:
@@ -378,7 +550,7 @@ frontpage = (function(){
     //   Display experiment attribute values in metadata form
     //
     var show_metadata = function(exp_id) {
-        var exp = known_experiments[exp_id];
+        var exp = experiments[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
             var field_value = exp[input_id];
@@ -431,24 +603,13 @@ frontpage = (function(){
     }
 
     //
-    // delete_experiment:
-    //   Delete experiment on server
+    // show_error:
+    //   Display error from server
     //
-    var delete_experiment = function(exp_id) {
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
-            data: {
-                action: "delete_experiment",
-                exp_id: exp_id,
-            },
-            success: function(data) {
-                var new_data = Object.assign({}, known_experiments);
-                delete new_data[exp_id];
-                fill_edit_table({ results: new_data });
-            },
-        });
+    var show_error = function(status, reason, cause) {
+        console.log(cause);
+        var msg = status + ": " + reason;
+        alert(msg);
     }
 
     return {
