@@ -51,7 +51,7 @@ frontpage = (function(){
 
     //
     // init_tab_edit:
-    //   Initialize all sections of the "upload" tab
+    //   Initialize all sections of the "edit" tab
     //
     var init_tab_edit = function() {
         // Setup grid layout for all sections
@@ -79,20 +79,11 @@ frontpage = (function(){
 
     //
     // show_tab_edit:
-    //   Display "upload" tab.  Currently does nothing,
+    //   Display "edit" tab.  Currently does nothing,
     //   but may (in the future), refresh the list of experiments.
     //
     var show_tab_edit = function() {
         /* alert("show tab edit"); */
-    }
-
-    //
-    // stop_default:
-    //   Event callback that prevents default action and propagation
-    //  
-    var stop_default = function(ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
     }
 
     //
@@ -270,7 +261,7 @@ frontpage = (function(){
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
         });
-        var tbl = $("#upload-entries-table");
+        var tbl = $("#edit-entries-table");
         tbl.append($("<thead/>").append(htr))
            .bootgrid(EditTableOptions)
            .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
@@ -312,7 +303,7 @@ frontpage = (function(){
     //   Display the list of experiments in edit table
     //
     var fill_edit_table = function(data) {
-        var tbl = $("#upload-entries-table");
+        var tbl = $("#edit-entries-table");
         tbl.bootgrid("clear");
         var rows = [];
         $.each(data.results, function(exp_id, exp) {
@@ -336,10 +327,10 @@ frontpage = (function(){
 
     //
     // edit_experiment_selected:
-    //   Event callback when user clicks on a row in uploads tables
+    //   Event callback when user clicks on a row in edit table
     //
     var edit_experiment_selected = function(ev, rows) {
-        $("#upload-metadata-fieldset").removeAttr("disabled");
+        $("#edit-metadata-fieldset").removeAttr("disabled");
         show_metadata(rows[0].id);
     }
 
@@ -349,7 +340,7 @@ frontpage = (function(){
     //   selects a different row
     //
     var edit_experiment_deselected = function(ev, rows) {
-        $("#upload-metadata-fieldset").attr("disabled", "disabled");
+        $("#edit-metadata-fieldset").attr("disabled", "disabled");
     }
 
     //
@@ -390,12 +381,16 @@ frontpage = (function(){
     //   Initialize controlled vocabulary elements
     //
     var init_controlled_vocabulary = function() {
-        $("#upload-experiment-type").attr("disabled", "disabled")
-                                    .click(add_experiment_type);
-        $("#upload-run-category").attr("disabled", "disabled")
-                                 .click(add_run_category);
-        $("#exptype").change(experiment_type_changed);
-        $("#runcat").change(run_category_changed);
+        $("#add-experiment-type").attr("disabled", "disabled")
+                                 .click(add_experiment_type);
+        $("#remove-experiment-type").attr("disabled", "disabled")
+                                    .click(remove_experiment_type);
+        $("#add-run-category").attr("disabled", "disabled")
+                              .click(add_run_category);
+        $("#remove-run-category").attr("disabled", "disabled")
+                                 .click(remove_run_category);
+        $("#exptype").on("input", experiment_type_changed);
+        $("#runcat").on("input", run_category_changed);
         reload_controlled_vocabulary();
         experiment_type_changed();  // in case browser kept input history
         run_category_changed();
@@ -419,52 +414,56 @@ frontpage = (function(){
     //   Add elements for selecting and adding controlled vocabulary terms
     //
     var fill_controlled_vocabulary = function(data) {
-        fill_list($("#exptype-list"), data.results.experiment_types);
-        fill_list($("#runcat-list"), data.results.run_categories);
+        fill_list("exptype", data.results.experiment_types);
+        fill_list("runcat", data.results.run_categories);
+        controlled_vocabulary = data.results;
+        experiment_type_changed();
+        run_category_changed();
     }
 
-    var fill_list = function(div, list) {
+    var fill_list = function(eid, list) {
         if (list.length == 0)
             list = [ "None" ];
-        div.empty();
+        var ul_id = "#" + eid + "-list"
+        var ul = $(ul_id);
+        ul.empty();
         $.each(list, function(index, val) {
-            var a = $("<a/>", { href: "#", class: "dropdown-item" }).text(val);
-            div.append(a);
+            var a = $("<a/>", { href: "#", "data-value": val }).text(val);
+            ul.append($("<li/>").append(a));
         });
+        $(ul_id + " a").click(function() {
+            $("#" + eid).val($(this).attr("data-value")).trigger("input");
+        });
+    }
+
+    //
+    // vocab_changed:
+    //   Update button status when vocabulary input field changes
+    //
+    var vocab_changed = function(v, vid, vkey) {
+        var add = $("#add-" + vid);
+        var remove = $("#remove-" + vid);
+        if (v && controlled_vocabulary) {
+            if ($.inArray(v, controlled_vocabulary[vkey]) == -1) {
+                add.removeAttr("disabled");
+                remove.attr("disabled", "disabled");
+            } else {
+                add.attr("disabled", "disabled");
+                remove.removeAttr("disabled");
+            }
+        } else {
+            add.attr("disabled", "disabled");
+            remove.attr("disabled", "disabled");
+        }
     }
 
     //
     // experiment_type_changed:
     //   Event callback when user changes value of experiment input field
     //
-    var experiment_type_changed = function(ev) {
-        var v = $("#exptype").val();
-        if (v)
-            $("#upload-experiment-type").removeAttr("disabled")
-        else
-            $("#upload-experiment-type").attr("disabled", "disabled")
-    }
-
-    //
-    // add_experiment_type:
-    //   Upload a new experiment type to server
-    //
-    var add_experiment_type = function() {
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
-            data: {
-                action: "add_experiment_type",
-                exp_type: $("#exptype").val(),
-            },
-            success: function(data) {
-                if (data.status != "success")
-                    show_error(data.status, data.reason, data.cause);
-                else
-                    reload_controlled_vocabulary();
-            },
-        });
+    var experiment_type_changed = function() {
+        vocab_changed($("#exptype").val(), "experiment-type",
+                      "experiment_types");
     }
 
     //
@@ -472,25 +471,22 @@ frontpage = (function(){
     //   Event callback when user changes value of category input field
     //
     var run_category_changed = function(ev) {
-        var v = $("#runcat").val();
-        if (v)
-            $("#upload-run-category").removeAttr("disabled")
-        else
-            $("#upload-run-category").attr("disabled", "disabled")
+        vocab_changed($("#runcat").val(), "run-category",
+                      "run_categories");
     }
 
     //
-    // add_run_category:
-    //   Upload a new run category to server
+    // vocab_server:
+    //   Send a request for controlled vocabulary change
     //
-    var add_run_category = function() {
+    var vocab_server = function(action, value) {
         $.ajax({
             dataType: "json",
             method: "POST",
             url: BaseURL + "/cgi-bin/upload.py",
             data: {
-                action: "add_experiment_type",
-                exp_type: $("#exptype").val(),
+                action: action,
+                exp_type: value,
             },
             success: function(data) {
                 if (data.status != "success")
@@ -499,6 +495,38 @@ frontpage = (function(){
                     reload_controlled_vocabulary();
             },
         });
+    }
+
+    //
+    // add_experiment_type:
+    //   Upload a new experiment type to server
+    //
+    var add_experiment_type = function() {
+        vocab_server("add_experiment_type", $("#exptype").val());
+    }
+
+    //
+    // remove_experiment_type:
+    //   Upload a new experiment type to server
+    //
+    var remove_experiment_type = function() {
+        vocab_server("remove_experiment_type", $("#exptype").val());
+    }
+
+    //
+    // add_run_category:
+    //   Upload a new run category to server
+    //
+    var add_run_category = function() {
+        vocab_server("add_run_category", $("#runcat").val());
+    }
+
+    //
+    // remove_run_category:
+    //   Upload a new run category to server
+    //
+    var remove_run_category = function() {
+        vocab_server("remove_run_category", $("#runcat").val());
     }
 
     //
@@ -526,7 +554,7 @@ frontpage = (function(){
     //   Lay out experiment attribute name and value fields in metadata form
     //
     var fill_metadata_form = function(data) {
-        var div = $("#upload-metadata-fieldset div");
+        var div = $("#edit-metadata-fieldset div");
         $.each(data.results, function(index, val) {
             var input_type = val[1];
             var input_id = val[2];
@@ -582,6 +610,15 @@ frontpage = (function(){
     // -----------------------------------------------------------------
     // Utility functions
     // -----------------------------------------------------------------
+
+    //
+    // stop_default:
+    //   Event callback that prevents default action and propagation
+    //  
+    var stop_default = function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+    }
 
     //
     // readable_size:

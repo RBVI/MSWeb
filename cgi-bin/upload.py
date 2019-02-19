@@ -91,7 +91,7 @@ def do_add_run_category(out, form):
         return
     from msweb_lib import datastore
     ds = datastore.DataStore(DataStorePath)
-    ds.add_run_category(etype)
+    ds.add_run_category(rcat)
     ds.write_index()
     _send_success(out, None)
 

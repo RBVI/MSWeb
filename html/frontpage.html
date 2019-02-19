@@ -42,7 +42,7 @@
           </div>
         </div>
         <div id="expedit" class="tab-pane fade">
-          <div class="ui-layout-north" id="upload-entries">
+          <div class="ui-layout-north" id="edit-entries">
             <form id="upload-file-form">
               <div class="file-input" id="upload-drop">
                 Drag-and-drop file here, or click to browse
@@ -55,45 +55,52 @@
               <span id="upload-status"></span>
             </form>
             <table class="table table-condensed table-hover table-striped"
-                   id="upload-entries-table"></table>
+                   id="edit-entries-table"></table>
           </div>
-          <div class="ui-layout-center" id="upload-metadata">
-            <form id="upload-vocabulary-form">
-              <fieldset id="upload-vocabulary-fieldset">
+          <div class="ui-layout-center" id="edit-metadata">
+            <form id="edit-vocabulary-form">
+              <fieldset id="edit-vocabulary-fieldset">
                 <legend>Edit Controlled Vocabulary</legend>
                 <div class="grid">
                   <label for="exptype">Experiment Type</label>
-                  <input type="text" id="exptype">
-                  <button id="upload-experiment-type">Add</button>
-                  <div class="dropdown show">
-                    <button class="btn btn-secondary dropdown-toggle" href="#"
-                       type="button" id="exptype-menu" data-toggle="dropdown"
-                       aria-haspopup="true" area-expanded="false">
-                       Known Types</button>
-                    <div class="dropdown-menu" aria-labelledby="exptype-menu"
-                         id="exptype-list"></div>
+                  <div class="input-group dropdown">
+                    <input type="text" class="form-control dropdown-toggle"
+                           id="exptype" placeholder="experiment type name">
+                    <ul id="exptype-list" class="dropdown-menu"></ul>
+                    <span role="button"
+                          class="input-group-addon dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-haspopup="true" aria-expanded="false">
+                      <span class="fa fa-caret-down"></span>
+                    </span>
                   </div>
+                  <button id="add-experiment-type">Add</button>
+                  <button id="remove-experiment-type">Remove</button>
+
                   <label for="runcat">Run Category</label>
-                  <input type="text" id="runcat">
-                  <button id="upload-run-category">Add</button>
-                  <div class="dropdown show">
-                    <button class="btn btn-secondary dropdown-toggle" href="#"
-                       type="button" id="runcat-menu" data-toggle="dropdown"
-                       aria-haspopup="true" area-expanded="false">
-                       Known Categories</button>
-                    <div class="dropdown-menu" aria-labelledby="runcat-menu"
-                         id="runcat-list"></div>
+                  <div class="input-group dropdown">
+                    <input type="text" class="form-control dropdown-toggle"
+                           id="runcat" placeholder="run category name">
+                    <ul id="runcat-list" class="dropdown-menu"></ul>
+                    <span role="button"
+                          class="input-group-addon dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-haspopup="true" aria-expanded="false">
+                      <span class="fa fa-caret-down"></span>
+                    </span>
                   </div>
+                  <button id="add-run-category">Add</button>
+                  <button id="remove-run-category">Remove</button>
                 </div>
               </fieldset>
             </form>
-            <form id="upload-metadata-form">
-              <fieldset id="upload-metadata-fieldset" disabled>
+            <form id="edit-metadata-form">
+              <fieldset id="edit-metadata-fieldset" disabled>
                 <legend>Edit Experiment</legend>
                 <div class="grid"></div>
               </fieldset>
-              <button id="upload-metadata-button">Update</button>
-              <button id="upload-revert-metadata-button">Revert</button>
+              <button id="edit-metadata-button">Update</button>
+              <button id="edit-revert-metadata-button">Revert</button>
             </form>
           </div>
         </div>

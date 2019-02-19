@@ -107,6 +107,8 @@ class DataStore:
             "version": self.Version,
             "uid": self.uid,
             "datadirs": [ self.raw_dir, self.cooked_dir ],
+            "experiment_types": self.experiment_types,
+            "run_categories": self.run_categories,
             "experiments": self.experiments,
         }
         import os.path, json
@@ -121,7 +123,7 @@ class DataStore:
     def add_experiment_type(self, etype):
         self.experiment_types.append(etype)
 
-    def run_category(self, rcat):
+    def add_run_category(self, rcat):
         self.run_categories.append(rcat)
 
     def add_experiment(self, data):

@@ -6,30 +6,30 @@ html, body, #frontpage, #expanalyze, #expedit {
     height: 100%;
     width: 100%;
 }
-#upload-vocabulary-fieldset .grid {
+#edit-vocabulary-fieldset .grid {
     display: grid;
-    grid-template-columns: 9em 1fr 5em 10em;
+    grid-template-columns: 9em 20em 6em 6em;
 }
-#upload-metadata-fieldset .grid {
+#edit-metadata-fieldset .grid {
     display: grid;
-    grid-template-columns: 9em 1fr;
+    grid-template-columns: 9em 50em;
 }
-#upload-vocabulary-fieldset label,
-#upload-metadata-fieldset label {
+#edit-vocabulary-fieldset label,
+#edit-metadata-fieldset label {
     font-weight: bold;
     text-align: right;
     padding-right: 0.5em;
 }
-#upload-vocabulary-fieldset input {
+#edit-vocabulary-fieldset input {
     padding: 0px 4px;
     margin: 0px;
 }
-#upload-vocabulary-fieldset button {
+#edit-vocabulary-fieldset button {
     padding: 0px 4px;
     margin: 0px;
 }
-#upload-vocabulary-fieldset,
-#upload-metadata-fieldset {
+#edit-vocabulary-fieldset,
+#edit-metadata-fieldset {
     margin-bottom: 1em;
 }
 #upload-button {
