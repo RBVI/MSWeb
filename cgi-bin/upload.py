@@ -48,26 +48,27 @@ def do_metadata_fields(out, form):
 
 
 def do_file_upload(out, form):
-    datafile = form.getfirst("datafile")
+    datafile = form["datafile"]
     if not datafile.file:
         _send_failed(out, "no file given")
         return
     import os.path, os, datetime
-    from msweb_lib import datastore, parse_combined
+    from msweb_lib import datastore, combined
     filename = os.path.basename(datafile.filename)
-    metadata = {
-        "uploader": os.environ.get("REMOTE_USER", "anonymous"),
-        "uploaddate": datetime.date.today().isoformat(),
-        "datafile": filename,
-    }
     ds = datastore.DataStore(DataStorePath)
-    exp_id = ds.add_experiment(metadata)
+    exp_id = ds.add_experiment(None)
     raw_file_name = ds.raw_file_name(exp_id)
     with open(raw_file_name, "wb") as f:
         f.write(datafile.file.read())
-    exp = parse_combined.parse_combined(raw_file_name, metadata=metadata)
+    exp = combined.parse_raw(raw_file_name)
     with open(ds.cooked_file_name(exp_id), "w") as f:
         exp.write_json(f)
+    ds.update_experiment(exp_id, {
+        "uploader": os.environ.get("REMOTE_USER", "anonymous"),
+        "uploaddate": datetime.date.today().isoformat(),
+        "datafile": filename,
+        "runs": { name: {} for name in exp.runs.keys() },
+    })
     ds.write_index()
     _send_success(out, None)
 
@@ -156,7 +157,36 @@ def do_delete_experiment(out, form):
     _send_success(out, None)
 
 
-def _send_failed(out, reason, cause="unspecified"):
+def do_update_experiment(out, form):
+    from msweb_lib import datastore
+    if not form.has_key("exp_id"):
+        _send_failed(out, "no experiment specified", "missing experiment id")
+        return
+    ds = datastore.DataStore(DataStorePath)
+    try:
+        exp_id = form.getfirst("exp_id")
+        exp = ds.experiments[exp_id]
+    except (ValueError, KeyError):
+        _send_failed(out, "invalid experiment selected",
+                          "experiment id: %r" % exp_id)
+        return
+    updated = []
+    deleted = []
+    for key in form.keys():
+        if key in [ "action", "exp_id" ]:
+            continue
+        value = form.getfirst(key)
+        if value:
+            exp[key] = value
+            updated.append(key)
+        else:
+            del exp[key]
+            deleted.append(key)
+    ds.write_index()
+    _send_success(out, {"updated":updated, "deleted":deleted})
+
+
+def _send_failed(out, reason, cause=""):
     _send_json(out, {
         "status": "error",
         "reason": reason,

@@ -3,50 +3,9 @@
 from __future__ import print_function
 
 
-def main():
-    import sys, getopt
-    verbose = 0
-    opts, args = getopt.getopt(sys.argv[1:], "v")
-    for opt, val in opts:
-        if opt == "-v":
-            verbose += 1
-    if len(args) == 1:
-        input_name = args[0]
-        output_name = None
-    elif len(args) == 2:
-        input_name = args[0]
-        output_name = args[1]
-    else:
-        print("Usage: %s [-v] excel_file [json_file]" % sys.argv[0],
-              file=sys.stderr)
-        raise SystemExit(1)
-
-    data = parse_combined(input_name, verbose=verbose)
-    print(data)
-
-
-def parse_int(s):
-    try:
-        return int(s)
-    except ValueError:
-        return 0
-
-
-def parse_float(s):
-    try:
-        return float(s)
-    except ValueError:
-        return 0.0
-
-
-def parse_percentage(s):
-    return parse_float(s) / 100.0
-
-
-def parse_combined(filename, metadata={}, verbose=0):
-    from msweb import Experiment, Protein, Run, Stats
+def parse_raw(filename, verbose=0):
     import xlrd
-    exp = Experiment(filename, metadata)
+    exp = Experiment(filename)
     with xlrd.open_workbook(filename) as wb:
         # There should only be one worksheet
         if wb.nsheets != 1:
@@ -160,7 +119,7 @@ def parse_combined(filename, metadata={}, verbose=0):
                 for offset, title in enumerate(search_name_columns):
                     v = sh.cell_value(rowx=row_index, colx=base+offset)
                     run_stats[title] = v
-                run.add_protein(protein, Stats(run_stats))
+                run.add_protein_stats(protein, Stats(run_stats))
             row_index += 1
         if verbose:
             print("%d proteins found" % len(exp.proteins))
@@ -168,5 +127,162 @@ def parse_combined(filename, metadata={}, verbose=0):
     return exp
 
 
+def parse_cooked(filename):
+    import json
+    with open(filename) as f:
+        data = json.load(f)
+    return Experiment.from_json(data)
+
+
+def parse_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        return 0
+
+
+def parse_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+
+
+def parse_percentage(s):
+    return parse_float(s) / 100.0
+
+
+"""MSWeb "combined" experiment data.
+
+An experiment consists of a list of proteins and a series of runs.
+A run consists of a list of proteins and their coverage statistics.
+"""
+
+
+class Experiment:
+
+    def __init__(self, name):
+        self.name = name
+        self.proteins = []      # all proteins
+        self.runs = {}
+
+    def add_protein(self, protein):
+        self.proteins.append(protein)
+
+    def add_run(self, run):
+        self.runs[run.name] = run
+
+    def write_json(self, f):
+        import json
+        json.dump(self.json_data(), f)
+
+    def json_data(self):
+        protein_index = { p: i for i, p in enumerate(self.proteins) }
+        return {
+            "name": self.name,
+            "proteins": [ p.json_data() for p in self.proteins ],
+            "runs": { r.name: r.json_data(protein_index)
+                      for r in self.runs.values() },
+        }
+
+    @staticmethod
+    def from_json(data):
+        exp = Experiment(data["name"])
+        exp.proteins = [ Protein.from_json(d) for d in data["proteins"] ]
+        exp.runs = { n: Run.from_json(d, exp.proteins)
+                     for n, d in data["runs"].items() }
+        return exp
+
+
+class _AttrLabelStore:
+    """Base class for storing dictionary as instance attributes.
+
+    Derived classes must define the "AttrLabelMap" class dictionary
+    whose keys are instance attribute names and values are string
+    label keys from raw data dictionaries."""
+
+    def __init__(self, data):
+        for attr, label in self.AttrLabelMap.items():
+            setattr(self, attr, data[label])
+
+    def json_data(self):
+        return { label: getattr(self, attr)
+                 for attr, label in self.AttrLabelMap.items() }
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(data)
+
+
+class Protein(_AttrLabelStore):
+
+    AttrLabelMap = {
+        "rank": "Rank",
+        "unique_peptides": "Uniq Pep",
+        "accession": "Acc #",
+        "gene": "Gene",
+        "molecular_weight": "Protein MW",
+        "species": "Species",
+        "name": "Protein Name",
+    }
+
+
+class Run:
+
+    def __init__(self, name):
+        self.name = name
+        self.protein_stats = {}
+
+    def add_protein_stats(self, protein, stats):
+        self.protein_stats[protein] = stats
+
+    def json_data(self, index_map):
+        return {
+            "name": self.name,
+            "protein_stats": { index_map[p]: s.json_data()
+                               for p, s in self.protein_stats.items() },
+        }
+
+    @staticmethod
+    def from_json(data, proteins):
+        r = Run(data["name"])
+        for n, d in data["protein_stats"].items():
+            r.protein_stats[proteins[int(n)]] = Stats.from_json(d)
+
+
+class Stats(_AttrLabelStore):
+
+    AttrLabelMap = {
+        "unique_peptides": "Num Unique",
+        "peptide_count": "Peptide Count",
+        "coverage": "% Cov",
+        "best_score": "Best Disc Score",
+        "best_expected": "Best Expect Val",
+    }
+
+
 if __name__ == "__main__":
+    def main():
+        import sys, getopt
+        verbose = 0
+        opts, args = getopt.getopt(sys.argv[1:], "v")
+        for opt, val in opts:
+            if opt == "-v":
+                verbose += 1
+        if len(args) == 1:
+            input_name = args[0]
+            output_name = None
+        elif len(args) == 2:
+            input_name = args[0]
+            output_name = args[1]
+        else:
+            print("Usage: %s [-v] excel_file [json_file]" % sys.argv[0],
+                  file=sys.stderr)
+            raise SystemExit(1)
+
+        exp = parse_raw(input_name, verbose=verbose)
+        print(exp)
+        json_data = exp.json_data()
+        exp2 = Experiment.from_json(json_data)
+        print(exp2)
     main()

@@ -315,15 +315,20 @@ frontpage = (function(){
 
         // Update and save information for later updates
         var new_experiments = [];
-        $.each(data.results, function(exp_id, exp) {
-            if (!(exp_id in experiments))
-                new_experiments.push(exp_id);
-        });
+        if (experiments)
+            $.each(data.results, function(exp_id, exp) {
+                if (!(exp_id in experiments))
+                    new_experiments.push(exp_id);
+            });
         experiments = data.results;
+
+        // If there is exactly one new experiment, select it
+        // (probably an upload).  If an experiment was selected,
+        // select it (probably an edit).
         if (new_experiments.length == 1)
-            // Select if there is exactly one new experiment
-            // (i.e., the one we just uploaded)
             tbl.select(new_experiments);
+        else if (metadata_exp_id)
+            tbl.select([ metadata_exp_id ]);
     }
 
     //
@@ -647,7 +652,6 @@ frontpage = (function(){
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
             var field_value = exp[input_id];
-            console.log("set " + input_id + " to " + field_value);
             $("#" + input_id).val(field_value);
         });
     }
@@ -657,8 +661,28 @@ frontpage = (function(){
     //   Send current metadata values to server
     //
     var update_metadata = function() {
-        // TODO: more here
-        console.log("update_metadata");
+        var form_data = {
+            "action": "update_experiment",
+            "exp_id": metadata_exp_id,
+        }
+        $.each(metadata_fields, function(index, val) {
+            var input_id = val[2];
+            var value = $("#" + input_id).val();
+            if (value)
+                form_data[input_id] = value;
+        });
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL + "/cgi-bin/upload.py",
+            data: form_data,
+            success: function(data) {
+                if (data.status != "success")
+                    show_error(data.status, data.reason, data.cause);
+                else
+                    reload_edit_table();
+            },
+        });
     }
 
     //
@@ -727,7 +751,8 @@ frontpage = (function(){
     //   Display error from server
     //
     var show_error = function(status, reason, cause) {
-        console.log(cause);
+        if (cause)
+            console.log("cause of error: " + cause);
         var msg = status + ": " + reason;
         alert(msg);
     }

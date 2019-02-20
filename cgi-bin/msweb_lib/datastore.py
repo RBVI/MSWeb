@@ -118,7 +118,12 @@ class DataStore:
     def experiment_status(self, exp):
         # TODO: make sure metadata are filled in and
         # all runs have categories assigned
-        return "incomplete"
+        try:
+            raise ValueError("unimplemented")
+        except ValueError:
+            return "incomplete"
+        else:
+            return "complete"
 
     def add_experiment_type(self, etype):
         self.experiment_types.append(etype)
@@ -131,6 +136,9 @@ class DataStore:
         self.uid += 1
         self.experiments[exp_id] = data
         return exp_id
+
+    def update_experiment(self, exp_id, data):
+        self.experiments[exp_id] = data
 
     def raw_file_name(self, exp_id):
         return self._full_path(self.raw_dir, "raw-%s" % exp_id)

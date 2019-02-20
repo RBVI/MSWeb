@@ -11,9 +11,8 @@ A run consists of a list of proteins and their coverage statistics.
 
 class Experiment:
 
-    def __init__(self, name, metadata):
+    def __init__(self, name):
         self.name = name
-        self.metadata = metadata
         self.protein_list = []      # all proteins
         self.proteins = {}          # non-decoy proteins
         self.runs = {}
@@ -45,9 +44,8 @@ class Protein:
 
 class Run:
 
-    def __init__(self, name, **metadata):
+    def __init__(self, name):
         self.name = name
-        self.metadata = metadata
         self.proteins = {}
 
     def add_protein(self, protein, stats):
