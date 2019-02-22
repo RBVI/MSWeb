@@ -20,7 +20,7 @@
 
 frontpage = (function(){
 
-    var BaseURL = "/MSWeb"
+    var BaseURL = "/MSWeb/cgi-bin/upload.py"
 
     // The front page consists of multiple tabs.
     // Tabs may (or may not) need initialization.
@@ -151,16 +151,37 @@ frontpage = (function(){
             alert("Please select a file to upload");
             return;
         }
-        var xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener("progress", upload_progress, false);
-        xhr.addEventListener("load", upload_complete, false);
-        xhr.addEventListener("error", upload_failed, false);
-        xhr.addEventListener("abort", upload_canceled, false);
         var form_data = new FormData();
         form_data.append("action", "file_upload");
-        form_data.append("datafile", selected_file);
-        xhr.open("POST", BaseURL + "/cgi-bin/upload.py")
-        xhr.send(form_data);
+        form_data.append("datafile", selected_file, selected_file.name);
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL,
+            data: form_data,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                if (data.status != "success") {
+                    set_upload_status("error: " + data.reason);
+                    show_error(data.status, data.reason, data.cause);
+                } else {
+                    set_upload_status("finished");
+                    reload_edit_table();
+                }
+            },
+            error: function(jqXHR, text_status, error_thrown) {
+                var msg = text_status ? text_status : "error";
+                if (error_thrown)
+                    msg += ": " + error_thrown;
+                set_upload_status(msg);
+            },
+            xhr: function() {
+                var xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener("progress", upload_progress, false);
+                return xhr;
+            },
+        });
         set_upload_status("uploading %s" % selected_file.name);
     }
 
@@ -177,37 +198,6 @@ frontpage = (function(){
                   readable_size(ev.total) + " (" +
                   Math.round(ev.loaded * 100 / ev.total) + "%)...";
         set_upload_status(msg);
-    }
-
-    //
-    // upload_complete:
-    //   Event callback to complete processing upload request
-    //
-    var upload_complete = function(ev) {
-        var answer = JSON.parse(ev.target.responseText);
-        if (answer.status != "success") {
-            show_error(answer.status, answer.reason, answer.cause);
-            set_upload_status("error: " + answer.reason);
-        } else {
-            set_upload_status("finished");
-            reload_edit_table();
-        }
-    }
-
-    //
-    // upload_failed:
-    //   Event callback to report failure in upload
-    //
-    var upload_failed = function(ev) {
-        set_upload_status("failed");
-    }
-
-    //
-    // upload_canceled:
-    //   Event callback to report cancelation of upload
-    //
-    var upload_canceled = function(ev) {
-        set_upload_status("canceled");
     }
 
     //
@@ -297,7 +287,11 @@ frontpage = (function(){
     var reload_edit_table = function() {
         $.ajax({
             dataType: "json",
-            url: BaseURL + "/cgi-bin/upload.py?action=all_experiments",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "all_experiments"
+            },
             success: fill_edit_table,
         });
     }
@@ -364,7 +358,7 @@ frontpage = (function(){
         $.ajax({
             dataType: "json",
             method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
+            url: BaseURL,
             data: {
                 action: "delete_experiment",
                 exp_id: exp_id,
@@ -425,7 +419,11 @@ frontpage = (function(){
         // Setup controlled vocabulary and metadata elements
         $.ajax({
             dataType: "json",
-            url: BaseURL + "/cgi-bin/upload.py?action=controlled_vocabulary",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "controlled_vocabulary",
+            },
             success: fill_controlled_vocabulary,
         });
     }
@@ -622,7 +620,11 @@ frontpage = (function(){
         $("#edit-revert-metadata-button").click(revert_metadata);
         $.ajax({
             dataType: "json",
-            url: BaseURL + "/cgi-bin/upload.py?action=metadata_fields",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "metadata_fields",
+            },
             success: fill_metadata_form,
         });
     }
@@ -699,7 +701,7 @@ frontpage = (function(){
         $.ajax({
             dataType: "json",
             method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
+            url: BaseURL,
             data: form_data,
             success: function(data) {
                 if (data.status != "success")
