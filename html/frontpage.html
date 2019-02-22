@@ -24,10 +24,10 @@
     </div>
     <div id="frontpage">
       <ul class="nav nav-tabs">
-        <li class="active">
+        <li class="nav active">
           <a data-toggle="tab" id="tab_analyze" href="#expanalyze">
           Analyze</a></li>
-        <li>
+        <li class="nav">
           <a data-toggle="tab" id="tab_edit" href="#expedit">
           Edit</a></li>
       </ul>
@@ -63,6 +63,8 @@
                 <legend>Edit Controlled Vocabulary</legend>
                 <div class="grid">
                   <label for="exptype-vocab">Experiment Type</label>
+                  <div id="exptype-vocab-div"></div>
+                  <!--
                   <div class="input-group dropdown">
                     <input type="text" class="form-control dropdown-toggle"
                            id="exptype-vocab"
@@ -75,10 +77,13 @@
                       <span class="fa fa-caret-down"></span>
                     </span>
                   </div>
+                  -->
                   <button id="add-experiment-type">Add</button>
                   <button id="remove-experiment-type">Remove</button>
 
                   <label for="runcat-vocab">Run Category</label>
+                  <div id="runcat-vocab-div"></div>
+                  <!--
                   <div class="input-group dropdown">
                     <input type="text" class="form-control dropdown-toggle"
                            id="runcat-vocab"
@@ -91,16 +96,32 @@
                       <span class="fa fa-caret-down"></span>
                     </span>
                   </div>
+                  -->
                   <button id="add-run-category">Add</button>
                   <button id="remove-run-category">Remove</button>
                 </div>
               </fieldset>
             </form>
             <form id="edit-metadata-form">
-              <fieldset id="edit-metadata-fieldset" disabled>
-                <legend>Edit Experiment</legend>
-                <div class="grid"></div>
-              </fieldset>
+              <ul class="nav nav-tabs">
+                <li class="nav active">
+                  <a data-toggle="tab" id="tab_edit_exp" href="#editexp">
+                  Edit Experiment</a></li>
+                <li class="nav">
+                  <a data-toggle="tab" id="tab_edit_runs" href="#editruns">
+                  Edit Runs</a></li>
+              </ul>
+              <div class="tab-content">
+                <div id="editexp" class="tab-pane fade in active">
+                  <fieldset id="edit-metadata-fieldset" disabled>
+                    <div class="grid"></div>
+                  </fieldset>
+                </div>
+                <div id="editruns" class="tab-pane fade">
+                  <table class="table table-condensed table-hover table-striped"
+                         id="edit-runs-table"></table>
+                </div>
+              </div>
               <button id="edit-metadata-button" disabled>Update</button>
               <button id="edit-revert-metadata-button" disabled>Revert</button>
             </form>

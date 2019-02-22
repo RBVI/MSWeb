@@ -104,16 +104,6 @@ def do_controlled_vocabulary(out, form):
                         "run_categories": ds.run_categories})
 
 
-def do_incomplete_uploads(out, form):
-    from msweb_lib import datastore
-    ds = datastore.DataStore(DataStorePath)
-    uploads = {}
-    for exp_id, exp in ds.experiments.items():
-        if not exp.get("complete", False):
-            uploads[exp_id] = exp
-    _send_success(out, uploads)
-
-
 def do_all_experiments(out, form):
     from msweb_lib import datastore
     ds = datastore.DataStore(DataStorePath)
