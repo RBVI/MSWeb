@@ -42,6 +42,10 @@ correspondence of files in the two data directories.
 #                   "researcher": "Someone Else",
 #                   "expdate": "10/20/2018",
 #                   ...
+#                   "runs": {
+#                       "run1": { "category": "C1", "date": "09/20/2018" },
+#                       ...
+#                   },
 #              },
 #           "2": {
 #                   "datafile": "new_experiment.xlsx",
@@ -116,14 +120,18 @@ class DataStore:
             json.dump(index_data, f)
 
     def experiment_status(self, exp):
-        # TODO: make sure metadata are filled in and
-        # all runs have categories assigned
         try:
-            raise ValueError("unimplemented")
+            for attr in ["title", "researcher", "expdate",
+                         "exptype", "datafile"]:
+                if not exp.get(attr):
+                    raise ValueError("no %s" % attr)
+            for run_name, run_data in exp["runs"].items():
+                if not run_data.get("category"):
+                    raise ValueError("run %s has no category" % run_name)
         except ValueError:
             return "incomplete"
         else:
-            return "complete"
+            return "ready"
 
     def add_experiment_type(self, etype):
         self.experiment_types.append(etype)
