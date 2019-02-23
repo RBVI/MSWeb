@@ -32,6 +32,9 @@ html, body, #frontpage, #expanalyze, #expedit {
 #edit-metadata-fieldset {
     margin-bottom: 1em;
 }
+#edit-upload {
+    float: right;
+}
 #upload-button {
     vertical-align: middle;
 }

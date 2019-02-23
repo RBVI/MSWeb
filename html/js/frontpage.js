@@ -40,10 +40,109 @@ frontpage = (function(){
     // Analyze tab functions
     // -----------------------------------------------------------------
 
-    // TODO: work on this tab has not started yet.
+    var AnalyzeTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+    }
 
+    //
+    // init_tab_analyze:
+    //   Initialize all sections of the "analyze" tab
+    //
+    var init_tab_analyze = function() {
+        // Setup grid layout for all sections
+        $("#expanalyze").layout({
+            name: "expanalyze",
+            north__size: "40%"
+        });
+        //
+        // Show experiments
+        init_analyze_table();
+
+        /* Reset tab callback */
+        tab_funcs.tab_analyze = show_tab_analyze;
+        show_tab_analyze();
+    }
+
+    //
+    // show_tab_analyze:
+    //   Display "analyze" tab
+    //
     var show_tab_analyze = function() {
-        /* alert("show tab experiments"); */
+        fill_analyze_table(experiments);
+    }
+
+    //
+    // init_analyze_table:
+    //   Initialize table of experiments in "analyze" tab
+    //
+    var init_analyze_table = function() {
+        var columns = [
+            ["Title", "title"],
+            ["Researcher", "researcher"],
+            ["Upload Date", "uploaddate"],
+        ];
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": "false",
+                                "data-visible": false }).text("Id"));
+        $.each(columns, function(index, values) {
+            htr.append($("<th/>", { "data-column-id": values[1] })
+                            .text(values[0]));
+        });
+        var tbl = $("#analyze-table");
+        tbl.append($("<thead/>").append(htr))
+           .append($("<tbody/>"))
+           .bootgrid(AnalyzeTableOptions)
+           .on("selected.rs.jquery.bootgrid", analyze_experiment_selected)
+           .on("deselected.rs.jquery.bootgrid", analyze_experiment_deselected);
+    }
+
+    //
+    // fill_analyze_table:
+    //   Display the list of experiments in analyze table
+    //
+    var fill_analyze_table = function(results) {
+        var tbl = $("#analyze-table");
+        tbl.bootgrid("clear");
+        var rows = [];
+        $.each(results, function(exp_id, exp) {
+            if (exp.status != "incomplete") {
+                var row = Object.assign({id: parseInt(exp_id)}, exp);
+                rows.push(row);
+            }
+        });
+        tbl.bootgrid("append", rows);
+
+        //
+        // If an experiment was selected, select it again.
+        //
+        if (analyze_exp_id)
+            tbl.select([ analyze_exp_id ]);
+    }
+
+    //
+    // analyze_experiment_selected:
+    //   Event callback when user clicks on a row in analyze table
+    //
+    var analyze_experiment_selected = function(ev, rows) {
+        // TODO: update display for newly selected experiment
+        alert("update display for newly selected experiment");
+    }
+
+    //
+    // analyze_experiment_deselected:
+    //   Event callback when user deselects row in uploads table or
+    //   selects a different row
+    //
+    var analyze_experiment_deselected = function(ev, rows) {
+        // TODO: hide display of experiment data
+        alert("hide display of experiment data");
     }
 
     // -----------------------------------------------------------------
@@ -85,7 +184,7 @@ frontpage = (function(){
     //   but may (in the future), refresh the list of experiments.
     //
     var show_tab_edit = function() {
-        /* alert("show tab edit"); */
+        fill_edit_table(experiments);
     }
 
     //
@@ -169,7 +268,7 @@ frontpage = (function(){
                     show_error(data.status, data.reason, data.cause);
                 } else {
                     set_upload_status("finished");
-                    reload_edit_table();
+                    reload_experiment_tables();
                 }
             },
             error: function(jqXHR, text_status, error_thrown) {
@@ -230,7 +329,7 @@ frontpage = (function(){
             }
         }
     }
-    var experiments = {}      // Last set of experiments from server
+    var analyze_exp_id;
 
     //
     // init_edit_table:
@@ -257,8 +356,9 @@ frontpage = (function(){
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
         });
-        var tbl = $("#edit-entries-table");
+        var tbl = $("#edit-table");
         tbl.append($("<thead/>").append(htr))
+           .append($("<tbody/>"))
            .bootgrid(EditTableOptions)
            .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", edit_experiment_deselected)
@@ -279,51 +379,33 @@ frontpage = (function(){
                         delete_experiment(exp_id);
                 });
             });
-        reload_edit_table();
     }
 
     //
-    // reload_edit_table:
-    //   Upload list of experiments in edit table
-    //
-    var reload_edit_table = function() {
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            url: BaseURL,
-            data: {
-                action: "all_experiments"
-            },
-            success: fill_edit_table,
-        });
-    }
-
-    //
-    // fill_edit_table:
+    // fill_edit_table::
     //   Display the list of experiments in edit table
     //
-    var fill_edit_table = function(data) {
-        var tbl = $("#edit-entries-table");
+    var fill_edit_table = function(results) {
+        var tbl = $("#edit-table");
+        if (tbl.find("tbody").length == 0)
+            return;
         tbl.bootgrid("clear");
         var rows = [];
-        $.each(data.results, function(exp_id, exp) {
+        $.each(results, function(exp_id, exp) {
             var row = Object.assign({id: parseInt(exp_id)}, exp);
             rows.push(row);
         });
         tbl.bootgrid("append", rows);
 
-        // Update and save information for later updates
-        var new_experiments = [];
-        if (experiments)
-            $.each(data.results, function(exp_id, exp) {
-                if (!(exp_id in experiments))
-                    new_experiments.push(exp_id);
-            });
-        experiments = data.results;
-
         // If there is exactly one new experiment, select it
         // (probably an upload).  If an experiment was selected,
         // select it (probably an edit).
+        var new_experiments = [];
+        if (experiments)
+            $.each(results, function(exp_id, exp) {
+                if (!(exp_id in experiments))
+                    new_experiments.push(exp_id);
+            });
         if (new_experiments.length == 1)
             tbl.select(new_experiments);
         else if (metadata_exp_id)
@@ -369,9 +451,7 @@ frontpage = (function(){
                 if (data.status != "success") {
                     show_error(data.status, data.reason, data.cause);
                 } else {
-                    var new_data = Object.assign({}, experiments);
-                    delete new_data[exp_id];
-                    fill_edit_table({ results: new_data });
+                    reload_experiment_tables();
                 }
             },
         });
@@ -787,9 +867,10 @@ frontpage = (function(){
     // -----------------------------------------------------------------
 
     var tab_funcs = {
-        tab_analyze: show_tab_analyze,
+        tab_analyze: init_tab_analyze,
         tab_edit: init_tab_edit,
     };
+    var experiments = {}      // Last set of experiments from server
 
     //
     // init_main:
@@ -803,7 +884,38 @@ frontpage = (function(){
         });
         var active = $("#frontpage .nav li.active a").attr("id");
         tab_funcs[active]();
+        reload_experiment_tables();
     };
+
+    //
+    // reload_experiment_tables:
+    //   Upload list of experiments in edit table
+    //
+    var reload_experiment_tables = function() {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "all_experiments"
+            },
+            success: fill_experiment_tables,
+        });
+    }
+
+    //
+    // fill_experiment_tables:
+    //   Display the list of experiments in edit table
+    //
+    var fill_experiment_tables = function(data) {
+        if (data.status != "success")
+            show_error(data.status, data.reason, data.cause);
+        else {
+            fill_analyze_table(data.results);
+            fill_edit_table(data.results);
+            experiments = data.results;
+        }
+    }
 
     // -----------------------------------------------------------------
     // Utility functions

@@ -32,32 +32,48 @@
           Edit</a></li>
       </ul>
       <div class="tab-content">
+        <!--
+          -- "Analyze" tab
+          -->
         <div id="expanalyze" class="tab-pane fade in active">
-          <table class="table table-condensed table-hover table-striped"
-               id="experimenttable"></table>
-          <div>
-            <button id="download">Download</button>
-            <button id="showdata">Show Data</button>
-            <button id="showplot">Show Plot</button>
+          <div class="ui-layout-north">
+            <!-- Table of experiments -->
+            <table class="table table-condensed table-hover table-striped"
+                   id="analyze-table"></table>
+            <div>
+              <button id="download">Download</button>
+              <button id="showplot">Show Plot</button>
+            </div>
+          </div>
+          <div class="ui-layout-center" id="analyze-experiment">
           </div>
         </div>
+        <!--
+          -- "Edit" tab
+          -->
         <div id="expedit" class="tab-pane fade">
-          <div class="ui-layout-north" id="edit-entries">
-            <form id="upload-file-form">
-              <div class="file-input" id="upload-drop">
-                Drag-and-drop file here, or click to browse
-                <input type="file"
-                       id="upload-file" name="upload-file">
-                <br>
-                Selected file: <span id="upload-file-name">none</span>
-              </div>
-              <button id="upload-button" disabled>Upload</button>
-              <span id="upload-status"></span>
-            </form>
+          <div class="ui-layout-north">
+            <!-- Table of experiments -->
             <table class="table table-condensed table-hover table-striped"
-                   id="edit-entries-table"></table>
-          </div>
-          <div class="ui-layout-center" id="edit-metadata">
+                   id="edit-table"></table>
+            <!-- Upload UI -->
+            <div id="edit-upload">
+              <fieldset>
+                <legend>Upload Dataset</legend>
+                <form id="upload-file-form">
+                  <div class="file-input" id="upload-drop">
+                    Drag-and-drop file here, or click to browse
+                    <input type="file"
+                           id="upload-file" name="upload-file">
+                    <br>
+                    Selected file: <span id="upload-file-name">none</span>
+                  </div>
+                  <button id="upload-button" disabled>Upload</button>
+                  <span id="upload-status"></span>
+                </form>
+              </fieldset>
+            </div>
+            <!-- Controlled vocabulary -->
             <form id="edit-vocabulary-form">
               <fieldset id="edit-vocabulary-fieldset">
                 <legend>Edit Controlled Vocabulary</legend>
@@ -102,6 +118,8 @@
                 </div>
               </fieldset>
             </form>
+          </div>
+          <div class="ui-layout-center" id="edit-metadata">
             <form id="edit-metadata-form">
               <ul class="nav nav-tabs">
                 <li class="nav active">
