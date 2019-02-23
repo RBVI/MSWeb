@@ -151,6 +151,8 @@ frontpage = (function(){
             alert("Please select a file to upload");
             return;
         }
+        // Have to do our own encoding since jQuery
+        // AJAX data does not support files yet
         var form_data = new FormData();
         form_data.append("action", "file_upload");
         form_data.append("datafile", selected_file, selected_file.name);
@@ -687,7 +689,8 @@ frontpage = (function(){
     // update_metadata:
     //   Send current metadata values to server
     //
-    var update_metadata = function() {
+    var update_metadata = function(ev) {
+        stop_default(ev);
         var form_data = {
             "action": "update_experiment",
             "exp_id": metadata_exp_id,
@@ -698,6 +701,15 @@ frontpage = (function(){
             if (value)
                 form_data[input_id] = value;
         });
+        var runs = {};
+        $("#edit-runs-table tbody tr").each(function(index) {
+            var name = $(this).find("td:nth-child(1)").text();
+            var date = $(this).find("td:nth-child(2) input").val();
+            var cat = $(this).find("td:nth-child(3) input").val();
+            // keys should match those used in show_runs()
+            runs[name] = { date: date, category: cat };
+        });
+        form_data["runs"] = JSON.stringify(runs);
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -730,15 +742,9 @@ frontpage = (function(){
     //
     var init_runs_form = function() {
         var htr = $("<tr/>");
-        htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": true,
-                                "data-type": "numeric",
-                                "data-visible": false }).text("Id"));
-        htr.append($("<th/>", { "data-column-id": "runname" }).text("Name"));
-        htr.append($("<th/>", { "data-column-id": "rundate",
-                                "data-formatter": "rundate" }).text("Date"));
-        htr.append($("<th/>", { "data-column-id": "runcat",
-                                "data-formatter": "runcat" }).text("Category"));
+        htr.append($("<th/>").text("Name"));
+        htr.append($("<th/>").text("Date"));
+        htr.append($("<th/>").text("Category"));
         var tbl = $("#edit-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"));
@@ -754,9 +760,11 @@ frontpage = (function(){
         var tbody = tbl.find("tbody");
         tbody.empty();
         var rid = 1;
-        $.each(exp["runs"], function(run_name, run_data) {
+        // $.each(exp["runs"], function(run_name, run_data) {
+        var runs = exp["runs"];
+        Object.keys(runs).sort().forEach(function(run_name) {
+            var run_data = runs[run_name];
             var tr = $("<tr/>");
-            tr.append($("<td/>").text(rid));
             tr.append($("<td/>").text(run_name));
             tr.append($("<td/>").append($("<input/>",
                                             { type: "date",

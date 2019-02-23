@@ -160,10 +160,12 @@ def do_update_experiment(out, form):
         _send_failed(out, "invalid experiment selected",
                           "experiment id: %r" % exp_id)
         return
+
+    # Update experiment metadata
     updated = []
     deleted = []
     for key in form.keys():
-        if key in [ "action", "exp_id" ]:
+        if key in [ "action", "exp_id", "runs" ]:
             continue
         value = form.getfirst(key)
         if value:
@@ -172,6 +174,17 @@ def do_update_experiment(out, form):
         else:
             del exp[key]
             deleted.append(key)
+
+    # Update runs metadata
+    runs = exp.get("runs", None)
+    runs_data = form.getfirst("runs")
+    if runs and runs_data:
+        import json
+        data = json.loads(runs_data)
+        for run_name, run_data in data.items():
+            runs[run_name].update(run_data)
+
+    # Save and respond
     ds.write_index()
     _send_success(out, {"updated":updated, "deleted":deleted})
 
