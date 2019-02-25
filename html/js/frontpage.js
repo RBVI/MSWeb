@@ -12,10 +12,12 @@
 // Edit tab upload form:
 //      ~~Add controls for experiment type vocabulary
 //      ~~Add controls for run category vocabulary
-//      Make editing experiment attributes work
-//      Add editable runs table for setting category and date
+//      ~~Make editing experiment attributes work
+//      ~~Add editable runs table for setting category and date
+//      Style runs table to use less vertical space
 // Analyze tab:
-//      ???
+//      Add runs table mapping long names to short integers
+//      Add stats table displaying protein vs stats for all runs
 //
 
 frontpage = (function(){
@@ -43,7 +45,7 @@ frontpage = (function(){
     var AnalyzeTableOptions = {
         selection: true,
         rowSelect: true,
-        multiSelect: true,
+        multiSelect: false,
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
     }
@@ -126,13 +128,17 @@ frontpage = (function(){
             tbl.select([ analyze_exp_id ]);
     }
 
+    var analyze_exp_id;
+
     //
     // analyze_experiment_selected:
     //   Event callback when user clicks on a row in analyze table
     //
     var analyze_experiment_selected = function(ev, rows) {
-        // TODO: update display for newly selected experiment
-        alert("update display for newly selected experiment");
+        $("#analyze-runs-table").removeAttr("disabled");
+        $("#analyze-stats-table").removeAttr("disabled");
+        analyze_exp_id = rows[0].id;
+        show_analyze_tables(analyze_exp_id);
     }
 
     //
@@ -141,8 +147,42 @@ frontpage = (function(){
     //   selects a different row
     //
     var analyze_experiment_deselected = function(ev, rows) {
-        // TODO: hide display of experiment data
-        alert("hide display of experiment data");
+        if (analyze_exp_id) {
+            $("#analyze-runs-table").attr("disabled", "disabled");
+            $("#analyze-stats-table").attr("disabled", "disabled");
+            analyze_exp_id = undefined;
+        }
+    }
+
+    //
+    // show_analyze_tables:
+    //   Redisplay contents for runs and stats table in analyze tab
+    //
+    var show_analyze_tables = function(exp_id) {
+        // TODO: update display for newly selected experiment
+        // First update the runs table and get a mapping from
+        // run name to short integer, as well as checkbuttons
+        // for displaying/hiding runs in stats table.  Then
+        // update stats table.
+        var tbl = $("#analyze-runs-table");
+        tbl.empty();
+        var exp = experiments[exp_id];
+        var tr = $("<tr/>");
+        tbl.append(tr);
+        length = 0;
+        $.each(exp.runs, function(run_name, run_data) {
+            console.log(run_name);
+            console.log(tr.length);
+            if (length == 2) {
+                tr = $("<tr/>");
+                tbl.append(tr);
+                length = 0;
+            }
+            // TODO: add checkbutton instead of plain text
+            tr.append($("<td/>").text(run_name));
+            console.log(tr.length);
+            length += 1;
+        });
     }
 
     // -----------------------------------------------------------------
@@ -329,7 +369,6 @@ frontpage = (function(){
             }
         }
     }
-    var analyze_exp_id;
 
     //
     // init_edit_table:
@@ -420,7 +459,8 @@ frontpage = (function(){
         $("#edit-metadata-fieldset").removeAttr("disabled");
         $("#edit-metadata-button").removeAttr("disabled");
         $("#edit-revert-metadata-button").removeAttr("disabled");
-        show_metadata(rows[0].id);
+        metadata_exp_id = rows[0].id;
+        show_metadata(metadata_exp_id);
     }
 
     //
@@ -429,9 +469,12 @@ frontpage = (function(){
     //   selects a different row
     //
     var edit_experiment_deselected = function(ev, rows) {
-        $("#edit-metadata-fieldset").attr("disabled", "disabled");
-        $("#edit-metadata-button").attr("disabled", "disabled");
-        $("#edit-revert-metadata-button").attr("disabled", "disabled");
+        if (metadata_exp_id) {
+            $("#edit-metadata-fieldset").attr("disabled", "disabled");
+            $("#edit-metadata-button").attr("disabled", "disabled");
+            $("#edit-revert-metadata-button").attr("disabled", "disabled");
+            metadata_exp_id = undefined;
+        }
     }
 
     //
@@ -750,7 +793,6 @@ frontpage = (function(){
     //   Display experiment attribute values in metadata form
     //
     var show_metadata = function(exp_id) {
-        metadata_exp_id = exp_id;
         var exp = experiments[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];

@@ -46,12 +46,23 @@
             </div>
           </div>
           <div class="ui-layout-center" id="analyze-experiment">
+            <div id="analyze-runs">
+              <table class="table table-condensed table-hover table-striped"
+                     id="analyze-runs-table"></table>
+            </div>
+            <div id="analyze_stats">
+              <table class="table table-condensed table-hover table-striped"
+                     id="analyze-stats-table"></table>
+            </div>
           </div>
         </div>
         <!--
           -- "Edit" tab
           -->
         <div id="expedit" class="tab-pane fade">
+          <!--
+            -- Top half: experiment table, vocabulary and upload UIs
+            -->
           <div class="ui-layout-north">
             <!-- Table of experiments -->
             <table class="table table-condensed table-hover table-striped"
@@ -80,45 +91,20 @@
                 <div class="grid">
                   <label for="exptype-vocab">Experiment Type</label>
                   <div id="exptype-vocab-div"></div>
-                  <!--
-                  <div class="input-group dropdown">
-                    <input type="text" class="form-control dropdown-toggle"
-                           id="exptype-vocab"
-                           placeholder="experiment type name">
-                    <ul id="exptype-vocab-list" class="dropdown-menu"></ul>
-                    <span role="button"
-                          class="input-group-addon dropdown-toggle"
-                          data-toggle="dropdown"
-                          aria-haspopup="true" aria-expanded="false">
-                      <span class="fa fa-caret-down"></span>
-                    </span>
-                  </div>
-                  -->
                   <button id="add-experiment-type">Add</button>
                   <button id="remove-experiment-type">Remove</button>
 
                   <label for="runcat-vocab">Run Category</label>
                   <div id="runcat-vocab-div"></div>
-                  <!--
-                  <div class="input-group dropdown">
-                    <input type="text" class="form-control dropdown-toggle"
-                           id="runcat-vocab"
-                           placeholder="run category name">
-                    <ul id="runcat-vocab-list" class="dropdown-menu"></ul>
-                    <span role="button"
-                          class="input-group-addon dropdown-toggle"
-                          data-toggle="dropdown"
-                          aria-haspopup="true" aria-expanded="false">
-                      <span class="fa fa-caret-down"></span>
-                    </span>
-                  </div>
-                  -->
                   <button id="add-run-category">Add</button>
                   <button id="remove-run-category">Remove</button>
                 </div>
               </fieldset>
             </form>
           </div>
+          <!--
+            -- Bottom half: experiment and runs metadata UI
+            -->
           <div class="ui-layout-center" id="edit-metadata">
             <form id="edit-metadata-form">
               <ul class="nav nav-tabs">
