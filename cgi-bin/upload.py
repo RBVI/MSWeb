@@ -120,19 +120,11 @@ def do_all_experiments(out, form):
 
 
 def do_delete_experiment(out, form):
-    from msweb_lib import datastore
-    import os
-    if not form.has_key("exp_id"):
-        _send_failed(out, "no experiment specified", "missing experiment id")
-        return
-    ds = datastore.DataStore(DataStorePath)
     try:
-        exp_id = form.getfirst("exp_id")
-        del ds.experiments[exp_id]
-    except (ValueError, KeyError):
-        _send_failed(out, "invalid experiment selected",
-                          "experiment id: %r" % exp_id)
+        ds, exp_id, exp = _get_exp_metadata(out, form)
+    except ValueError:
         return
+    del ds.experiments[exp_id]
     ds.write_index()
     cooked = ds.cooked_file_name(exp_id)
     raw = ds.raw_file_name(exp_id)
@@ -148,17 +140,9 @@ def do_delete_experiment(out, form):
 
 
 def do_update_experiment(out, form):
-    from msweb_lib import datastore
-    if not form.has_key("exp_id"):
-        _send_failed(out, "no experiment specified", "missing experiment id")
-        return
-    ds = datastore.DataStore(DataStorePath)
     try:
-        exp_id = form.getfirst("exp_id")
-        exp = ds.experiments[exp_id]
-    except (ValueError, KeyError):
-        _send_failed(out, "invalid experiment selected",
-                          "experiment id: %r" % exp_id)
+        ds, exp_id, exp = _get_exp_metadata(out, form)
+    except ValueError:
         return
 
     # Update experiment metadata
@@ -187,6 +171,34 @@ def do_update_experiment(out, form):
     # Save and respond
     ds.write_index()
     _send_success(out, {"updated":updated, "deleted":deleted})
+
+
+def do_get_experiment(out, form):
+    from msweb_lib import combined
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    cooked = ds.cooked_file_name(exp_id)
+    with open(cooked) as f:
+        _send_success(out, {"experiment_data":f.read(),
+                            "experiment_id":exp_id})
+
+
+def _get_exp_metadata(out, form):
+    from msweb_lib import datastore
+    if not form.has_key("exp_id"):
+        _send_failed(out, "no experiment specified", "missing experiment id")
+        raise ValueError("no experiment specified")
+    ds = datastore.DataStore(DataStorePath)
+    try:
+        exp_id = form.getfirst("exp_id")
+        exp = ds.experiments[exp_id]
+    except (ValueError, KeyError):
+        _send_failed(out, "invalid experiment selected",
+                          "experiment id: %r" % exp_id)
+        raise ValueError("invalid experiment specified")
+    return ds, exp_id, exp
 
 
 def _send_failed(out, reason, cause=""):

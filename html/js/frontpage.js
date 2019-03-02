@@ -16,8 +16,9 @@
 //      ~~Add editable runs table for setting category and date
 //      Style runs table to use less vertical space
 // Analyze tab:
-//      Add runs table mapping long names to short integers
+//      ~~Add runs table mapping long names to short integers
 //      Add stats table displaying protein vs stats for all runs
+//      Add plot area
 //
 
 frontpage = (function(){
@@ -60,8 +61,6 @@ frontpage = (function(){
             name: "expanalyze",
             north__size: "40%"
         });
-        //
-        // Show experiments
         init_analyze_table();
 
         /* Reset tab callback */
@@ -129,6 +128,7 @@ frontpage = (function(){
     }
 
     var analyze_exp_id;
+    var analyze_exp;
 
     //
     // analyze_experiment_selected:
@@ -170,18 +170,54 @@ frontpage = (function(){
         var tr = $("<tr/>");
         tbl.append(tr);
         length = 0;
+        var run_map = {};
+        var run_id = 1;
         $.each(exp.runs, function(run_name, run_data) {
-            console.log(run_name);
-            console.log(tr.length);
             if (length == 2) {
                 tr = $("<tr/>");
                 tbl.append(tr);
                 length = 0;
             }
-            // TODO: add checkbutton instead of plain text
-            tr.append($("<td/>").text(run_name));
-            console.log(tr.length);
+            // add checkbox instead of plain text
+            var cb_id = "run-cb-" + run_id;
+            var label = $("<label/>", { "for": cb_id })
+                            .text(run_id + ": " + run_name);
+            var cb = $("<input/>", { "type": "checkbox",
+                                         "id": cb_id,
+                                         "class": "run-checkbox",
+                                         "value": run_id });
+            tr.append($("<td/>").append(cb).append(label));
             length += 1;
+            run_map[run_id] = run_name;
+            run_id += 1;
+        });
+        show_status("fetching experiment data...", true)
+        get_experiment(exp_id);
+    }
+
+    //
+    // get_experiment:
+    //   Get experiment data from server
+    //
+    var get_experiment = function(exp_id) {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "get_experiment",
+                exp_id: exp_id,
+            },
+            success: function(data) {
+                show_status("", false)
+                if (data.status != "success") {
+                    show_error(data.status, data.reason, data.cause);
+                } else {
+                    // TODO: update analyze table and plot
+                    alert("update analysis for experiment " +
+                          data.results.experiment_id);
+                }
+            },
         });
     }
 
@@ -1000,6 +1036,15 @@ frontpage = (function(){
             console.log("cause of error: " + cause);
         var msg = status + ": " + reason;
         alert(msg);
+    }
+
+    //
+    // show_status:
+    //   Display status at status box at top of page
+    //
+    var show_status = function(msg, busy) {
+        $("#top-status-box").text(msg);
+        $("body").css("cursor", busy ? "progress" : "default");
     }
 
     return {

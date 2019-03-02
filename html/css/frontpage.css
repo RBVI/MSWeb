@@ -42,6 +42,9 @@ html, body, #frontpage, #expanalyze, #expedit {
     font-weight: bold;
 }
 .exp-delete-button {
-    border-radius: .5em;
+    border-radius: 0.5em;
     background: darkgray;
+}
+.run-checkbox + label {
+    margin-left: 0.25em;
 }
