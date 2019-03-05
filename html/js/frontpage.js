@@ -401,7 +401,7 @@ frontpage = (function(){
             "actions": function(column, row) {
                 return '<button data-row-id="' + row.id +
                        '" class="btn btn-xs btn-default exp-delete">' +
-                       '<span class="fa fa-trash"></span></button>'
+                       '<span class="icon fa fa-trash"></span></button>'
             }
         }
     }
