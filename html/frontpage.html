@@ -1,142 +1,200 @@
 <!DOCTYPE html>
 <!-- vim: set expandtab shiftwidth=2 softtabstop=2: -->
+<!-- edited using 120-column window -->
 <html>
   <head>
     <meta charset="utf-8">
     <title>MSWeb Preview</title>
     <!-- CSS -->
-    <link rel="stylesheet" href="css/jquery.layout-default.css" type="text/css">
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" type="text/css">
-    <!--
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    -->
-    <!-- end Bootstrap -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- FA 5.7 requires shims and does not look better -->
-    <link rel="stylesheet" href="css/msweb.css" type="text/css">
     <link rel="stylesheet" href="css/frontpage.css" type="text/css">
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <!-- Boostrap -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <!--
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css"></script>
-    <!--end Bootstrap -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.fa.min.js"></script>
-    <script type="text/javascript" src="js/jquery.layout-1.4.0.js"></script>
     <script type="text/javascript" src="js/frontpage.js"></script>
   </head>
   <body>
-    <div class="msweb-title frontpage-title">
+    <div class="frontpage-title">
       <h4><span id="top-status-box"></span>&nbsp;&nbsp;MSWeb v0.1</h4>
     </div>
-    <div id="frontpage">
-      <ul class="nav nav-tabs">
-        <li class="nav active">
-          <a data-toggle="tab" id="tab_analyze" href="#expanalyze">
-          Analyze</a></li>
-        <li class="nav">
-          <a data-toggle="tab" id="tab_edit" href="#expedit">
-          Edit</a></li>
-      </ul>
-      <div class="tab-content">
+    <div id="frontpage" class="col-xs-12">
+      <nav>
+        <div class="nav nav-tabs" role="tablist">
+          <a class="nav-item nav-link active" id="tab_analyze" data-toggle="tab" href="#expanalyze" role="tab"
+             aria-controls="expanalyze" aria-selected="true">
+            Analyze
+          </a>
+          <a class="nav-item nav-link" id="tab_edit" data-toggle="tab" href="#expedit" role="tab"
+             aria-controls="expedit" aria-selected="false">
+            Edit
+          </a>
+        </div>
+      </nav>
+      <div class="tab-content py-3 px-3 px-sm-0">
         <!-- "Analyze" tab -->
-        <div id="expanalyze" class="tab-pane fade in active">
-          <div class="ui-layout-north">
-            <!-- Table of experiments -->
-            <table class="table table-condensed table-hover table-striped"
-                   id="analyze-table"></table>
-            <div>
-              <button id="download">Download</button>
-              <button id="showplot">Show Plot</button>
+        <div class="tab-pane fade show active" id="expanalyze" role="tabpanel" aria-labelledby="tab_analyze">
+          <div class="panel-group">
+            <div class="card" id="analyze-experiments">
+              <div class="card-heading">
+                <h3 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-exp-card"
+                          aria-expanded="true" aria-controls="analyze-exp-card">
+                    Available Experiments
+                  </button>
+                </h3>
+              </div>
+              <div class="card-body collapse show" id="analyze-exp-card">
+                <!-- Table of experiments -->
+                <div class="entire-bootgrid-table">
+                  <table class="table table-condensed table-hover table-striped" id="analyze-exp-table"></table>
+                </div>
+                <div>
+                  <button id="download">Download</button>
+                  <button id="showplot">Show Plot</button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="ui-layout-center" id="analyze-experiment">
-            <div id="analyze-runs">
-              <table class="table table-condensed table-hover table-striped"
-                     id="analyze-runs-table"></table>
+            <div class="card" id="analyze-runs">
+              <div class="card-heading">
+                <h3 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-runs-card"
+                          aria-expanded="true" aria-controls="analyze-runs-card">
+                    Runs
+                  </button>
+                </h3>
+              </div>
+              <div class="card-body collapse show" id="analyze-runs-card">
+                <table class="table table-condensed table-hover table-striped" id="analyze-runs-table"></table>
+              </div>
             </div>
-            <div id="analyze_stats">
-              <table class="table table-condensed table-hover table-striped"
-                     id="analyze-stats-table"></table>
+            <div class="card" id="analyze-stats">
+              <div class="card-heading">
+                <h3 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-stats-card"
+                          aria-expanded="true" aria-controls="analyze-stats-card">
+                    Data and Plots
+                  </button>
+                </h3>
+              </div>
+              <div class="card-body collapse show" id="analyze-stats-card">
+                <div class="entire-bootgrid-table">
+                  <table class="table table-condensed table-hover table-striped" id="analyze-stats-table"></table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <!-- "Edit" tab -->
-        <div id="expedit" class="tab-pane fade">
-          <!-- Top half: experiment table, vocabulary and upload UIs -->
-          <div class="ui-layout-north">
-            <!-- Table of experiments -->
-            <table class="table table-condensed table-hover table-striped"
-                   id="edit-table"></table>
+        <div class="tab-pane fade" id="expedit"
+             role="tabpanel" aria-labelledby="tab_edit">
+          <!-- Accordion with three sections: upload, vocab, metadata -->
+          <div id="edit-accordion">
             <!-- Upload UI -->
-            <div id="edit-upload">
-              <fieldset>
-                <legend>Upload Dataset</legend>
-                <form id="upload-file-form">
-                  <div class="file-input" id="upload-drop">
-                    Drag-and-drop file here, or click to browse
-                    <input type="file"
-                           id="upload-file" name="upload-file">
-                    <br>
-                    Selected file: <span id="upload-file-name">none</span>
-                  </div>
-                  <button id="upload-button" disabled>Upload</button>
-                  <span id="upload-status"></span>
-                </form>
-              </fieldset>
-            </div>
-            <!-- Controlled vocabulary -->
-            <form id="edit-vocabulary-form">
-              <fieldset id="edit-vocabulary-fieldset">
-                <legend>Edit Controlled Vocabulary</legend>
-                <div class="grid">
-                  <label for="exptype-vocab">Experiment Type</label>
-                  <div id="exptype-vocab-div"></div>
-                  <button id="add-experiment-type">Add</button>
-                  <button id="remove-experiment-type">Remove</button>
-
-                  <label for="runcat-vocab">Run Category</label>
-                  <div id="runcat-vocab-div"></div>
-                  <button id="add-run-category">Add</button>
-                  <button id="remove-run-category">Remove</button>
-                </div>
-              </fieldset>
-            </form>
-          </div>
-          <!-- Bottom half: experiment and runs metadata UI -->
-          <div class="ui-layout-center" id="edit-metadata">
-            <form id="edit-metadata-form">
-              <ul class="nav nav-tabs">
-                <li class="nav active">
-                  <a data-toggle="tab" id="tab_edit_exp" href="#editexp">
-                  Edit Experiment</a></li>
-                <li class="nav">
-                  <a data-toggle="tab" id="tab_edit_runs" href="#editruns">
-                  Edit Runs</a></li>
-              </ul>
-              <div class="tab-content">
-                <div id="editexp" class="tab-pane fade in active">
-                  <fieldset id="edit-metadata-fieldset" disabled>
-                    <div class="grid"></div>
-                  </fieldset>
-                </div>
-                <div id="editruns" class="tab-pane fade">
-                  <table class="table table-condensed table-hover table-striped"
-                         id="edit-runs-table"></table>
+            <div class="card" id="edit-upload">
+              <div class="card-header" id="edit-upload-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#edit-upload-body"
+                          aria-controls="edit-upload-body" aria-expanded="true">
+                    Upload Dataset
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse show" id="edit-upload-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-upload-heading">
+                <div class="card-body">
+                  <form id="upload-file-form">
+                    <div class="file-input" id="upload-drop">
+                      Drag-and-drop file here, or click to browse
+                      <input type="file" id="upload-file" name="upload-file">
+                      <br>
+                      Selected file: <span id="upload-file-name">none</span>
+                    </div>
+                    <button id="upload-button" disabled>Upload</button>
+                    <span id="upload-status"></span>
+                  </form>
                 </div>
               </div>
-              <button id="edit-metadata-button" disabled>Update</button>
-              <button id="edit-revert-metadata-button" disabled>Revert</button>
-            </form>
-          </div>
+            </div>
+            <!-- Controlled vocabulary -->
+            <div class="card" id="edit-vocabulary">
+              <div class="card-header" id="edit-vocab-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#edit-vocab-body"
+                          aria-controls="edit-vocab-body" aria-expanded="false">
+                    Edit Controlled Vocabulary
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse" id="edit-vocab-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-vocab-heading">
+                <div class="card-body">
+                  <form id="edit-vocabulary-form">
+                    <div class="grid">
+                      <label for="exptype-vocab">Experiment Type</label>
+                      <div id="exptype-vocab-div"></div>
+                      <label for="runcat-vocab">Run Category</label>
+                      <div id="runcat-vocab-div"></div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- Experiment and runs metadata UI -->
+            <div class="card" id="edit-metadata">
+              <div class="card-header" id="edit-metadata-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#edit-metadata-body"
+                          aria-controls="edit-metadata-body" aria-expanded="false">
+                    Edit Experiment/Run Metadata
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse" id="edit-metadata-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-metadata-heading">
+                <div class="card-body">
+                  <!-- Table of experiments -->
+                  <div class="entire-bootgrid-table">
+                    <table class="table table-condensed table-hover table-striped" id="edit-table"></table>
+                  </div>
+                  <form id="edit-metadata-form">
+                    <nav>
+                      <div class="nav nav-tabs" role="tablist">
+                        <li class="nav active">
+                        <a class="nav-item nav-link active" id="tab_edit_exp" data-toggle="tab" href="#editexp"
+                           role="tab" aria-controls="editexp" aria-selected="true">
+                          Edit Experiment
+                        </a>
+                        <a class="nav-item nav-link" id="tab_edit_runs" data-toggle="tab" href="#editruns"
+                           role="tab" aria-controls="editruns" aria-selected="false">
+                          Edit Runs</a></li>
+                      </ul>
+                    </nav>
+                    <div class="tab-content py-3 px-3 px-sm-0">
+                      <div class="tab-pane fade show active" id="editexp" role="tabpanel"
+                           aria-labelledby="tab_edit_exp">
+                        <fieldset id="edit-metadata-fieldset" disabled>
+                          <div class="grid"></div>
+                        </fieldset>
+                      </div>
+                      <div class="tab-pane fade" id="editruns" role="tabpanel"
+                           aria-labelledby="tab_edit_runs">
+                        <table class="table table-condensed table-hover table-striped" id="edit-runs-table"></table>
+                      </div>
+                    </div>
+                    <button id="edit-metadata-button" disabled>Update</button>
+                    <button id="edit-revert-metadata-button" disabled>Revert</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          <div>
         </div>
       </div>
     </div>

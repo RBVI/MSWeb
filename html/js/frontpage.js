@@ -56,11 +56,6 @@ frontpage = (function(){
     //   Initialize all sections of the "analyze" tab
     //
     var init_tab_analyze = function() {
-        // Setup grid layout for all sections
-        $("#expanalyze").layout({
-            name: "expanalyze",
-            north__size: "40%"
-        });
         init_analyze_table();
 
         /* Reset tab callback */
@@ -96,7 +91,7 @@ frontpage = (function(){
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
         });
-        var tbl = $("#analyze-table");
+        var tbl = $("#analyze-exp-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"))
            .bootgrid(AnalyzeTableOptions)
@@ -109,7 +104,7 @@ frontpage = (function(){
     //   Display the list of experiments in analyze table
     //
     var fill_analyze_table = function(results) {
-        var tbl = $("#analyze-table");
+        var tbl = $("#analyze-exp-table");
         tbl.bootgrid("clear");
         var rows = [];
         $.each(results, function(exp_id, exp) {
@@ -230,12 +225,6 @@ frontpage = (function(){
     //   Initialize all sections of the "edit" tab
     //
     var init_tab_edit = function() {
-        // Setup grid layout for all sections
-        $("#expedit").layout({
-            name: "expedit",
-            north__size: "40%"
-        });
-
         // Setup upload file elements
         $("#upload-drop").on("dragover", stop_default)
                          .on("dragenter", stop_default)
@@ -551,10 +540,10 @@ frontpage = (function(){
     //   Initialize controlled vocabulary elements
     //
     var init_controlled_vocabulary = function() {
-        var v = add_vocab_dropdown("exptype-vocab");
+        var v = add_editable_vocab("exptype-vocab", "experiment-type");
         $("#exptype-vocab-div").append(v[0]);
         v[1].prop("placeholder", "experiment type name");
-        v = add_vocab_dropdown("runcat-vocab");
+        v = add_editable_vocab("runcat-vocab", "run-category");
         $("#runcat-vocab-div").append(v[0]);
         v[1].prop("placeholder", "run category name");
         $("#add-experiment-type").attr("disabled", "disabled")
@@ -597,31 +586,48 @@ frontpage = (function(){
         if (data)
             controlled_vocabulary = data.results;
         var root = $("#frontpage");
+        fill_dropdown(root, "exptype-vocab",
+                      controlled_vocabulary.experiment_types);
         $.each(cv_exptypes, function(index, eid) {
-            fill_list(root, eid, controlled_vocabulary.experiment_types);
+            fill_selector(root, eid, controlled_vocabulary.experiment_types);
         });
+        fill_dropdown(root, "runcat-vocab",
+                      controlled_vocabulary.run_categories);
         $.each(cv_runcats, function(index, eid) {
-            fill_list(root, eid, controlled_vocabulary.run_categories);
+            fill_selector(root, eid, controlled_vocabulary.run_categories);
         });
         experiment_type_changed();
         run_category_changed();
     }
 
-    var fill_list = function(root, eid, list) {
-        // eid is the root (e.g., "exptype")
-        // Fill in list eid-list (e.g., "exptype-list") and
-        // add callback to update eid (e.g., "exptype-vocab")
-        if (list.length == 0)
-            list = [ "None" ];
-        var ul_id = "#" + eid + "-list"
-        var ul = root.find(ul_id);
-        ul.empty();
+    var fill_dropdown = function(root, eid, list) {
+        var input = root.find("#" + eid);
+        var input_group = input.parent();
+        var menu = input_group.find(".dropdown-menu");
+        menu.empty();
         $.each(list, function(index, val) {
-            var a = $("<a/>", { href: "#", "data-value": val }).text(val);
-            ul.append($("<li/>").append(a));
+            menu.append($("<a/>", { "class": "dropdown-item",
+                                    "href": "#",
+                                    "data-value": val }).text(val));
         });
-        root.find(ul_id + " a").click(function() {
-            $("#" + eid).val($(this).attr("data-value")).trigger("input");
+        var button = input_group.find(".input-group-prepend button");
+        if (button) {
+            if (list.length == 0)
+                button.attr("disabled", "disabled");
+            else
+                button.removeAttr("disabled");
+            menu.find("a").click(function() {
+                input.val($(this).attr("data-value")).trigger("input");
+            });
+        }
+    }
+
+    var fill_selector = function(root, eid, list) {
+        var select = root.find("#" + eid);
+        select.empty();
+        select.append($("<option/>", { "value": ""}));
+        $.each(list, function(index, val) {
+            select.append($("<option/>", { "value": val }).text(val));
         });
     }
 
@@ -647,48 +653,56 @@ frontpage = (function(){
     }
 
     //
-    // add_vocab_dropdown:
+    // add_editable_vocab:
     //   Add a editable dropdown input for controlled vocabulary
     //   without filling it in with the actual vocabulary terms
     //
-    var add_vocab_dropdown = function(input_id) {
-        var div = $("<div/>", { "class": "input-group dropdown" });
+    var add_editable_vocab = function(input_id, name) {
+        var div = $("<div/>", { "class": "input-group mb-3" });
+        var predefined = $("<div/>", { "class": "input-group-prepend" });
+        var button = $("<button/>", { "class": "btn btn-outline-secondary dropdown-toggle",
+                                      "type": button,
+                                      "data-toggle": "dropdown",
+                                      "aria-haspopup": "true",
+                                      "aria-expanded": "false" });
+        var dropdown = $("<div/>", { "class": "dropdown-menu" });
         var input = $("<input/>", { "type": "text",
                                     "id": input_id,
-                                    "class": "form-control dropdown-toggle" });
-        var ul_id = input_id + "-list";
-        var ul = $("<ul/>", { "id": ul_id,
-                              "class": "dropdown-menu" });
-        var span = $("<span/>", { role: "button",
-                                  "class": "input-group-addon dropdown-toggle",
-                                  "data-toggle": "dropdown",
-                                  "aria-haspopup": "true",
-                                  "aria-expanded": "false" });
-        span.append($("<span/>", { "class": "fa fa-caret-down" }));
-        div.append(input).append(ul).append(span);
+                                    "class": "form-control" });
+        var actions = $("<div/>", { "class": "input-group-append" });
+        actions.append($("<button/>", { "class": "btn btn-outline-secondary",
+                                        "id": "add-" + name,
+                                        "type": "button" }).text("Add"))
+               .append($("<button/>", { "class": "btn btn-outline-secondary",
+                                        "id": "remove-" + name,
+                                        "type": "button" }).text("Remove"));
+        predefined.append(button).append(dropdown);
+        div.append(predefined, input, actions);
         return [ div, input ];
     }
 
     //
-    // add_exptype_vocab
-    //   Fill in experiment type terms in dropdown list
+    // add_exptype_vocab:
+    //   Add selector for experiment type
     //
-    var add_exptype_vocab = function(root, input_id, fill_now) {
-        if (fill_now && controlled_vocabulary)
-            fill_list(root, input_id, controlled_vocabulary.experiment_types);
+    var add_exptype_vocab = function(input_id) {
+        var select = $("<select/>", { "class": "form-control",
+                                      "id": input_id });
         if (cv_exptypes.indexOf(input_id) == -1)
             cv_exptypes.push(input_id);
+        return select;
     }
 
     //
     // add_runcat_vocab:
-    //   Fill in run category terms in dropdown list
+    //   Add selector for run category
     //
-    var add_runcat_vocab = function(root, input_id, fill_now) {
-        if (fill_now && controlled_vocabulary)
-            fill_list(root, input_id, controlled_vocabulary.run_categories);
+    var add_runcat_vocab = function(input_id) {
+        var select = $("<select/>", { "class": "form-control",
+                                      "id": input_id });
         if (cv_runcats.indexOf(input_id) == -1)
             cv_runcats.push(input_id);
+        return select;
     }
 
     //
@@ -802,15 +816,9 @@ frontpage = (function(){
             var label = $("<label/>", { "for": input_id }).text(val[0]);
             var input;
             if (input_type == "exptype") {
-                var v = add_vocab_dropdown(input_id);
-                container = v[0];
-                input = v[1];
-                add_exptype_vocab(container, input_id, false);
+                container = input = add_exptype_vocab(input_id);
             } else if (input_type == "runcat") {
-                var v = add_vocab_dropdown(input_id);
-                container = v[0];
-                input = v[1];
-                add_runcat_vocab(container, input_id, false);
+                container = input = add_runcat_vocab(input_id);
             } else if (input_type == "textarea")
                 container = input = $("<textarea/>", { "id": input_id });
             else
@@ -829,6 +837,7 @@ frontpage = (function(){
     //   Display experiment attribute values in metadata form
     //
     var show_metadata = function(exp_id) {
+        fill_controlled_vocabulary(null);
         var exp = experiments[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
@@ -836,11 +845,6 @@ frontpage = (function(){
             $("#" + input_id).val(field_value);
         });
         show_runs(exp_id);
-        // Fill vocabulary dropdowns.  The "run category" dropdowns
-        // are built empty, so we have to fill them.  This also
-        // refills all other vocabulary dropdowns as a side effect,
-        // so maybe we want to be a little more efficient about it.
-        fill_controlled_vocabulary(null);
     }
 
     //
@@ -918,7 +922,6 @@ frontpage = (function(){
         var tbody = tbl.find("tbody");
         tbody.empty();
         var rid = 1;
-        // $.each(exp["runs"], function(run_name, run_data) {
         var runs = exp["runs"];
         Object.keys(runs).sort().forEach(function(run_name) {
             var run_data = runs[run_name];
@@ -928,14 +931,11 @@ frontpage = (function(){
                                             { type: "date",
                                               value: run_data["date"] })));
             var input_id = "run-" + rid;
-            var v = add_vocab_dropdown(input_id);
-            container = v[0];
-            input = v[1];
-            add_runcat_vocab(container, input_id, false);
-            input.attr("placeholder", "run category name");
-            input.val(run_data["category"]);
+            container = input = add_runcat_vocab(input_id);
             tr.append($("<td/>").append(container));
             tbody.append(tr);
+            fill_selector(tr, input_id, controlled_vocabulary.run_categories);
+            input.val(run_data["category"]);
             rid += 1;
         });
     }
@@ -960,7 +960,7 @@ frontpage = (function(){
             if (func)
                 func();
         });
-        var active = $("#frontpage .nav li.active a").attr("id");
+        var active = $("#frontpage .nav a.active").attr("id");
         tab_funcs[active]();
         reload_experiment_tables();
     };
