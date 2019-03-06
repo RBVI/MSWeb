@@ -3,6 +3,14 @@
     float:right;
     margin-right: 1em;
 }
+.frontpage-status {
+    color: red;
+}
+.frontpage-theme {
+    font-size: small;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
 html, body, #frontpage, #expanalyze, #expedit {
     height: 100%;
     width: 100%;

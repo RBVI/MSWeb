@@ -955,6 +955,7 @@ frontpage = (function(){
     //   Initialize front page
     //
     var init_main = function() {
+        get_themes();
         $("#frontpage").on("shown.bs.tab", function(e) {
             var func = tab_funcs[e.target["id"]];
             if (func)
@@ -964,6 +965,35 @@ frontpage = (function(){
         tab_funcs[active]();
         reload_experiment_tables();
     };
+
+    //
+    // get_themes:
+    //   Fetch list of Bootstrap themes from cdnjs
+    //
+    var get_themes = function() {
+        $.ajax({
+            dataType: "json",
+            method: "GET",
+            url: "https://bootswatch.com/api/4.json",
+            success: function(data) {
+                var select = $("#themes");
+                $.each(data.themes, function(index, theme) {
+                    select.append($("<option/>", { "data-value": theme.cssCdn })
+                                    .text(theme.name));
+                });
+                select.change(function() {
+                    var url = $(this).children(":selected").attr("data-value");
+                    if (url) {
+                        var link = $("<link/>", { "rel": "stylesheet",
+                                                  "type": "text/css",
+                                                  "href": url });
+                        $("head").append(link);
+                    }
+                });
+                select.val("Cosmo").trigger("change");
+            }
+        });
+    }
 
     //
     // reload_experiment_tables:
