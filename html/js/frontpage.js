@@ -49,7 +49,21 @@ frontpage = (function(){
         multiSelect: false,
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
-    }
+    };
+    var ExperimentStatsColumns = [
+        [ "unique_peptides", "Num Unique", "Unique", false, ],
+        [ "peptide_count", "Peptide Count", "Count", false, ],
+        [ "coverage", "% Cov", "Cov", false, ],
+        [ "best_score", "Best Disc Score", "Score", true, ],
+        [ "best_expected", "Best Expect Val", "Exp", false, ],
+    ];
+    var ExperimentStatsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+    };
 
     //
     // init_tab_analyze:
@@ -68,7 +82,7 @@ frontpage = (function(){
     //   Display "analyze" tab
     //
     var show_tab_analyze = function() {
-        fill_analyze_table(experiments);
+        fill_analyze_table(experiment_metadata);
     }
 
     //
@@ -86,7 +100,7 @@ frontpage = (function(){
                                 "data-identifier": true,
                                 "data-type": "numeric",
                                 "data-searchable": "false",
-                                "data-visible": false }).text("Id"));
+                                "data-visible": "false" }).text("Id"));
         $.each(columns, function(index, values) {
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
@@ -123,7 +137,7 @@ frontpage = (function(){
     }
 
     var analyze_exp_id;
-    var analyze_exp;
+    var analyze_stats_rows;
 
     //
     // analyze_experiment_selected:
@@ -132,6 +146,8 @@ frontpage = (function(){
     var analyze_experiment_selected = function(ev, rows) {
         $("#analyze-runs-table").removeAttr("disabled");
         $("#analyze-stats-table").removeAttr("disabled");
+        if (rows[0].id == analyze_exp_id)
+            return;
         analyze_exp_id = rows[0].id;
         show_analyze_tables(analyze_exp_id);
     }
@@ -143,9 +159,11 @@ frontpage = (function(){
     //
     var analyze_experiment_deselected = function(ev, rows) {
         if (analyze_exp_id) {
+            // XXX: clear out runs and data tables?
             $("#analyze-runs-table").attr("disabled", "disabled");
             $("#analyze-stats-table").attr("disabled", "disabled");
             analyze_exp_id = undefined;
+            analyze_stats_rows = undefined;
         }
     }
 
@@ -161,11 +179,11 @@ frontpage = (function(){
         // update stats table.
         var tbl = $("#analyze-runs-table");
         tbl.empty();
-        var exp = experiments[exp_id];
+        var exp = experiment_metadata[exp_id];
         var tr = $("<tr/>");
         tbl.append(tr);
         length = 0;
-        var run_map = {};
+        var run_order = [];
         var run_id = 1;
         $.each(exp.runs, function(run_name, run_data) {
             if (length == 2) {
@@ -173,28 +191,37 @@ frontpage = (function(){
                 tbl.append(tr);
                 length = 0;
             }
-            // add checkbox instead of plain text
             var cb_id = "run-cb-" + run_id;
             var label = $("<label/>", { "for": cb_id })
                             .text(run_id + ": " + run_name);
             var cb = $("<input/>", { "type": "checkbox",
-                                         "id": cb_id,
-                                         "class": "run-checkbox",
-                                         "value": run_id });
+                                     "id": cb_id,
+                                     "checked": "checked",
+                                     "class": "run-checkbox",
+                                     "value": run_id });
             tr.append($("<td/>").append(cb).append(label));
             length += 1;
-            run_map[run_id] = run_name;
+            run_order.push(run_name);
             run_id += 1;
         });
-        show_status("fetching experiment data...", true)
-        get_experiment(exp_id);
+        $(".run-checkbox").change(function(ev) {
+            show_stats_column($(this).val(), $(this).is(":checked"));
+        });
+        exp.run_order = run_order;
+        if (experiment_stats[exp_id])
+            show_experiment_stats(exp_id);
+        else {
+            show_status("fetching experiment data...", true)
+            get_experiment_stats(exp_id);
+            // Table will be shown after data is fetched
+        }
     }
 
     //
-    // get_experiment:
+    // get_experiment_stats:
     //   Get experiment data from server
     //
-    var get_experiment = function(exp_id) {
+    var get_experiment_stats = function(exp_id) {
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -208,12 +235,92 @@ frontpage = (function(){
                 if (data.status != "success") {
                     show_error(data.status, data.reason, data.cause);
                 } else {
-                    // TODO: update analyze table and plot
-                    alert("update analysis for experiment " +
-                          data.results.experiment_id);
+                    var exp_id = data.results.experiment_id;
+                    experiment_stats[exp_id] = data.results;
+                    show_experiment_stats(exp_id);
+                    // TODO: update and plot
                 }
             },
         });
+    }
+
+    //
+    // show_experiment_stats:
+    //   Display data for given experiment in analyze tab
+    //
+    var show_experiment_stats = function(exp_id) {
+        var table = $("#analyze-stats-table");
+        table.bootgrid("destroy").empty();
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-visible": "false" })
+                        .text("Id"));
+        htr.append($("<th/>", { "data-column-id": "protein" })
+                        .text("Protein"));
+        htr.append($("<th/>", { "data-column-id": "gene" })
+                        .text("Gene"));
+        var run_order = experiment_metadata[exp_id].run_order;
+        $.each(run_order, function(run_index, run_name) {
+            var run_id = run_index + 1;
+            $.each(ExperimentStatsColumns, function(index, column) {
+                var id = run_id + "-" + column[2];
+                var label = run_id + ": " + column[2];
+                htr.append($("<th/>", { "data-column-id": id,
+                                        "data-type": "numeric",
+                                        "data-visible": column[3],
+                                        "data-searchable": "false" })
+                                .text(label));
+            });
+        });
+
+        var stats = JSON.parse(experiment_stats[exp_id].experiment_data);
+        var rows = [];
+        $.each(stats.proteins, function(index, protein) {
+            var row = { id: index };
+            row.protein = protein["Acc #"]
+            row.gene = protein["Gene"]
+            rows.push(row);
+            $.each(run_order, function(run_index, run_name) {
+                var run_id = run_index + 1;
+                var run_data = stats.runs[run_name].protein_stats[index];
+                if (run_data)
+                    $.each(ExperimentStatsColumns, function(index, column) {
+                        row[run_id + "-" + column[2]] = run_data[column[1]];
+                    });
+                else
+                    $.each(ExperimentStatsColumns, function(index, column) {
+                        row[run_id + "-" + column[2]] = "";
+                    });
+            });
+        });
+        analyze_stats_rows = rows;
+        table.append($("<thead/>").append(htr))
+             .append($("<tbody/>"))
+             .bootgrid(ExperimentStatsTableOptions)
+             .bootgrid("append", rows);
+    }
+
+    //
+    // show_stats_column:
+    //   Show or hide all the columns for a particular run
+    //
+    var show_stats_column = function(run_id, show) {
+        $("#analyze-stats-table").bootgrid("destroy");
+        var table = $("#analyze-stats-table");
+        var run_order = experiment_metadata[analyze_exp_id].run_order;
+        $.each(run_order, function(run_index, run_name) {
+            var run_id = run_index + 1;
+            var show = $("#run-cb-" + run_id).is(":checked");
+            $.each(ExperimentStatsColumns, function(index, column) {
+                var label = run_id + "-" + column[2];
+                var th = table.find("th[data-column-id='" + label + "']");
+                th.data("visible", (show ? column[3] : false))
+                  .data("visible-in-selection", (show ? column[3] : false));
+            });
+        });
+        $("#analyze-stats-table").bootgrid(ExperimentStatsTableOptions)
+                                 .bootgrid("append", analyze_stats_rows);
     }
 
     // -----------------------------------------------------------------
@@ -249,7 +356,7 @@ frontpage = (function(){
     //   but may (in the future), refresh the list of experiments.
     //
     var show_tab_edit = function() {
-        fill_edit_table(experiments);
+        fill_edit_table(experiment_metadata);
     }
 
     //
@@ -430,7 +537,7 @@ frontpage = (function(){
                 tbl.find(".exp-delete").on("click", function(ev) {
                     stop_default(ev);
                     var exp_id = ev.target.dataset.rowId
-                    var exp = experiments[exp_id];
+                    var exp = experiment_metadata[exp_id];
                     var msg = "Really delete experiment";
                     if (exp.title)
                         msg += ' "' + exp.title + '"';
@@ -465,9 +572,9 @@ frontpage = (function(){
         // (probably an upload).  If an experiment was selected,
         // select it (probably an edit).
         var new_experiments = [];
-        if (experiments)
+        if (experiment_metadata)
             $.each(results, function(exp_id, exp) {
-                if (!(exp_id in experiments))
+                if (!(exp_id in experiment_metadata))
                     new_experiments.push(exp_id);
             });
         if (new_experiments.length == 1)
@@ -838,7 +945,7 @@ frontpage = (function(){
     //
     var show_metadata = function(exp_id) {
         fill_controlled_vocabulary(null);
-        var exp = experiments[exp_id];
+        var exp = experiment_metadata[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
             var field_value = exp[input_id];
@@ -917,7 +1024,7 @@ frontpage = (function(){
     //   Display experiment attribute values in metadata form
     //
     var show_runs = function(exp_id) {
-        var exp = experiments[exp_id];
+        var exp = experiment_metadata[exp_id];
         var tbl = $("#edit-runs-table");
         var tbody = tbl.find("tbody");
         tbody.empty();
@@ -948,7 +1055,8 @@ frontpage = (function(){
         tab_analyze: init_tab_analyze,
         tab_edit: init_tab_edit,
     };
-    var experiments = {}      // Last set of experiments from server
+    var experiment_metadata = {}      // All experiment metadata
+    var experiment_stats = {}         // Fetched experiment stats
 
     //
     // init_main:
@@ -1021,7 +1129,7 @@ frontpage = (function(){
         else {
             fill_analyze_table(data.results);
             fill_edit_table(data.results);
-            experiments = data.results;
+            experiment_metadata = data.results;
         }
     }
 

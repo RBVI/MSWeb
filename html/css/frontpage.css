@@ -15,6 +15,9 @@ html, body, #frontpage, #expanalyze, #expedit {
     height: 100%;
     width: 100%;
 }
+#analyze-stats-table {
+    width: inherit;
+}
 #edit-vocabulary-fieldset .grid {
     display: grid;
     grid-template-columns: 9em 20em 6em 6em;
