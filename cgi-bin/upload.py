@@ -185,6 +185,17 @@ def do_get_experiment(out, form):
                             "experiment_id":exp_id})
 
 
+def do_download_experiment(out, form):
+    from msweb_lib import combined
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    raw = ds.raw_file_name(exp_id)
+    with open(raw, "rb") as f:
+        _send_download(out, f, exp_meta["datafile"]);
+
+
 def _get_exp_metadata(out, form):
     from msweb_lib import datastore
     if not form.has_key("exp_id"):
@@ -221,6 +232,29 @@ def _send_json(out, value):
     print("Content-Type: application/json", file=out)
     print(file=out)
     json.dump(value, out)
+
+
+def _send_download(out, f, filename, content_type=None):
+    print("Content-Type: %s" % _content_type(filename, content_type), file=out)
+    print("Content-Disposition: attachment; filename=\"%s\"" % filename)
+    print(file=out)
+    out.write(f.read())
+
+
+DefaultContentType = "application/octet-stream"
+ContentTypes = {
+    ".xls": "application//vnd.ms-excel",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+}
+
+
+def _content_type(filename, content_type):
+    if content_type:
+        return content_type
+    else:
+        import os.path
+        ext = os.path.splitext(filename)[1]
+        return ContentTypes.get(ext, DefaultContentType)
 
 
 if __name__ == "__main__":

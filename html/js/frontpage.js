@@ -51,11 +51,11 @@ frontpage = (function(){
         rowCount: [20, 50, 100, -1],
     };
     var ExperimentStatsColumns = [
-        [ "unique_peptides", "Num Unique", "Unique", false, ],
-        [ "peptide_count", "Peptide Count", "Count", false, ],
-        [ "coverage", "% Cov", "Cov", false, ],
-        [ "best_score", "Best Disc Score", "Score", true, ],
-        [ "best_expected", "Best Expect Val", "Exp", false, ],
+        [ "unique_peptides", "Num Unique", "Unique", "false", ],
+        [ "peptide_count", "Peptide Count", "Count", "false", ],
+        [ "coverage", "% Cov", "Cov", "false", ],
+        [ "best_score", "Best Disc Score", "Score", "true", ],
+        [ "best_expected", "Best Expect Val", "Exp", "false", ],
     ];
     var ExperimentStatsTableOptions = {
         selection: true,
@@ -97,7 +97,7 @@ frontpage = (function(){
         ];
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": true,
+                                "data-identifier": "true",
                                 "data-type": "numeric",
                                 "data-searchable": "false",
                                 "data-visible": "false" }).text("Id"));
@@ -111,6 +111,7 @@ frontpage = (function(){
            .bootgrid(AnalyzeTableOptions)
            .on("selected.rs.jquery.bootgrid", analyze_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", analyze_experiment_deselected);
+        $("#download").click(download_experiment);
     }
 
     //
@@ -253,7 +254,9 @@ frontpage = (function(){
         table.bootgrid("destroy").empty();
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": true,
+                                "data-identifier": "true",
+                                "data-type": "numeric",
+                                "data-searchable": "false",
                                 "data-visible": "false" })
                         .text("Id"));
         htr.append($("<th/>", { "data-column-id": "protein" })
@@ -278,9 +281,8 @@ frontpage = (function(){
         var rows = [];
         $.each(stats.proteins, function(index, protein) {
             var row = { id: index };
-            row.protein = protein["Acc #"]
-            row.gene = protein["Gene"]
-            rows.push(row);
+            row.protein = protein["Acc #"] ? protein["Acc #"].toString() : "-";
+            row.gene = protein["Gene"] ? protein["Gene"].toString() : "-";
             $.each(run_order, function(run_index, run_name) {
                 var run_id = run_index + 1;
                 var run_data = stats.runs[run_name].protein_stats[index];
@@ -290,9 +292,10 @@ frontpage = (function(){
                     });
                 else
                     $.each(ExperimentStatsColumns, function(index, column) {
-                        row[run_id + "-" + column[2]] = "";
+                        row[run_id + "-" + column[2]] = "-";
                     });
             });
+            rows.push(row);
         });
         analyze_stats_rows = rows;
         table.append($("<thead/>").append(htr))
@@ -321,6 +324,21 @@ frontpage = (function(){
         });
         $("#analyze-stats-table").bootgrid(ExperimentStatsTableOptions)
                                  .bootgrid("append", analyze_stats_rows);
+    }
+
+    //
+    // download_experiment:
+    //   Download raw file for selected experiment
+    //
+    var download_experiment = function(ev) {
+        ev.preventDefault();
+        if (!analyze_exp_id)
+            alert("No experiment selected");
+        else {
+            var url = BaseURL + "?action=download_experiment&exp_id=" +
+                      analyze_exp_id;
+            window.location.href = url;
+        }
     }
 
     // -----------------------------------------------------------------
@@ -515,14 +533,14 @@ frontpage = (function(){
         ];
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": true,
+                                "data-identifier": "true",
                                 "data-type": "numeric",
                                 "data-searchable": "false",
-                                "data-visible": false }).text("Id"));
+                                "data-visible": "false" }).text("Id"));
         htr.append($("<th/>", { "data-column-id": "actions",
                                 "data-formatter": "actions",
                                 "data-searchable": "false",
-                                "data-sortable": false }).text("Actions"));
+                                "data-sortable": "false" }).text("Actions"));
         $.each(columns, function(index, values) {
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
