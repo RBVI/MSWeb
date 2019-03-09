@@ -11,52 +11,17 @@
     margin-left: 1rem;
     margin-right: 1rem;
 }
-html, body, #frontpage, #expanalyze, #expedit {
+html, body, #frontpage, #analyze-tab, #edit-tab {
     height: 100%;
     width: 100%;
 }
 #analyze-stats-table {
     width: inherit;
 }
-#edit-vocabulary-fieldset .grid {
-    display: grid;
-    grid-template-columns: 9em 20em 6em 6em;
-}
-#edit-metadata-fieldset .grid {
-    display: grid;
-    grid-template-columns: 9em 50em;
-}
-#edit-vocabulary-fieldset label,
-#edit-metadata-fieldset label {
-    font-weight: bold;
-    text-align: right;
-    padding-right: 0.5em;
-}
-#edit-vocabulary-fieldset input {
-    padding: 0px 4px;
-    margin: 0px;
-}
-#edit-vocabulary-fieldset button {
-    padding: 0px 4px;
-    margin: 0px;
-}
-#edit-vocabulary-fieldset,
-#edit-metadata-fieldset {
-    margin-bottom: 1em;
-}
-#upload-button {
-    vertical-align: middle;
-}
 #upload-file-name {
     font-weight: bold;
 }
-.exp-delete-button {
-    border-radius: 0.5em;
-    background: darkgray;
-}
-.run-checkbox + label {
-    margin-left: 0.25em;
-}
+/* Put border around bootgrid tables to group UI elements */
 .entire-bootgrid-table {
     background: #fff;
     border: 1px solid lightgray;

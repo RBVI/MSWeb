@@ -29,20 +29,22 @@
     <div id="frontpage" class="col-xs-12">
       <nav>
         <div class="nav nav-tabs" role="tablist">
-          <a class="nav-item nav-link active" id="tab_analyze" data-toggle="tab" href="#expanalyze" role="tab"
-             aria-controls="expanalyze" aria-selected="true">
+          <a class="nav-item nav-link active" id="tab_analyze" data-toggle="tab" href="#analyze-tab" role="tab"
+             aria-controls="analyze-tab" aria-selected="true">
             Analyze
           </a>
-          <a class="nav-item nav-link" id="tab_edit" data-toggle="tab" href="#expedit" role="tab"
-             aria-controls="expedit" aria-selected="false">
+          <a class="nav-item nav-link" id="tab_edit" data-toggle="tab" href="#edit-tab" role="tab"
+             aria-controls="edit-tab" aria-selected="false">
             Edit
           </a>
         </div>
       </nav>
       <div class="tab-content py-3 px-3 px-sm-0">
         <!-- "Analyze" tab -->
-        <div class="tab-pane fade show active" id="expanalyze" role="tabpanel" aria-labelledby="tab_analyze">
+        <div class="tab-pane fade show active" id="analyze-tab" role="tabpanel" aria-labelledby="tab_analyze">
           <div class="panel-group">
+
+            <!-- Analyze table of ready experiments -->
             <div class="card" id="analyze-experiments">
               <div class="card-heading">
                 <h3 class="mb-0">
@@ -53,7 +55,6 @@
                 </h3>
               </div>
               <div class="card-body collapse show" id="analyze-exp-card">
-                <!-- Table of experiments -->
                 <div class="entire-bootgrid-table">
                   <table class="table table-condensed table-hover table-striped" id="analyze-exp-table"></table>
                 </div>
@@ -63,6 +64,9 @@
                 </div>
               </div>
             </div>
+            <!-- end Analyze table of ready experiments -->
+
+            <!-- Analyze table of runs -->
             <div class="card" id="analyze-runs">
               <div class="card-heading">
                 <h3 class="mb-0">
@@ -76,6 +80,9 @@
                 <table class="table table-condensed table-hover table-striped" id="analyze-runs-table"></table>
               </div>
             </div>
+            <!-- end Analyze table of runs -->
+
+            <!-- Analyze table of experiment stats -->
             <div class="card" id="analyze-stats">
               <div class="card-heading">
                 <h3 class="mb-0">
@@ -91,13 +98,19 @@
                 </div>
               </div>
             </div>
+            <!-- end Analyze table of experiment stats -->
+
           </div>
+          <!-- end panel group -->
         </div>
+        <!-- end "Analyze" tab -->
+
         <!-- "Edit" tab -->
-        <div class="tab-pane fade" id="expedit"
+        <div class="tab-pane fade" id="edit-tab"
              role="tabpanel" aria-labelledby="tab_edit">
           <!-- Accordion with three sections: upload, vocab, metadata -->
           <div id="edit-accordion">
+
             <!-- Upload UI -->
             <div class="card" id="edit-upload">
               <div class="card-header" id="edit-upload-heading">
@@ -124,6 +137,8 @@
                 </div>
               </div>
             </div>
+            <!-- end Upload UI -->
+
             <!-- Controlled vocabulary -->
             <div class="card" id="edit-vocabulary">
               <div class="card-header" id="edit-vocab-heading">
@@ -138,16 +153,22 @@
                    aria-labelledby="edit-vocab-heading">
                 <div class="card-body">
                   <form id="edit-vocabulary-form">
-                    <div class="grid">
-                      <label for="exptype-vocab">Experiment Type</label>
-                      <div id="exptype-vocab-div"></div>
-                      <label for="runcat-vocab">Run Category</label>
-                      <div id="runcat-vocab-div"></div>
+                    <div class="form-group row">
+                      <label class="col-sm-2 col-form-label"
+                             for="exptype-vocab">Experiment Type</label>
+                      <div id="exptype-vocab-div" class="col-sm-10"></div>
+                    </div>
+                    <div class="form-group row">
+                      <label class="col-sm-2 col-form-label"
+                             for="runcat-vocab">Run Category</label>
+                      <div id="runcat-vocab-div" class="col-sm-10"></div>
                     </div>
                   </form>
                 </div>
               </div>
             </div>
+            <!-- end Controlled vocabulary -->
+
             <!-- Experiment and runs metadata UI -->
             <div class="card" id="edit-metadata">
               <div class="card-header" id="edit-metadata-heading">
@@ -161,44 +182,49 @@
               <div class="collapse" id="edit-metadata-body" data-parent="#edit-accordion"
                    aria-labelledby="edit-metadata-heading">
                 <div class="card-body">
-                  <!-- Table of experiments -->
                   <div class="entire-bootgrid-table">
                     <table class="table table-condensed table-hover table-striped" id="edit-table"></table>
                   </div>
                   <form id="edit-metadata-form">
-                    <nav>
-                      <div class="nav nav-tabs" role="tablist">
-                        <li class="nav active">
-                        <a class="nav-item nav-link active" id="tab_edit_exp" data-toggle="tab" href="#editexp"
-                           role="tab" aria-controls="editexp" aria-selected="true">
-                          Edit Experiment
-                        </a>
-                        <a class="nav-item nav-link" id="tab_edit_runs" data-toggle="tab" href="#editruns"
-                           role="tab" aria-controls="editruns" aria-selected="false">
-                          Edit Runs</a></li>
-                      </ul>
-                    </nav>
-                    <div class="tab-content py-3 px-3 px-sm-0">
-                      <div class="tab-pane fade show active" id="editexp" role="tabpanel"
-                           aria-labelledby="tab_edit_exp">
-                        <fieldset id="edit-metadata-fieldset" disabled>
-                          <div class="grid"></div>
-                        </fieldset>
+                    <fieldset id="edit-metadata-fieldset" class="edit-metdata" disabled>
+                      <nav>
+                        <div class="nav nav-tabs" role="tablist">
+                          <li class="nav active">
+                          <a class="nav-item nav-link active disabled edit-metadata" id="tab_edit_exp"
+                             href="#edit-metadata-exp" data-toggle="tab"
+                             role="tab" aria-controls="edit-metadata-exp" aria-selected="true">
+                            Edit Experiment
+                          </a>
+                          <a class="nav-item nav-link disabled edit-metadata" id="tab_edit_runs"
+                             href="#edit-metadata-runs" data-toggle="tab"
+                             role="tab" aria-controls="edit-metadata-runs" aria-selected="false">
+                            Edit Runs</a></li>
+                        </div>
+                      </nav>
+                      <div class="tab-content py-3 px-3 px-sm-0">
+                        <div class="tab-pane fade show active" id="edit-metadata-exp" role="tabpanel"
+                             aria-labelledby="tab_edit_exp">
+                        </div>
+                        <div class="tab-pane fade" id="edit-metadata-runs" role="tabpanel"
+                             aria-labelledby="tab_edit_runs">
+                          <table class="table table-condensed table-hover table-striped" id="edit-runs-table"></table>
+                        </div>
                       </div>
-                      <div class="tab-pane fade" id="editruns" role="tabpanel"
-                           aria-labelledby="tab_edit_runs">
-                        <table class="table table-condensed table-hover table-striped" id="edit-runs-table"></table>
-                      </div>
-                    </div>
-                    <button id="edit-metadata-button" disabled>Update</button>
-                    <button id="edit-revert-metadata-button" disabled>Revert</button>
+                      <button id="edit-metadata-button">Update</button>
+                      <button id="edit-revert-metadata-button">Revert</button>
+                    </fieldset>
                   </form>
                 </div>
               </div>
             </div>
-          <div>
+            <!-- end Experiment and runs metadata UI -->
+          </div>
+          <!-- end Accordion with three sections: upload, vocab, metadata -->
         </div>
+        <!-- end "Edit" tab -->
       </div>
+      <!-- end frontpage tabs -->
     </div>
+    <!-- end frontpage -->
   </body>
 </html>

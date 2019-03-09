@@ -2,23 +2,7 @@
 
 //
 // TODO:
-// Main page:
-//      ~~Change tab names to Analyze and Edit
-// Edit tab experiments table:
-//      ~~Replace incomplete uploads with all experiments + status
-//      ~~    (Sort by "status" to see incomplete uploads together)
-//      ~~Add delete experiment button with popup confirmation
-//      ~~Replace Experiment Condition with Notes
-// Edit tab upload form:
-//      ~~Add controls for experiment type vocabulary
-//      ~~Add controls for run category vocabulary
-//      ~~Make editing experiment attributes work
-//      ~~Add editable runs table for setting category and date
-//      Style runs table to use less vertical space
-// Analyze tab:
-//      ~~Add runs table mapping long names to short integers
-//      Add stats table displaying protein vs stats for all runs
-//      Add plot area
+//   Add plot area
 //
 
 frontpage = (function(){
@@ -173,7 +157,6 @@ frontpage = (function(){
     //   Redisplay contents for runs and stats table in analyze tab
     //
     var show_analyze_tables = function(exp_id) {
-        // TODO: update display for newly selected experiment
         // First update the runs table and get a mapping from
         // run name to short integer, as well as checkbuttons
         // for displaying/hiding runs in stats table.  Then
@@ -239,7 +222,7 @@ frontpage = (function(){
                     var exp_id = data.results.experiment_id;
                     experiment_stats[exp_id] = data.results;
                     show_experiment_stats(exp_id);
-                    // TODO: update and plot
+                    // TODO: update plot
                 }
             },
         });
@@ -607,8 +590,7 @@ frontpage = (function(){
     //
     var edit_experiment_selected = function(ev, rows) {
         $("#edit-metadata-fieldset").removeAttr("disabled");
-        $("#edit-metadata-button").removeAttr("disabled");
-        $("#edit-revert-metadata-button").removeAttr("disabled");
+        $(".edit-metadata").removeClass("disabled")
         metadata_exp_id = rows[0].id;
         show_metadata(metadata_exp_id);
     }
@@ -619,12 +601,10 @@ frontpage = (function(){
     //   selects a different row
     //
     var edit_experiment_deselected = function(ev, rows) {
-        if (metadata_exp_id) {
-            $("#edit-metadata-fieldset").attr("disabled", "disabled");
-            $("#edit-metadata-button").attr("disabled", "disabled");
-            $("#edit-revert-metadata-button").attr("disabled", "disabled");
-            metadata_exp_id = undefined;
-        }
+        $("#edit-metadata-fieldset").attr("disabled", "disabled");
+        $(".edit-metadata").addClass("disabled")
+        metadata_exp_id = undefined;
+        // XXX: hide metadata?
     }
 
     //
@@ -934,11 +914,12 @@ frontpage = (function(){
     //   Lay out experiment attribute name and value fields in metadata form
     //
     var fill_metadata_form = function(data) {
-        var div = $("#edit-metadata-fieldset div");
+        var div = $("#edit-metadata-exp");
         $.each(data.results, function(index, val) {
             var input_type = val[1];
             var input_id = val[2];
-            var label = $("<label/>", { "for": input_id }).text(val[0]);
+            var label = $("<label/>", { "class": "col-sm-2 col-form-label",
+                                        "for": input_id }).text(val[0]);
             var input;
             if (input_type == "exptype") {
                 container = input = add_exptype_vocab(input_id);
@@ -952,7 +933,9 @@ frontpage = (function(){
             $.each(val[3], function(index, value) {
                 input.prop(value[0], value[1]);
             });
-            div.append(label).append(container);
+            container.attr("class", "col-sm-10");
+            div.append($("<div/>", { "class": "form-group row" })
+                        .append(label, container));
         });
         metadata_fields = data.results;
     }
