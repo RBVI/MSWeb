@@ -35,11 +35,11 @@ frontpage = (function(){
         rowCount: [20, 50, 100, -1],
     };
     var ExperimentStatsColumns = [
-        [ "unique_peptides", "Num Unique", "Unique", "false", ],
-        [ "peptide_count", "Peptide Count", "Count", "false", ],
-        [ "coverage", "% Cov", "Cov", "false", ],
-        [ "best_score", "Best Disc Score", "Score", "true", ],
-        [ "best_expected", "Best Expect Val", "Exp", "false", ],
+        [ "unique_peptides", "Num Unique", "Unique", false, ],
+        [ "peptide_count", "Peptide Count", "Count", false, ],
+        [ "coverage", "% Cov", "Cov", false, ],
+        [ "best_score", "Best Disc Score", "Score", true, ],
+        [ "best_expected", "Best Expect Val", "Exp", false, ],
     ];
     var ExperimentStatsTableOptions = {
         selection: true,
@@ -237,10 +237,10 @@ frontpage = (function(){
         table.bootgrid("destroy").empty();
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": "true",
+                                "data-identifier": true,
                                 "data-type": "numeric",
-                                "data-searchable": "false",
-                                "data-visible": "false" })
+                                "data-searchable": false,
+                                "data-visible": false })
                         .text("Id"));
         htr.append($("<th/>", { "data-column-id": "protein" })
                         .text("Protein"));
@@ -255,7 +255,7 @@ frontpage = (function(){
                 htr.append($("<th/>", { "data-column-id": id,
                                         "data-type": "numeric",
                                         "data-visible": column[3],
-                                        "data-searchable": "false" })
+                                        "data-searchable": false })
                                 .text(label));
             });
         });
@@ -301,8 +301,7 @@ frontpage = (function(){
             $.each(ExperimentStatsColumns, function(index, column) {
                 var label = run_id + "-" + column[2];
                 var th = table.find("th[data-column-id='" + label + "']");
-                th.data("visible", (show ? column[3] : false))
-                  .data("visible-in-selection", (show ? column[3] : false));
+                th.data("visible", (show ? column[3] : false));
             });
         });
         $("#analyze-stats-table").bootgrid(ExperimentStatsTableOptions)
