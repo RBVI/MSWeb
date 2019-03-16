@@ -1,4 +1,4 @@
-/* vim: set expandtab shiftwidth=4 softtabstop=4: */
+// vim: set expandtab shiftwidth=4 softtabstop=4:
 
 //
 // TODO:
@@ -23,40 +23,19 @@ frontpage = (function(){
     // initialization, the regular callback is registered
     // in "tab_funcs" directly.
 
-    // -----------------------------------------------------------------
+    // =================================================================
     // Analyze tab functions
-    // -----------------------------------------------------------------
-
-    var AnalyzeTableOptions = {
-        selection: true,
-        rowSelect: true,
-        multiSelect: false,
-        keepSelection: true,
-        rowCount: [20, 50, 100, -1],
-    };
-    var ExperimentStatsColumns = [
-        [ "unique_peptides", "Num Unique", "Unique", false, ],
-        [ "peptide_count", "Peptide Count", "Count", false, ],
-        [ "coverage", "% Cov", "Cov", false, ],
-        [ "best_score", "Best Disc Score", "Score", true, ],
-        [ "best_expected", "Best Expect Val", "Exp", false, ],
-    ];
-    var ExperimentStatsTableOptions = {
-        selection: true,
-        rowSelect: true,
-        multiSelect: true,
-        keepSelection: true,
-        rowCount: [20, 50, 100, -1],
-    };
+    // =================================================================
 
     //
     // init_tab_analyze:
     //   Initialize all sections of the "analyze" tab
     //
     var init_tab_analyze = function() {
-        init_analyze_table();
+        init_analyze_experiments();
+        init_analyze_runs();
 
-        /* Reset tab callback */
+        // Reset tab callback
         tab_funcs.tab_analyze = show_tab_analyze;
         show_tab_analyze();
     }
@@ -66,14 +45,35 @@ frontpage = (function(){
     //   Display "analyze" tab
     //
     var show_tab_analyze = function() {
-        fill_analyze_table(experiment_metadata);
+        fill_analyze_experiments(experiment_metadata);
     }
 
+    // -----------------------------------------------------------------
+    // Analyze experiments section
+    // -----------------------------------------------------------------
+
     //
-    // init_analyze_table:
+    // Currently selected values in analyze tab
+    //
+    var analyze_exp_id;
+    var analyze_stats_rows;
+
+    //
+    // Options for experiments table in analyze tab
+    //
+    var AnalyzeExperimentsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: false,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+    };
+
+    //
+    // init_analyze_experiments:
     //   Initialize table of experiments in "analyze" tab
     //
-    var init_analyze_table = function() {
+    var init_analyze_experiments = function() {
         var columns = [
             ["Title", "title"],
             ["Researcher", "researcher"],
@@ -81,10 +81,10 @@ frontpage = (function(){
         ];
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": "true",
+                                "data-identifier": true,
                                 "data-type": "numeric",
-                                "data-searchable": "false",
-                                "data-visible": "false" }).text("Id"));
+                                "data-searchable": false,
+                                "data-visible": false }).text("Id"));
         $.each(columns, function(index, values) {
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
@@ -92,17 +92,17 @@ frontpage = (function(){
         var tbl = $("#analyze-exp-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"))
-           .bootgrid(AnalyzeTableOptions)
+           .bootgrid(AnalyzeExperimentsTableOptions)
            .on("selected.rs.jquery.bootgrid", analyze_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", analyze_experiment_deselected);
         $("#download").click(download_experiment);
     }
 
     //
-    // fill_analyze_table:
+    // fill_analyze_experiments:
     //   Display the list of experiments in analyze table
     //
-    var fill_analyze_table = function(results) {
+    var fill_analyze_experiments = function(results) {
         var tbl = $("#analyze-exp-table");
         tbl.bootgrid("clear");
         var rows = [];
@@ -121,20 +121,25 @@ frontpage = (function(){
             tbl.select([ analyze_exp_id ]);
     }
 
-    var analyze_exp_id;
-    var analyze_stats_rows;
-
     //
     // analyze_experiment_selected:
     //   Event callback when user clicks on a row in analyze table
     //
     var analyze_experiment_selected = function(ev, rows) {
-        $("#analyze-runs-table").removeAttr("disabled");
-        $("#analyze-stats-table").removeAttr("disabled");
+        $("#analyze-fieldset").removeAttr("disabled");
         if (rows[0].id == analyze_exp_id)
             return;
         analyze_exp_id = rows[0].id;
-        show_analyze_tables(analyze_exp_id);
+        // First update the runs table and generate a mapping from
+        // run name to short integer.  Then update stats table.
+        fill_analyze_runs(analyze_exp_id);
+        if (experiment_stats[analyze_exp_id])
+            show_experiment_stats(analyze_exp_id);
+        else {
+            show_status("fetching experiment data...", true)
+            get_experiment_stats(analyze_exp_id);
+            // Table will be shown after data is fetched
+        }
     }
 
     //
@@ -145,67 +150,116 @@ frontpage = (function(){
     var analyze_experiment_deselected = function(ev, rows) {
         if (analyze_exp_id) {
             // XXX: clear out runs and data tables?
-            $("#analyze-runs-table").attr("disabled", "disabled");
-            $("#analyze-stats-table").attr("disabled", "disabled");
+            $("#analyze-fieldset").attr("disabled", "disabled");
             analyze_exp_id = undefined;
             analyze_stats_rows = undefined;
         }
     }
 
+    // -----------------------------------------------------------------
+    // Analyze runs section
+    // -----------------------------------------------------------------
+
     //
-    // show_analyze_tables:
-    //   Redisplay contents for runs and stats table in analyze tab
+    // Options for runs table in analyze tab
     //
-    var show_analyze_tables = function(exp_id) {
-        // First update the runs table and get a mapping from
-        // run name to short integer, as well as checkbuttons
-        // for displaying/hiding runs in stats table.  Then
-        // update stats table.
+    var AnalyzeRunsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [-1],
+    };
+
+    //
+    // init_analyze_runs:
+    //   Initialize runs table headers
+    //
+    var init_analyze_runs = function() {
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": false,
+                                "data-visible": true })
+                        .text("Id"));
+        htr.append($("<th/>", { "data-column-id": "name" })
+                        .text("Name"));
+        htr.append($("<th/>", { "data-column-id": "date" })
+                        .text("Date"));
+        htr.append($("<th/>", { "data-column-id": "category" })
+                        .text("Category"));
         var tbl = $("#analyze-runs-table");
-        tbl.empty();
+        tbl.append($("<thead/>").append(htr))
+           .append($("<tbody/>"))
+           .bootgrid(AnalyzeRunsTableOptions)
+           .on('loaded.rs.jquery.bootgrid', function() {
+                tbl.off('selected.rs.jquery.bootgrid')
+                   .off('deselected.rs.jquery.bootgrid')
+                   .bootgrid("select")
+                   .on('selected.rs.jquery.bootgrid', function() {
+                        update_stats_column();
+                    })
+                   .on('deselected.rs.jquery.bootgrid', function() {
+                        update_stats_column();
+                    });
+            });
+    }
+
+    //
+    // fill_analyze_runs:
+    //   Display runs in selected experiment
+    //
+    var fill_analyze_runs = function(exp_id) {
         var exp = experiment_metadata[exp_id];
-        var tr = $("<tr/>");
-        tbl.append(tr);
-        length = 0;
+        var rid = 1;
+        var runs = exp["runs"];
+        var rows = [];
         var run_order = [];
-        var run_id = 1;
-        $.each(exp.runs, function(run_name, run_data) {
-            if (length == 2) {
-                tr = $("<tr/>");
-                tbl.append(tr);
-                length = 0;
-            }
-            var cb_id = "run-cb-" + run_id;
-            var label = $("<label/>", { "for": cb_id })
-                            .text(run_id + ": " + run_name);
-            var cb = $("<input/>", { "type": "checkbox",
-                                     "id": cb_id,
-                                     "checked": "checked",
-                                     "class": "run-checkbox",
-                                     "value": run_id });
-            tr.append($("<td/>").append(cb).append(label));
-            length += 1;
+        Object.keys(runs).sort().forEach(function(run_name) {
+            var run_data = runs[run_name];
+            var row = { "id": rid,
+                        "name": run_name,
+                        "date": run_data["date"],
+                        "category": run_data["category"], };
+            rows.push(row);
             run_order.push(run_name);
-            run_id += 1;
-        });
-        $(".run-checkbox").change(function(ev) {
-            show_stats_column($(this).val(), $(this).is(":checked"));
+            rid += 1;
         });
         exp.run_order = run_order;
-        if (experiment_stats[exp_id])
-            show_experiment_stats(exp_id);
-        else {
-            show_status("fetching experiment data...", true)
-            get_experiment_stats(exp_id);
-            // Table will be shown after data is fetched
-        }
+        var tbl = $("#analyze-runs-table");
+        tbl.bootgrid("clear")
+           .bootgrid("append", rows);
     }
+
+    // -----------------------------------------------------------------
+    // Analyze stats section
+    // -----------------------------------------------------------------
+
+    //
+    // Options for analyze stats table and stats column information
+    //
+    var ExperimentStatsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+    };
+    var ExperimentStatsColumns = [
+        [ "unique_peptides", "Num Unique", "Unique", false, ],
+        [ "peptide_count", "Peptide Count", "Count", false, ],
+        [ "coverage", "% Cov", "Cov", false, ],
+        [ "best_score", "Best Disc Score", "Score", true, ],
+        [ "best_expected", "Best Expect Val", "Exp", false, ],
+    ];
 
     //
     // get_experiment_stats:
     //   Get experiment data from server
     //
     var get_experiment_stats = function(exp_id) {
+        $("#analyze-fieldset").attr("disabled", "disabled");
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -215,6 +269,7 @@ frontpage = (function(){
                 exp_id: exp_id,
             },
             success: function(data) {
+                $("#analyze-fieldset").removeAttr("disabled");
                 show_status("", false)
                 if (data.status != "success") {
                     show_error(data.status, data.reason, data.cause);
@@ -222,7 +277,7 @@ frontpage = (function(){
                     var exp_id = data.results.experiment_id;
                     experiment_stats[exp_id] = data.results;
                     show_experiment_stats(exp_id);
-                    // TODO: update plot
+                    // TODO: remove old plots
                 }
             },
         });
@@ -288,24 +343,26 @@ frontpage = (function(){
     }
 
     //
-    // show_stats_column:
+    // update_stats_column:
     //   Show or hide all the columns for a particular run
     //
-    var show_stats_column = function(run_id, show) {
+    var update_stats_column = function() {
+        var selected = $("#analyze-runs-table").bootgrid("getSelectedRows");
         $("#analyze-stats-table").bootgrid("destroy");
+        // Need to lookup name again after bootgrid rearranges elements
         var table = $("#analyze-stats-table");
         var run_order = experiment_metadata[analyze_exp_id].run_order;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
-            var show = $("#run-cb-" + run_id).is(":checked");
+            var show = selected.includes(run_id);
             $.each(ExperimentStatsColumns, function(index, column) {
                 var label = run_id + "-" + column[2];
                 var th = table.find("th[data-column-id='" + label + "']");
                 th.data("visible", (show ? column[3] : false));
             });
         });
-        $("#analyze-stats-table").bootgrid(ExperimentStatsTableOptions)
-                                 .bootgrid("append", analyze_stats_rows);
+        table.bootgrid(ExperimentStatsTableOptions)
+             .bootgrid("append", analyze_stats_rows);
     }
 
     //
@@ -323,9 +380,9 @@ frontpage = (function(){
         }
     }
 
-    // -----------------------------------------------------------------
+    // =================================================================
     // Edit tab functions
-    // -----------------------------------------------------------------
+    // =================================================================
 
     //
     // init_tab_edit:
@@ -340,12 +397,12 @@ frontpage = (function(){
         $("#upload-button").click(upload_file).attr("disabled", "disabled");
 
         // Show experiments
-        init_edit_table();
+        init_edit_experiments();
         init_controlled_vocabulary();
         init_metadata_form();
         init_runs_form();
 
-        /* Reset tab callback */
+        // Reset tab callback
         tab_funcs.tab_edit = show_tab_edit;
         show_tab_edit();
     }
@@ -356,8 +413,12 @@ frontpage = (function(){
     //   but may (in the future), refresh the list of experiments.
     //
     var show_tab_edit = function() {
-        fill_edit_table(experiment_metadata);
+        fill_edit_experiments(experiment_metadata);
     }
+
+    // --------------------------------------------------------------------
+    // Edit upload section
+    // --------------------------------------------------------------------
 
     //
     // file_dropped:
@@ -395,7 +456,10 @@ frontpage = (function(){
         set_file(files[0]);
     }
 
-    var selected_file;      // Last file selected
+    //
+    // Last file selected
+    //
+    var selected_file;
 
     //
     // set_file:
@@ -481,159 +545,9 @@ frontpage = (function(){
         $("#upload-status").text(msg);
     }
 
-    //
     // --------------------------------------------------------------------
-    // Experiments
+    // Edit controlled vocabulary section
     // --------------------------------------------------------------------
-    //
-
-    var EditTableOptions = {
-        selection: true,
-        rowSelect: true,
-        multiSelect: false,
-        keepSelection: true,
-        rowCount: [20, 50, 100, -1],
-        formatters: {
-            "actions": function(column, row) {
-                return '<button data-row-id="' + row.id +
-                       '" class="btn btn-xs btn-default exp-delete">' +
-                       '<span class="icon fa fa-trash"></span></button>'
-            }
-        }
-    }
-
-    //
-    // init_edit_table:
-    //   Initialize the edit table with appropriate headers
-    //
-    var init_edit_table = function() {
-        var columns = [
-            ["Upload Date", "uploaddate"],
-            ["Uploader", "uploader"],
-            ["Status", "status"],
-            ["File Name", "datafile"],
-        ];
-        var htr = $("<tr/>");
-        htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": "true",
-                                "data-type": "numeric",
-                                "data-searchable": "false",
-                                "data-visible": "false" }).text("Id"));
-        htr.append($("<th/>", { "data-column-id": "actions",
-                                "data-formatter": "actions",
-                                "data-searchable": "false",
-                                "data-sortable": "false" }).text("Actions"));
-        $.each(columns, function(index, values) {
-            htr.append($("<th/>", { "data-column-id": values[1] })
-                            .text(values[0]));
-        });
-        var tbl = $("#edit-table");
-        tbl.append($("<thead/>").append(htr))
-           .append($("<tbody/>"))
-           .bootgrid(EditTableOptions)
-           .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
-           .on("deselected.rs.jquery.bootgrid", edit_experiment_deselected)
-           .on("loaded.rs.jquery.bootgrid", function() {
-                tbl.find(".exp-delete").on("click", function(ev) {
-                    stop_default(ev);
-                    var exp_id = ev.target.dataset.rowId
-                    var exp = experiment_metadata[exp_id];
-                    var msg = "Really delete experiment";
-                    if (exp.title)
-                        msg += ' "' + exp.title + '"';
-                    msg += " uploaded by "
-                    msg += exp.uploader ? exp.uploader : "(unknown)";
-                    if (exp.uploaddate)
-                        msg += " on " + exp.uploaddate;
-                    msg += '?';
-                    if (confirm(msg))
-                        delete_experiment(exp_id);
-                });
-            });
-    }
-
-    //
-    // fill_edit_table::
-    //   Display the list of experiments in edit table
-    //
-    var fill_edit_table = function(results) {
-        var tbl = $("#edit-table");
-        if (tbl.find("tbody").length == 0)
-            return;
-        tbl.bootgrid("clear");
-        var rows = [];
-        $.each(results, function(exp_id, exp) {
-            var row = Object.assign({id: parseInt(exp_id)}, exp);
-            rows.push(row);
-        });
-        tbl.bootgrid("append", rows);
-
-        // If there is exactly one new experiment, select it
-        // (probably an upload).  If an experiment was selected,
-        // select it (probably an edit).
-        var new_experiments = [];
-        if (experiment_metadata)
-            $.each(results, function(exp_id, exp) {
-                if (!(exp_id in experiment_metadata))
-                    new_experiments.push(exp_id);
-            });
-        if (new_experiments.length == 1)
-            tbl.select(new_experiments);
-        else if (metadata_exp_id)
-            tbl.select([ metadata_exp_id ]);
-    }
-
-    //
-    // edit_experiment_selected:
-    //   Event callback when user clicks on a row in edit table
-    //
-    var edit_experiment_selected = function(ev, rows) {
-        $("#edit-metadata-fieldset").removeAttr("disabled");
-        $(".edit-metadata").removeClass("disabled")
-        metadata_exp_id = rows[0].id;
-        show_metadata(metadata_exp_id);
-    }
-
-    //
-    // edit_experiment_deselected:
-    //   Event callback when user deselects row in uploads table or
-    //   selects a different row
-    //
-    var edit_experiment_deselected = function(ev, rows) {
-        $("#edit-metadata-fieldset").attr("disabled", "disabled");
-        $(".edit-metadata").addClass("disabled")
-        metadata_exp_id = undefined;
-        // XXX: hide metadata?
-    }
-
-    //
-    // delete_experiment:
-    //   Delete experiment on server
-    //
-    var delete_experiment = function(exp_id) {
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            url: BaseURL,
-            data: {
-                action: "delete_experiment",
-                exp_id: exp_id,
-            },
-            success: function(data) {
-                if (data.status != "success") {
-                    show_error(data.status, data.reason, data.cause);
-                } else {
-                    reload_experiment_tables();
-                }
-            },
-        });
-    }
-
-    //
-    // --------------------------------------------------------------------
-    // Controlled vocabulary
-    // --------------------------------------------------------------------
-    //
 
     var controlled_vocabulary;
     var cv_exptypes = [ "exptype-vocab" ];
@@ -881,11 +795,155 @@ frontpage = (function(){
         vocab_server("remove_run_category", $("#runcat-vocab").val());
     }
 
-    //
     // --------------------------------------------------------------------
-    // Metadata upload form
+    // Edit experiment metadata section
     // --------------------------------------------------------------------
+
+    var EditExperimentsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: false,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+        formatters: {
+            "actions": function(column, row) {
+                return '<button data-row-id="' + row.id +
+                       '" class="btn btn-xs btn-default exp-delete">' +
+                       '<span class="icon fa fa-trash"></span></button>'
+            }
+        }
+    }
+
     //
+    // init_edit_experiments:
+    //   Initialize the edit experiments table with appropriate headers
+    //
+    var init_edit_experiments = function() {
+        var columns = [
+            ["Upload Date", "uploaddate"],
+            ["Uploader", "uploader"],
+            ["Status", "status"],
+            ["File Name", "datafile"],
+        ];
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": false,
+                                "data-visible": false }).text("Id"));
+        htr.append($("<th/>", { "data-column-id": "actions",
+                                "data-formatter": "actions",
+                                "data-searchable": false,
+                                "data-sortable": false }).text("Actions"));
+        $.each(columns, function(index, values) {
+            htr.append($("<th/>", { "data-column-id": values[1] })
+                            .text(values[0]));
+        });
+        var tbl = $("#edit-table");
+        tbl.append($("<thead/>").append(htr))
+           .append($("<tbody/>"))
+           .bootgrid(EditExperimentsTableOptions)
+           .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
+           .on("deselected.rs.jquery.bootgrid", edit_experiment_deselected)
+           .on("loaded.rs.jquery.bootgrid", function() {
+                tbl.find(".exp-delete").on("click", function(ev) {
+                    stop_default(ev);
+                    var exp_id = ev.target.dataset.rowId
+                    var exp = experiment_metadata[exp_id];
+                    var msg = "Really delete experiment";
+                    if (exp.title)
+                        msg += ' "' + exp.title + '"';
+                    msg += " uploaded by "
+                    msg += exp.uploader ? exp.uploader : "(unknown)";
+                    if (exp.uploaddate)
+                        msg += " on " + exp.uploaddate;
+                    msg += '?';
+                    if (confirm(msg))
+                        delete_experiment(exp_id);
+                });
+            });
+    }
+
+    //
+    // fill_edit_experiments:
+    //   Display the list of experiments in edit table
+    //
+    var fill_edit_experiments = function(results) {
+        var tbl = $("#edit-table");
+        if (tbl.find("tbody").length == 0)
+            return;
+        tbl.bootgrid("clear");
+        var rows = [];
+        $.each(results, function(exp_id, exp) {
+            var row = Object.assign({id: parseInt(exp_id)}, exp);
+            rows.push(row);
+        });
+        tbl.bootgrid("append", rows);
+
+        // If there is exactly one new experiment, select it
+        // (probably an upload).  If an experiment was selected,
+        // select it (probably an edit).
+        var new_experiments = [];
+        if (experiment_metadata)
+            $.each(results, function(exp_id, exp) {
+                if (!(exp_id in experiment_metadata))
+                    new_experiments.push(exp_id);
+            });
+        if (new_experiments.length == 1)
+            tbl.select(new_experiments);
+        else if (metadata_exp_id)
+            tbl.select([ metadata_exp_id ]);
+    }
+
+    //
+    // edit_experiment_selected:
+    //   Event callback when user clicks on a row in edit table
+    //
+    var edit_experiment_selected = function(ev, rows) {
+        $("#edit-metadata-fieldset").removeAttr("disabled");
+        $(".edit-metadata").removeClass("disabled")
+        metadata_exp_id = rows[0].id;
+        show_metadata(metadata_exp_id);
+    }
+
+    //
+    // edit_experiment_deselected:
+    //   Event callback when user deselects row in uploads table or
+    //   selects a different row
+    //
+    var edit_experiment_deselected = function(ev, rows) {
+        $("#edit-metadata-fieldset").attr("disabled", "disabled");
+        $(".edit-metadata").addClass("disabled")
+        metadata_exp_id = undefined;
+        // XXX: hide metadata?
+    }
+
+    //
+    // delete_experiment:
+    //   Delete experiment on server
+    //
+    var delete_experiment = function(exp_id) {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL,
+            data: {
+                action: "delete_experiment",
+                exp_id: exp_id,
+            },
+            success: function(data) {
+                if (data.status != "success") {
+                    show_error(data.status, data.reason, data.cause);
+                } else {
+                    reload_experiment_tables();
+                }
+            },
+        });
+    }
+
+    // --------------------------------------------------------------------
+    // Experiment metadata section
+    // --------------------------------------------------------------------
 
     var metadata_fields;
     var metadata_exp_id;
@@ -951,7 +1009,7 @@ frontpage = (function(){
             var field_value = exp[input_id];
             $("#" + input_id).val(field_value);
         });
-        show_runs(exp_id);
+        fill_edit_runs(exp_id);
     }
 
     //
@@ -975,7 +1033,7 @@ frontpage = (function(){
             var name = $(this).find("td:nth-child(1)").text();
             var date = $(this).find("td:nth-child(2) input").val();
             var cat = $(this).find("td:nth-child(3) input").val();
-            // keys should match those used in show_runs()
+            // keys should match those used in fill_edit_runs()
             runs[name] = { date: date, category: cat };
         });
         form_data["runs"] = JSON.stringify(runs);
@@ -1002,7 +1060,7 @@ frontpage = (function(){
     }
 
     // -----------------------------------------------------------------
-    // Edit runs table
+    // Runs metadata section
     // -----------------------------------------------------------------
 
     //
@@ -1020,10 +1078,10 @@ frontpage = (function(){
     }
 
     //
-    // show_runs:
+    // fill_edit_runs:
     //   Display experiment attribute values in metadata form
     //
-    var show_runs = function(exp_id) {
+    var fill_edit_runs = function(exp_id) {
         var exp = experiment_metadata[exp_id];
         var tbl = $("#edit-runs-table");
         var tbody = tbl.find("tbody");
@@ -1047,9 +1105,9 @@ frontpage = (function(){
         });
     }
 
-    // -----------------------------------------------------------------
+    // =================================================================
     // Main page functions
-    // -----------------------------------------------------------------
+    // =================================================================
 
     var tab_funcs = {
         tab_analyze: init_tab_analyze,
@@ -1127,15 +1185,15 @@ frontpage = (function(){
         if (data.status != "success")
             show_error(data.status, data.reason, data.cause);
         else {
-            fill_analyze_table(data.results);
-            fill_edit_table(data.results);
+            fill_analyze_experiments(data.results);
+            fill_edit_experiments(data.results);
             experiment_metadata = data.results;
         }
     }
 
-    // -----------------------------------------------------------------
+    // =================================================================
     // Utility functions
-    // -----------------------------------------------------------------
+    // =================================================================
 
     //
     // stop_default:
