@@ -53,14 +53,14 @@ def do_file_upload(out, form):
         _send_failed(out, "no file given")
         return
     import os.path, os, datetime
-    from msweb_lib import datastore, combined
+    from msweb_lib import datastore, abundance
     filename = os.path.basename(datafile.filename)
     ds = datastore.DataStore(DataStorePath)
     exp_id = ds.add_experiment(None)
     raw_file_name = ds.raw_file_name(exp_id)
     with open(raw_file_name, "wb") as f:
         f.write(datafile.file.read())
-    exp = combined.parse_raw(raw_file_name)
+    exp = abundance.parse_raw(raw_file_name)
     with open(ds.cooked_file_name(exp_id), "w") as f:
         exp.write_json(f)
     ds.update_experiment(exp_id, {
@@ -68,6 +68,7 @@ def do_file_upload(out, form):
         "uploaddate": datetime.date.today().isoformat(),
         "datafile": filename,
         "runs": { name: {} for name in exp.runs.keys() },
+        "run_categories": ["control"],
     })
     ds.write_index()
     _send_success(out, None)
@@ -82,26 +83,25 @@ def do_add_experiment_type(out, form):
     ds = datastore.DataStore(DataStorePath)
     ds.add_experiment_type(etype)
     ds.write_index()
-    _send_success(out, None)
+    _send_success(out, {"experiment_types":ds.experiment_types})
 
 
-def do_add_run_category(out, form):
-    rcat = form.getfirst("run_cat")
-    if not rcat:
-        _send_failed(out, "no run category given")
+def do_remove_experiment_type(out, form):
+    etype = form.getfirst("exp_type")
+    if not etype:
+        _send_failed(out, "no experiment type given")
         return
     from msweb_lib import datastore
     ds = datastore.DataStore(DataStorePath)
-    ds.add_run_category(rcat)
+    ds.remove_experiment_type(etype)
     ds.write_index()
-    _send_success(out, None)
+    _send_success(out, {"experiment_types":ds.experiment_types})
 
 
 def do_controlled_vocabulary(out, form):
     from msweb_lib import datastore
     ds = datastore.DataStore(DataStorePath)
-    _send_success(out, {"experiment_types": ds.experiment_types,
-                        "run_categories": ds.run_categories})
+    _send_success(out, {"experiment_types": ds.experiment_types})
 
 
 def do_all_experiments(out, form):
@@ -139,6 +139,36 @@ def do_delete_experiment(out, form):
     _send_success(out, None)
 
 
+def do_add_run_category(out, form):
+    rcat = form.getfirst("run_cat")
+    if not rcat:
+        _send_failed(out, "no run category given")
+        return
+    try:
+        ds, exp_id, exp = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    ds.add_run_category(exp_id, rcat)
+    ds.write_index()
+    _send_success(out, {"exp_id":exp_id,
+                        "run_categories":exp.run_categories})
+
+
+def do_remove_run_category(out, form):
+    rcat = form.getfirst("run_cat")
+    if not rcat:
+        _send_failed(out, "no run category given")
+        return
+    try:
+        ds, exp_id, exp = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    ds.remove_run_category(exp_id, rcat)
+    ds.write_index()
+    _send_success(out, {"exp_id":exp_id,
+                        "run_categories":exp.run_categories})
+
+
 def do_update_experiment(out, form):
     try:
         ds, exp_id, exp = _get_exp_metadata(out, form)
@@ -174,7 +204,7 @@ def do_update_experiment(out, form):
 
 
 def do_get_experiment(out, form):
-    from msweb_lib import combined
+    from msweb_lib import abundance
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:
@@ -186,7 +216,7 @@ def do_get_experiment(out, form):
 
 
 def do_download_experiment(out, form):
-    from msweb_lib import combined
+    from msweb_lib import abundance
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:

@@ -551,7 +551,6 @@ frontpage = (function(){
 
     var controlled_vocabulary;
     var cv_exptypes = [ "exptype-vocab" ];
-    var cv_runcats = [ "runcat-vocab" ];
 
     // 
     // init_controlled_vocabulary:
@@ -561,22 +560,13 @@ frontpage = (function(){
         var v = add_editable_vocab("exptype-vocab", "experiment-type");
         $("#exptype-vocab-div").append(v[0]);
         v[1].prop("placeholder", "experiment type name");
-        v = add_editable_vocab("runcat-vocab", "run-category");
-        $("#runcat-vocab-div").append(v[0]);
-        v[1].prop("placeholder", "run category name");
         $("#add-experiment-type").attr("disabled", "disabled")
                                  .click(add_experiment_type);
         $("#remove-experiment-type").attr("disabled", "disabled")
                                     .click(remove_experiment_type);
-        $("#add-run-category").attr("disabled", "disabled")
-                              .click(add_run_category);
-        $("#remove-run-category").attr("disabled", "disabled")
-                                 .click(remove_run_category);
         $("#exptype-vocab").on("input", experiment_type_changed);
-        $("#runcat-vocab").on("input", run_category_changed);
         reload_controlled_vocabulary();
         experiment_type_changed();  // in case browser kept input history
-        run_category_changed();
     }
 
     //
@@ -609,13 +599,7 @@ frontpage = (function(){
         $.each(cv_exptypes, function(index, eid) {
             fill_selector(root, eid, controlled_vocabulary.experiment_types);
         });
-        fill_dropdown(root, "runcat-vocab",
-                      controlled_vocabulary.run_categories);
-        $.each(cv_runcats, function(index, eid) {
-            fill_selector(root, eid, controlled_vocabulary.run_categories);
-        });
         experiment_type_changed();
-        run_category_changed();
     }
 
     var fill_dropdown = function(root, eid, list) {
@@ -640,11 +624,11 @@ frontpage = (function(){
         }
     }
 
-    var fill_selector = function(root, eid, list) {
+    var fill_selector = function(root, eid, values) {
         var select = root.find("#" + eid);
         select.empty();
         select.append($("<option/>", { "value": ""}));
-        $.each(list, function(index, val) {
+        $.each(values, function(index, val) {
             select.append($("<option/>", { "value": val }).text(val));
         });
     }
@@ -712,33 +696,12 @@ frontpage = (function(){
     }
 
     //
-    // add_runcat_vocab:
-    //   Add selector for run category
-    //
-    var add_runcat_vocab = function(input_id) {
-        var select = $("<select/>", { "class": "form-control",
-                                      "id": input_id });
-        if (cv_runcats.indexOf(input_id) == -1)
-            cv_runcats.push(input_id);
-        return select;
-    }
-
-    //
     // experiment_type_changed:
     //   Event callback when user changes value of experiment input field
     //
     var experiment_type_changed = function() {
         vocab_changed($("#exptype-vocab").val(), "experiment-type",
                       "experiment_types");
-    }
-
-    //
-    // run_category_changed:
-    //   Event callback when user changes value of category input field
-    //
-    var run_category_changed = function(ev) {
-        vocab_changed($("#runcat-vocab").val(), "run-category",
-                      "run_categories");
     }
 
     //
@@ -777,22 +740,6 @@ frontpage = (function(){
     //
     var remove_experiment_type = function() {
         vocab_server("remove_experiment_type", $("#exptype-vocab").val());
-    }
-
-    //
-    // add_run_category:
-    //   Upload a new run category to server
-    //
-    var add_run_category = function() {
-        vocab_server("add_run_category", $("#runcat-vocab").val());
-    }
-
-    //
-    // remove_run_category:
-    //   Upload a new run category to server
-    //
-    var remove_run_category = function() {
-        vocab_server("remove_run_category", $("#runcat-vocab").val());
     }
 
     // --------------------------------------------------------------------
@@ -891,8 +838,8 @@ frontpage = (function(){
             });
         if (new_experiments.length == 1)
             tbl.select(new_experiments);
-        else if (metadata_exp_id)
-            tbl.select([ metadata_exp_id ]);
+        else if (edit_exp_id)
+            tbl.select([ edit_exp_id ]);
     }
 
     //
@@ -902,8 +849,8 @@ frontpage = (function(){
     var edit_experiment_selected = function(ev, rows) {
         $("#edit-metadata-fieldset").removeAttr("disabled");
         $(".edit-metadata").removeClass("disabled")
-        metadata_exp_id = rows[0].id;
-        show_metadata(metadata_exp_id);
+        edit_exp_id = rows[0].id;
+        show_metadata(edit_exp_id);
     }
 
     //
@@ -914,7 +861,7 @@ frontpage = (function(){
     var edit_experiment_deselected = function(ev, rows) {
         $("#edit-metadata-fieldset").attr("disabled", "disabled");
         $(".edit-metadata").addClass("disabled")
-        metadata_exp_id = undefined;
+        edit_exp_id = undefined;
         // XXX: hide metadata?
     }
 
@@ -946,7 +893,7 @@ frontpage = (function(){
     // --------------------------------------------------------------------
 
     var metadata_fields;
-    var metadata_exp_id;
+    var edit_exp_id;
 
     //
     // init_metadata_form:
@@ -1003,6 +950,7 @@ frontpage = (function(){
     //
     var show_metadata = function(exp_id) {
         fill_controlled_vocabulary(null);
+        fill_run_category_vocabulary(exp_id, null);
         var exp = experiment_metadata[exp_id];
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
@@ -1015,12 +963,13 @@ frontpage = (function(){
     //
     // update_metadata:
     //   Send current metadata values to server
+    //   NB: run category vocabulary is not included!
     //
     var update_metadata = function(ev) {
         stop_default(ev);
         var form_data = {
             "action": "update_experiment",
-            "exp_id": metadata_exp_id,
+            "exp_id": edit_exp_id,
         }
         $.each(metadata_fields, function(index, val) {
             var input_id = val[2];
@@ -1056,12 +1005,14 @@ frontpage = (function(){
     //   Revert metadata values to unchanged values
     //
     var revert_metadata = function() {
-        show_metadata(metadata_exp_id);
+        show_metadata(edit_exp_id);
     }
 
     // -----------------------------------------------------------------
     // Runs metadata section
     // -----------------------------------------------------------------
+
+    var cv_runcats = [];
 
     //
     // init_runs_form:
@@ -1075,6 +1026,14 @@ frontpage = (function(){
         var tbl = $("#edit-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"));
+        var v = add_editable_vocab("runcat-vocab", "run-category");
+        $("#runcat-vocab-div").append(v[0]);
+        v[1].prop("placeholder", "run category name");
+        $("#add-run-category").attr("disabled", "disabled")
+                              .click(add_run_category);
+        $("#remove-run-category").attr("disabled", "disabled")
+                                 .click(remove_run_category);
+        $("#runcat-vocab").on("input", run_category_changed);
     }
 
     //
@@ -1087,7 +1046,7 @@ frontpage = (function(){
         var tbody = tbl.find("tbody");
         tbody.empty();
         var rid = 1;
-        var runs = exp["runs"];
+        var runs = exp.runs;
         Object.keys(runs).sort().forEach(function(run_name) {
             var run_data = runs[run_name];
             var tr = $("<tr/>");
@@ -1099,10 +1058,89 @@ frontpage = (function(){
             container = input = add_runcat_vocab(input_id);
             tr.append($("<td/>").append(container));
             tbody.append(tr);
-            fill_selector(tr, input_id, controlled_vocabulary.run_categories);
+            fill_selector(tr, input_id, exp.run_categories);
             input.val(run_data["category"]);
             rid += 1;
         });
+    }
+
+    //
+    // add_runcat_vocab:
+    //   Add selector for run category
+    //
+    var add_runcat_vocab = function(input_id) {
+        var select = $("<select/>", { "class": "form-control",
+                                      "id": input_id });
+        if (cv_runcats.indexOf(input_id) == -1)
+            cv_runcats.push(input_id);
+        return select;
+    }
+
+    //
+    // fill_run_category_vocabulary:
+    //   Reload run category dropdowns
+    //
+    var fill_run_category_vocabulary = function(exp_id, categories) {
+        var exp = experiment_metadata[exp_id];
+        if (categories != null)
+            exp.run_categories = categories;
+        var root = $("#edit-metadata-runs");
+        fill_dropdown(root, "runcat-vocab", exp.run_categories);
+        $.each(cv_runcats, function(index, eid) {
+            fill_selector(root, eid, exp.run_categories);
+        });
+        run_category_changed();
+    }
+
+    //
+    // run_category_vocab_server:
+    //   Send a request for controlled vocabulary change
+    //
+    var run_category_vocab_server = function(action, exp_id, value) {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: BaseURL + "/cgi-bin/upload.py",
+            data: {
+                action: action,
+                exp_id: exp_id,
+                run_cat: value,
+            },
+            success: function(data) {
+                if (data.status != "success")
+                    show_error(data.status, data.reason, data.cause);
+                else
+                    fill_run_category_vocabulary(data.results.exp_id,
+                                                 data.results.run_categories);
+            },
+        });
+    }
+
+    //
+    // add_run_category:
+    //   Upload a new run category to server
+    //
+    var add_run_category = function() {
+        run_category_vocab_server("add_run_category",
+                                  $("#runcat-vocab").val());
+    }
+
+    //
+    // remove_run_category:
+    //   Upload a new run category to server
+    //
+    var remove_run_category = function() {
+        run_category_vocab_server("remove_run_category",
+                                  $("#runcat-vocab").val());
+    }
+
+    //
+    // run_category_changed:
+    //   Event callback when user changes value of category input field
+    //
+    var run_category_changed = function(ev) {
+        vocab_changed($("#runcat-vocab").val(), "run-category",
+                      "run_categories");
     }
 
     // =================================================================

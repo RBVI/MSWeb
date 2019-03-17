@@ -152,7 +152,7 @@ def parse_percentage(s):
     return parse_float(s) / 100.0
 
 
-"""MSWeb "combined" experiment data.
+"""MSWeb "abundance" experiment data.
 
 An experiment consists of a list of proteins and a series of runs.
 A run consists of a list of proteins and their coverage statistics.

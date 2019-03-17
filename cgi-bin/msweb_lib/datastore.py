@@ -33,7 +33,6 @@ correspondence of files in the two data directories.
 #       "version": 1,
 #       "uid": 3,
 #       "experiment_types": [ "T1" ],           # controlled vocab
-#       "run_categories": [ "C1" ],             # controlled vocab
 #       "datadirs": [ "raw", "cooked" ],        # version-dependent
 #       "experiments": {                        # version-dependent
 #           "1": {
@@ -42,6 +41,7 @@ correspondence of files in the two data directories.
 #                   "researcher": "Someone Else",
 #                   "expdate": "10/20/2018",
 #                   ...
+#                   "run_categories": ["control"],
 #                   "runs": {
 #                       "run1": { "category": "C1", "date": "09/20/2018" },
 #                       ...
@@ -89,8 +89,7 @@ class DataStore:
             self.uid = 1
             self.raw_dir = "raw"
             self.cooked_dir = "cooked"
-            self.experiment_types = []
-            self.run_categories = []
+            self.experiment_types = ["abundance"]
             self.experiments = {}
         else:
             with open(index_file) as f:
@@ -102,7 +101,6 @@ class DataStore:
             self.uid = index_data["uid"]
             self.raw_dir, self.cooked_dir = index_data["datadirs"]
             self.experiment_types = index_data.get("experiment_types", [])
-            self.run_categories = index_data.get("run_categories", [])
             self.experiments = index_data["experiments"]
 
     def write_index(self):
@@ -112,7 +110,6 @@ class DataStore:
             "uid": self.uid,
             "datadirs": [ self.raw_dir, self.cooked_dir ],
             "experiment_types": self.experiment_types,
-            "run_categories": self.run_categories,
             "experiments": self.experiments,
         }
         import os.path, json
@@ -136,8 +133,16 @@ class DataStore:
     def add_experiment_type(self, etype):
         self.experiment_types.append(etype)
 
-    def add_run_category(self, rcat):
-        self.run_categories.append(rcat)
+    def remove_experiment_type(self, etype):
+        self.experiment_types.remove(etype)
+
+    def add_run_category(self, exp_id, rcat):
+        exp = self.experiments[exp_id]
+        exp.run_categories.append(rcat)
+
+    def remove_run_category(self, exp_id, rcat):
+        exp = self.experiments[exp_id]
+        exp.run_categories.remove(rcat)
 
     def add_experiment(self, data):
         exp_id = str(self.uid)
