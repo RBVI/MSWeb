@@ -430,6 +430,10 @@ frontpage = (function(){
                                         .html("&times;"))
                             .click(function(ev) {
                                 console.log("close " + basename)
+                                plot_link.remove();
+                                plot_panel.remove();
+                                $("#frontpage > nav .nav-link:first-child")
+                                    .tab("show");
                             });
         plot_content.append(plot_close);
         // TODO: create plot content
