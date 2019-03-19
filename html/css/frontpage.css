@@ -1,7 +1,8 @@
 .frontpage-title {
     color: #527eff;
-    float:right;
-    margin-right: 1em;
+    position: fixed;
+    top: 0.5rem;
+    right: 1rem;
 }
 .frontpage-status {
     color: red;

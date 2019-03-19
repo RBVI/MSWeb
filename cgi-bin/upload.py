@@ -151,7 +151,7 @@ def do_add_run_category(out, form):
     ds.add_run_category(exp_id, rcat)
     ds.write_index()
     _send_success(out, {"exp_id":exp_id,
-                        "run_categories":exp.run_categories})
+                        "run_categories":exp["run_categories"]})
 
 
 def do_remove_run_category(out, form):
@@ -166,7 +166,7 @@ def do_remove_run_category(out, form):
     ds.remove_run_category(exp_id, rcat)
     ds.write_index()
     _send_success(out, {"exp_id":exp_id,
-                        "run_categories":exp.run_categories})
+                        "run_categories":exp["run_categories"]})
 
 
 def do_update_experiment(out, form):

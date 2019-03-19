@@ -137,12 +137,12 @@ class DataStore:
         self.experiment_types.remove(etype)
 
     def add_run_category(self, exp_id, rcat):
-        exp = self.experiments[exp_id]
-        exp.run_categories.append(rcat)
+        exp_data = self.experiments[exp_id]
+        exp_data["run_categories"].append(rcat)
 
     def remove_run_category(self, exp_id, rcat):
-        exp = self.experiments[exp_id]
-        exp.run_categories.remove(rcat)
+        exp_data = self.experiments[exp_id]
+        exp_data["run_categories"].remove(rcat)
 
     def add_experiment(self, data):
         exp_id = str(self.uid)

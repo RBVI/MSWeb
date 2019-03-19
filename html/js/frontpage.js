@@ -95,7 +95,10 @@ frontpage = (function(){
            .bootgrid(AnalyzeExperimentsTableOptions)
            .on("selected.rs.jquery.bootgrid", analyze_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", analyze_experiment_deselected);
-        $("#download").click(download_experiment);
+        $("#download").click(download_experiment).attr("disabled", "disabled");
+        $("#showplot").click(show_plot).attr("disabled", "disabled");
+        $(".make-plot-button").click(make_plot);
+        $(".cancel-plot-button").click(cancel_plot);
     }
 
     //
@@ -126,6 +129,8 @@ frontpage = (function(){
     //   Event callback when user clicks on a row in analyze table
     //
     var analyze_experiment_selected = function(ev, rows) {
+        $("#download").removeAttr("disabled");
+        $("#showplot").removeAttr("disabled");
         $("#analyze-fieldset").removeAttr("disabled");
         if (rows[0].id == analyze_exp_id)
             return;
@@ -154,6 +159,9 @@ frontpage = (function(){
             analyze_exp_id = undefined;
             analyze_stats_rows = undefined;
         }
+        $("#download").attr("disabled", "disabled");
+        $("#showplot").attr("disabled", "disabled");
+        $("#analyze-fieldset").attr("disabled", "disabled");
     }
 
     // -----------------------------------------------------------------
@@ -380,6 +388,70 @@ frontpage = (function(){
         }
     }
 
+    //
+    // show_plot:
+    //   Update modal plot parameters dialog with plot tabs
+    //   suitable for currently selected experiment
+    //
+    var show_plot = function(ev) {
+        console.log("show_plot");
+        var exp = experiment_metadata[analyze_exp_id];
+        console.log(exp.exptype);
+    }
+
+    //
+    // make_plot:
+    //   Generate new plot tab using currently selected parameters
+    //
+    var make_plot = function(ev) {
+        console.log("make_plot");
+        var basename = "xyzzy";
+        var plot_link_name = "tab_plot_" + basename;
+        var plot_panel_name = "panel-plot-" + basename;
+        var plot_panel = $("<div/>", { "class":"tab-pane fade",
+                                       "id": plot_panel_name,
+                                       "role": "tabpanel",
+                                       "aria-labelledby": plot_link_name });
+        var plot_content = $("<div/>");
+        plot_panel.append(plot_content);
+        $("#frontpage > div.tab-content").append(plot_panel);
+        var plot_link = $("<a/>", { "class": "nav-item nav-link",
+                                    "id": plot_link_name,
+                                    "href": "#" + plot_panel_name,
+                                    "data-toggle": "tab",
+                                    "role": "tab",
+                                    "aria-controls": plot_panel_name,
+                                    "aria-selected": false }).text(basename);
+        $("#frontpage > nav div").append(plot_link);
+        plot_link.tab("show");
+        plot_close = $("<button/>", { "class": "close",
+                                      "aria-label": "Close" })
+                            .append($("<span/>", { "aria-hidden": "true" })
+                                        .html("&times;"))
+                            .click(function(ev) {
+                                console.log("close " + basename)
+                            });
+        plot_content.append(plot_close);
+        // TODO: create plot content
+        var plotly_div_name = "plotly-" + basename;
+        var plotly_div = $("<div/>", { "id": plotly_div_name,
+                                       "css": { "width": "600px",
+                                                "height": "250px" } });
+        plot_content.append(plotly_div);
+        Plotly.plot(plotly_div.get(0), [{
+            x: [1, 2, 3, 4, 5],
+            y: [1, 2, 4, 8, 16] }], {
+            margin: { t: 0 } });
+    }
+
+    //
+    // cancel_plot:
+    //   No-op for now
+    //
+    var cancel_plot = function(ev) {
+        console.log("cancel_plot");
+    }
+
     // =================================================================
     // Edit tab functions
     // =================================================================
@@ -504,7 +576,7 @@ frontpage = (function(){
                     show_error(data.status, data.reason, data.cause);
                 } else {
                     set_upload_status("finished");
-                    reload_experiment_tables();
+                    reload_experiments_tables();
                 }
             },
             error: function(jqXHR, text_status, error_thrown) {
@@ -637,11 +709,11 @@ frontpage = (function(){
     // vocab_changed:
     //   Update button status when vocabulary input field changes
     //
-    var vocab_changed = function(v, vid, vkey) {
+    var vocab_changed = function(v, vid, values) {
         var add = $("#add-" + vid);
         var remove = $("#remove-" + vid);
         if (v && controlled_vocabulary) {
-            if ($.inArray(v, controlled_vocabulary[vkey]) == -1) {
+            if ($.inArray(v, values) == -1) {
                 add.removeAttr("disabled");
                 remove.attr("disabled", "disabled");
             } else {
@@ -700,8 +772,9 @@ frontpage = (function(){
     //   Event callback when user changes value of experiment input field
     //
     var experiment_type_changed = function() {
-        vocab_changed($("#exptype-vocab").val(), "experiment-type",
-                      "experiment_types");
+        if (controlled_vocabulary)
+            vocab_changed($("#exptype-vocab").val(), "experiment-type",
+                          controlled_vocabulary.experiment_types);
     }
 
     //
@@ -882,7 +955,7 @@ frontpage = (function(){
                 if (data.status != "success") {
                     show_error(data.status, data.reason, data.cause);
                 } else {
-                    reload_experiment_tables();
+                    reload_experiments_tables();
                 }
             },
         });
@@ -981,7 +1054,7 @@ frontpage = (function(){
         $("#edit-runs-table tbody tr").each(function(index) {
             var name = $(this).find("td:nth-child(1)").text();
             var date = $(this).find("td:nth-child(2) input").val();
-            var cat = $(this).find("td:nth-child(3) input").val();
+            var cat = $(this).find("td:nth-child(3) select").val();
             // keys should match those used in fill_edit_runs()
             runs[name] = { date: date, category: cat };
         });
@@ -995,7 +1068,7 @@ frontpage = (function(){
                 if (data.status != "success")
                     show_error(data.status, data.reason, data.cause);
                 else
-                    reload_edit_table();
+                    reload_experiments_tables();
             },
         });
     }
@@ -1121,7 +1194,7 @@ frontpage = (function(){
     //   Upload a new run category to server
     //
     var add_run_category = function() {
-        run_category_vocab_server("add_run_category",
+        run_category_vocab_server("add_run_category", edit_exp_id,
                                   $("#runcat-vocab").val());
     }
 
@@ -1130,7 +1203,7 @@ frontpage = (function(){
     //   Upload a new run category to server
     //
     var remove_run_category = function() {
-        run_category_vocab_server("remove_run_category",
+        run_category_vocab_server("remove_run_category", edit_exp_id,
                                   $("#runcat-vocab").val());
     }
 
@@ -1140,7 +1213,7 @@ frontpage = (function(){
     //
     var run_category_changed = function(ev) {
         vocab_changed($("#runcat-vocab").val(), "run-category",
-                      "run_categories");
+                      experiment_metadata[edit_exp_id].run_categories);
     }
 
     // =================================================================
@@ -1167,7 +1240,7 @@ frontpage = (function(){
         });
         var active = $("#frontpage .nav a.active").attr("id");
         tab_funcs[active]();
-        reload_experiment_tables();
+        reload_experiments_tables();
     };
 
     //
@@ -1200,10 +1273,10 @@ frontpage = (function(){
     }
 
     //
-    // reload_experiment_tables:
-    //   Upload list of experiments in edit table
+    // reload_experiments_tables:
+    //   Upload list of experiments in edit tab
     //
-    var reload_experiment_tables = function() {
+    var reload_experiments_tables = function() {
         $.ajax({
             dataType: "json",
             method: "POST",
