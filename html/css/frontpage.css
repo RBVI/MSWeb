@@ -31,6 +31,15 @@ html, body, #frontpage, #browse-tab, #edit-tab {
 #upload-file-name {
     font-weight: bold;
 }
+/* Add disclosure triangle before collapse link */
+[data-toggle="collapse"] .fa:before {   
+    margin-right: 0.5rem;
+    content: "\f0d7";
+}
+[data-toggle="collapse"].collapsed .fa:before {
+    margin-right: 0.5rem;
+    content: "\f0da";
+}
 /* Put border around bootgrid tables to group UI elements */
 .entire-bootgrid-table {
     background: #fff;
