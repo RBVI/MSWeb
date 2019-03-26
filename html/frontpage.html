@@ -30,34 +30,34 @@
     <div id="frontpage" class="container col-xs-12">
       <nav>
         <div class="nav nav-tabs" role="tablist">
-          <a class="nav-item nav-link active" id="tab_analyze" data-toggle="tab" href="#analyze-tab" role="tab"
-             aria-controls="analyze-tab" aria-selected="true">
-            Analyze
+          <a class="nav-item nav-link active" id="tab_browse" data-toggle="tab" href="#browse-tab" role="tab"
+             aria-controls="browse-tab" aria-selected="true">
+            Browse
           </a>
           <a class="nav-item nav-link" id="tab_edit" data-toggle="tab" href="#edit-tab" role="tab"
              aria-controls="edit-tab" aria-selected="false">
-            Edit
+            Upload
           </a>
         </div>
       </nav>
       <div class="tab-content py-3 px-3 px-sm-0">
-        <!-- "Analyze" tab -->
-        <div class="tab-pane fade show active" id="analyze-tab" role="tabpanel" aria-labelledby="tab_analyze">
+        <!-- "Browse" tab -->
+        <div class="tab-pane fade show active" id="browse-tab" role="tabpanel" aria-labelledby="tab_browse">
           <div class="panel-group">
 
-            <!-- Analyze table of ready experiments -->
-            <div class="card" id="analyze-experiments">
-              <div class="card-heading">
+            <!-- Browse table of ready experiments -->
+            <div class="card" id="browse-experiments">
+              <div class="card-header">
                 <h3 class="mb-0">
-                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-exp-card"
-                          aria-expanded="true" aria-controls="analyze-exp-card">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#browse-exp-card"
+                          aria-expanded="true" aria-controls="browse-exp-card">
                     Available Experiments
                   </button>
                 </h3>
               </div>
-              <div class="card-body collapse show" id="analyze-exp-card">
+              <div class="card-body collapse show" id="browse-exp-card">
                 <div class="entire-bootgrid-table">
-                  <table class="table table-condensed table-hover table-striped" id="analyze-exp-table"></table>
+                  <table class="table table-condensed table-hover table-striped" id="browse-exp-table"></table>
                 </div>
                 <div>
                   <button type="button" class="btn" id="download">Download</button>
@@ -66,48 +66,51 @@
                 </div>
               </div>
             </div>
-            <!-- end Analyze table of ready experiments -->
+            <!-- end Browse table of ready experiments -->
 
-            <fieldset id="analyze-fieldset">
-            <!-- Analyze table of runs -->
-            <div class="card" id="analyze-runs">
-              <div class="card-heading">
+            <fieldset id="browse-fieldset">
+            <!-- Browse table of runs -->
+            <div class="card" id="browse-runs">
+              <div class="card-header">
                 <h3 class="mb-0">
-                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-runs-card"
-                          aria-expanded="true" aria-controls="analyze-runs-card">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#browse-runs-card"
+                          aria-expanded="true" aria-controls="browse-runs-card">
                     Runs
                   </button>
                 </h3>
               </div>
-              <div class="card-body collapse show" id="analyze-runs-card">
-                <table class="table table-condensed table-hover table-striped" id="analyze-runs-table"></table>
+              <div class="card-body collapse show" id="browse-runs-card">
+                <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
               </div>
             </div>
-            <!-- end Analyze table of runs -->
+            <!-- end Browse table of runs -->
 
-            <!-- Analyze table of experiment stats -->
-            <div class="card" id="analyze-stats">
-              <div class="card-heading">
+            <!-- Browse table of experiment stats -->
+            <div class="card" id="browse-stats">
+              <div class="card-header">
                 <h3 class="mb-0">
-                  <button class="btn btn-link" data-toggle="collapse" data-target="#analyze-stats-card"
-                          aria-expanded="true" aria-controls="analyze-stats-card">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#browse-stats-card"
+                          aria-expanded="true" aria-controls="browse-stats-card">
                     Data and Plots
                   </button>
                 </h3>
               </div>
-              <div class="card-body collapse show" id="analyze-stats-card">
+              <div class="card-body collapse show" id="browse-stats-card">
+                <div id="browse-stats-columns">
+                  <span>Show Stats Columns:</span>
+                </div>
                 <div class="entire-bootgrid-table">
-                  <table class="table table-condensed table-hover table-striped" id="analyze-stats-table"></table>
+                  <table class="table table-condensed table-hover table-striped" id="browse-stats-table"></table>
                 </div>
               </div>
             </div>
-            <!-- end Analyze table of experiment stats -->
+            <!-- end Browse table of experiment stats -->
             </fieldset>
 
           </div>
           <!-- end panel group -->
         </div>
-        <!-- end "Analyze" tab -->
+        <!-- end "Browse" tab -->
 
         <!-- "Edit" tab -->
         <div class="tab-pane fade" id="edit-tab"

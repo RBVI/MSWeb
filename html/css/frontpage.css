@@ -3,6 +3,7 @@
     position: fixed;
     top: 0.5rem;
     right: 1rem;
+    z-index: 1;
 }
 .frontpage-status {
     color: red;
@@ -12,11 +13,19 @@
     margin-left: 1rem;
     margin-right: 1rem;
 }
-html, body, #frontpage, #analyze-tab, #edit-tab {
+html, body, #frontpage, #browse-tab, #edit-tab {
     height: 100%;
     width: 100%;
 }
-#analyze-stats-table {
+#browse-stats-columns {
+    border: 1px solid lightgray;
+    padding: 0.25rem;
+}
+.browse-stats-cb {
+    margin-left: 1rem;
+    margin-right: 0.2rem;
+}
+#browse-stats-table {
     width: inherit;
 }
 #upload-file-name {

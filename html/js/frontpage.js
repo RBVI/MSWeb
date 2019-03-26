@@ -24,44 +24,45 @@ frontpage = (function(){
     // in "tab_funcs" directly.
 
     // =================================================================
-    // Analyze tab functions
+    // Browse tab functions
     // =================================================================
 
     //
-    // init_tab_analyze:
-    //   Initialize all sections of the "analyze" tab
+    // init_tab_browse:
+    //   Initialize all sections of the "browse" tab
     //
-    var init_tab_analyze = function() {
-        init_analyze_experiments();
-        init_analyze_runs();
+    var init_tab_browse = function() {
+        init_browse_experiments();
+        init_browse_runs();
+        init_browse_stats();
 
         // Reset tab callback
-        tab_funcs.tab_analyze = show_tab_analyze;
-        show_tab_analyze();
+        tab_funcs.tab_browse = show_tab_browse;
+        show_tab_browse();
     }
 
     //
-    // show_tab_analyze:
-    //   Display "analyze" tab
+    // show_tab_browse:
+    //   Display "browse" tab
     //
-    var show_tab_analyze = function() {
-        fill_analyze_experiments(experiment_metadata);
+    var show_tab_browse = function() {
+        fill_browse_experiments(experiment_metadata);
     }
 
     // -----------------------------------------------------------------
-    // Analyze experiments section
+    // Browse experiments section
     // -----------------------------------------------------------------
 
     //
-    // Currently selected values in analyze tab
+    // Currently selected values in browse tab
     //
-    var analyze_exp_id;
-    var analyze_stats_rows;
+    var browse_exp_id;
+    var browse_stats_rows;
 
     //
-    // Options for experiments table in analyze tab
+    // Options for experiments table in browse tab
     //
-    var AnalyzeExperimentsTableOptions = {
+    var BrowseExperimentsTableOptions = {
         selection: true,
         rowSelect: true,
         multiSelect: false,
@@ -70,10 +71,10 @@ frontpage = (function(){
     };
 
     //
-    // init_analyze_experiments:
-    //   Initialize table of experiments in "analyze" tab
+    // init_browse_experiments:
+    //   Initialize table of experiments in "browse" tab
     //
-    var init_analyze_experiments = function() {
+    var init_browse_experiments = function() {
         var columns = [
             ["Title", "title"],
             ["Researcher", "researcher"],
@@ -89,12 +90,12 @@ frontpage = (function(){
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
         });
-        var tbl = $("#analyze-exp-table");
+        var tbl = $("#browse-exp-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"))
-           .bootgrid(AnalyzeExperimentsTableOptions)
-           .on("selected.rs.jquery.bootgrid", analyze_experiment_selected)
-           .on("deselected.rs.jquery.bootgrid", analyze_experiment_deselected);
+           .bootgrid(BrowseExperimentsTableOptions)
+           .on("selected.rs.jquery.bootgrid", browse_experiment_selected)
+           .on("deselected.rs.jquery.bootgrid", browse_experiment_deselected);
         $("#download").click(download_experiment).attr("disabled", "disabled");
         $("#showplot").click(show_plot).attr("disabled", "disabled");
         $(".make-plot-button").click(make_plot);
@@ -102,11 +103,11 @@ frontpage = (function(){
     }
 
     //
-    // fill_analyze_experiments:
-    //   Display the list of experiments in analyze table
+    // fill_browse_experiments:
+    //   Display the list of experiments in browse table
     //
-    var fill_analyze_experiments = function(results) {
-        var tbl = $("#analyze-exp-table");
+    var fill_browse_experiments = function(results) {
+        var tbl = $("#browse-exp-table");
         tbl.bootgrid("clear");
         var rows = [];
         $.each(results, function(exp_id, exp) {
@@ -120,58 +121,58 @@ frontpage = (function(){
         //
         // If an experiment was selected, select it again.
         //
-        if (analyze_exp_id)
-            tbl.select([ analyze_exp_id ]);
+        if (browse_exp_id)
+            tbl.select([ browse_exp_id ]);
     }
 
     //
-    // analyze_experiment_selected:
-    //   Event callback when user clicks on a row in analyze table
+    // browse_experiment_selected:
+    //   Event callback when user clicks on a row in browse table
     //
-    var analyze_experiment_selected = function(ev, rows) {
+    var browse_experiment_selected = function(ev, rows) {
         $("#download").removeAttr("disabled");
         $("#showplot").removeAttr("disabled");
-        $("#analyze-fieldset").removeAttr("disabled");
-        if (rows[0].id == analyze_exp_id)
+        $("#browse-fieldset").removeAttr("disabled");
+        if (rows[0].id == browse_exp_id)
             return;
-        analyze_exp_id = rows[0].id;
+        browse_exp_id = rows[0].id;
         // First update the runs table and generate a mapping from
         // run name to short integer.  Then update stats table.
-        fill_analyze_runs(analyze_exp_id);
-        if (experiment_stats[analyze_exp_id])
-            show_experiment_stats(analyze_exp_id);
+        fill_browse_runs(browse_exp_id);
+        if (experiment_stats[browse_exp_id])
+            show_experiment_stats(browse_exp_id);
         else {
             show_status("fetching experiment data...", true)
-            get_experiment_stats(analyze_exp_id);
+            get_experiment_stats(browse_exp_id);
             // Table will be shown after data is fetched
         }
     }
 
     //
-    // analyze_experiment_deselected:
+    // browse_experiment_deselected:
     //   Event callback when user deselects row in uploads table or
     //   selects a different row
     //
-    var analyze_experiment_deselected = function(ev, rows) {
-        if (analyze_exp_id) {
+    var browse_experiment_deselected = function(ev, rows) {
+        if (browse_exp_id) {
             // XXX: clear out runs and data tables?
-            $("#analyze-fieldset").attr("disabled", "disabled");
-            analyze_exp_id = undefined;
-            analyze_stats_rows = undefined;
+            $("#browse-fieldset").attr("disabled", "disabled");
+            browse_exp_id = undefined;
+            browse_stats_rows = undefined;
         }
         $("#download").attr("disabled", "disabled");
         $("#showplot").attr("disabled", "disabled");
-        $("#analyze-fieldset").attr("disabled", "disabled");
+        $("#browse-fieldset").attr("disabled", "disabled");
     }
 
     // -----------------------------------------------------------------
-    // Analyze runs section
+    // Browse runs section
     // -----------------------------------------------------------------
 
     //
-    // Options for runs table in analyze tab
+    // Options for runs table in browse tab
     //
-    var AnalyzeRunsTableOptions = {
+    var BrowseRunsTableOptions = {
         selection: true,
         rowSelect: true,
         multiSelect: true,
@@ -180,10 +181,10 @@ frontpage = (function(){
     };
 
     //
-    // init_analyze_runs:
+    // init_browse_runs:
     //   Initialize runs table headers
     //
-    var init_analyze_runs = function() {
+    var init_browse_runs = function() {
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
@@ -197,28 +198,17 @@ frontpage = (function(){
                         .text("Date"));
         htr.append($("<th/>", { "data-column-id": "category" })
                         .text("Category"));
-        var tbl = $("#analyze-runs-table");
+        var tbl = $("#browse-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"))
-           .bootgrid(AnalyzeRunsTableOptions)
-           .on('loaded.rs.jquery.bootgrid', function() {
-                tbl.off('selected.rs.jquery.bootgrid')
-                   .off('deselected.rs.jquery.bootgrid')
-                   .bootgrid("select")
-                   .on('selected.rs.jquery.bootgrid', function() {
-                        update_stats_column();
-                    })
-                   .on('deselected.rs.jquery.bootgrid', function() {
-                        update_stats_column();
-                    });
-            });
+           .bootgrid(BrowseRunsTableOptions);
     }
 
     //
-    // fill_analyze_runs:
+    // fill_browse_runs:
     //   Display runs in selected experiment
     //
-    var fill_analyze_runs = function(exp_id) {
+    var fill_browse_runs = function(exp_id) {
         var exp = experiment_metadata[exp_id];
         var rid = 1;
         var runs = exp["runs"];
@@ -235,26 +225,39 @@ frontpage = (function(){
             rid += 1;
         });
         exp.run_order = run_order;
-        var tbl = $("#analyze-runs-table");
+        var tbl = $("#browse-runs-table");
+        function select_all_first_time() {
+            tbl.off('selected.rs.jquery.bootgrid')
+               .off('deselected.rs.jquery.bootgrid')
+               .off('loaded.rs.jquery.bootgrid', select_all_first_time)
+               .bootgrid("select")
+               .on('selected.rs.jquery.bootgrid', function() {
+                    update_stats_columns();
+                })
+               .on('deselected.rs.jquery.bootgrid', function() {
+                    update_stats_columns();
+                });
+        }
         tbl.bootgrid("clear")
-           .bootgrid("append", rows);
+           .bootgrid("append", rows)
+           .on('loaded.rs.jquery.bootgrid', select_all_first_time);
     }
 
     // -----------------------------------------------------------------
-    // Analyze stats section
+    // Browse stats section
     // -----------------------------------------------------------------
 
     //
-    // Options for analyze stats table and stats column information
+    // Options for browse stats table and stats column information
     //
-    var ExperimentStatsTableOptions = {
+    var BrowseStatsTableOptions = {
         selection: true,
         rowSelect: true,
         multiSelect: true,
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
     };
-    var ExperimentStatsColumns = [
+    var BrowseStatsColumns = [
         [ "unique_peptides", "Num Unique", "Unique", false, ],
         [ "peptide_count", "Peptide Count", "Count", false, ],
         [ "coverage", "% Cov", "Cov", false, ],
@@ -263,11 +266,35 @@ frontpage = (function(){
     ];
 
     //
+    // init_browse_stats:
+    //   Initialize stats user interface in "browse" tab
+    //
+    var init_browse_stats = function() {
+        var columns = $("#browse-stats-columns");
+        $.each(BrowseStatsColumns, function(index, column) {
+            var checkbox = $("<input/>",
+                             { "type": "checkbox",
+                               "class": "browse-stats-cb",
+                               "data-value": index,
+                               "name": column[0] });
+            checkbox.prop("checked", column[3]);
+            var label = $("<label/>", { "for": column[0] }).text(column[1]);
+            columns.append(checkbox, label);
+        });
+        $(".browse-stats-cb").click(function(ev) {
+            var index = $(this).attr("data-value");
+            var checked = $(this).prop("checked");
+            BrowseStatsColumns[index][3] = checked;
+            update_stats_columns();
+        });
+    }
+
+    //
     // get_experiment_stats:
     //   Get experiment data from server
     //
     var get_experiment_stats = function(exp_id) {
-        $("#analyze-fieldset").attr("disabled", "disabled");
+        $("#browse-fieldset").attr("disabled", "disabled");
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -277,7 +304,7 @@ frontpage = (function(){
                 exp_id: exp_id,
             },
             success: function(data) {
-                $("#analyze-fieldset").removeAttr("disabled");
+                $("#browse-fieldset").removeAttr("disabled");
                 show_status("", false)
                 if (data.status != "success") {
                     show_error(data.status, data.reason, data.cause);
@@ -293,10 +320,10 @@ frontpage = (function(){
 
     //
     // show_experiment_stats:
-    //   Display data for given experiment in analyze tab
+    //   Display data for given experiment in browse tab
     //
     var show_experiment_stats = function(exp_id) {
-        var table = $("#analyze-stats-table");
+        var table = $("#browse-stats-table");
         table.bootgrid("destroy").empty();
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
@@ -312,7 +339,7 @@ frontpage = (function(){
         var run_order = experiment_metadata[exp_id].run_order;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
-            $.each(ExperimentStatsColumns, function(index, column) {
+            $.each(BrowseStatsColumns, function(index, column) {
                 var id = run_id + "-" + column[2];
                 var label = run_id + ": " + column[2];
                 htr.append($("<th/>", { "data-column-id": id,
@@ -333,44 +360,47 @@ frontpage = (function(){
                 var run_id = run_index + 1;
                 var run_data = stats.runs[run_name].protein_stats[index];
                 if (run_data)
-                    $.each(ExperimentStatsColumns, function(index, column) {
+                    $.each(BrowseStatsColumns, function(index, column) {
                         row[run_id + "-" + column[2]] = run_data[column[1]];
                     });
                 else
-                    $.each(ExperimentStatsColumns, function(index, column) {
+                    $.each(BrowseStatsColumns, function(index, column) {
                         row[run_id + "-" + column[2]] = "-";
                     });
             });
             rows.push(row);
         });
-        analyze_stats_rows = rows;
+        browse_stats_rows = rows;
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
-             .bootgrid(ExperimentStatsTableOptions)
+             .bootgrid(BrowseStatsTableOptions)
              .bootgrid("append", rows);
     }
 
     //
-    // update_stats_column:
+    // update_stats_columns:
     //   Show or hide all the columns for a particular run
     //
-    var update_stats_column = function() {
-        var selected = $("#analyze-runs-table").bootgrid("getSelectedRows");
-        $("#analyze-stats-table").bootgrid("destroy");
+    var update_stats_columns = function() {
+        console.log("update_stats_columns");
+        if (!browse_exp_id)
+            return;
+        var selected = $("#browse-runs-table").bootgrid("getSelectedRows");
+        $("#browse-stats-table").bootgrid("destroy");
         // Need to lookup name again after bootgrid rearranges elements
-        var table = $("#analyze-stats-table");
-        var run_order = experiment_metadata[analyze_exp_id].run_order;
+        var table = $("#browse-stats-table");
+        var run_order = experiment_metadata[browse_exp_id].run_order;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
             var show = selected.includes(run_id);
-            $.each(ExperimentStatsColumns, function(index, column) {
+            $.each(BrowseStatsColumns, function(index, column) {
                 var label = run_id + "-" + column[2];
                 var th = table.find("th[data-column-id='" + label + "']");
                 th.data("visible", (show ? column[3] : false));
             });
         });
-        table.bootgrid(ExperimentStatsTableOptions)
-             .bootgrid("append", analyze_stats_rows);
+        table.bootgrid(BrowseStatsTableOptions)
+             .bootgrid("append", browse_stats_rows);
     }
 
     //
@@ -379,11 +409,11 @@ frontpage = (function(){
     //
     var download_experiment = function(ev) {
         ev.preventDefault();
-        if (!analyze_exp_id)
+        if (!browse_exp_id)
             alert("No experiment selected");
         else {
             var url = BaseURL + "?action=download_experiment&exp_id=" +
-                      analyze_exp_id;
+                      browse_exp_id;
             window.location.href = url;
         }
     }
@@ -394,9 +424,10 @@ frontpage = (function(){
     //   suitable for currently selected experiment
     //
     var show_plot = function(ev) {
-        console.log("show_plot");
-        var exp = experiment_metadata[analyze_exp_id];
-        console.log(exp.exptype);
+        // console.log("show_plot");
+        var exp = experiment_metadata[browse_exp_id];
+        // console.log(exp.exptype);
+        // TODO: create UI for this type of experiment
     }
 
     //
@@ -404,7 +435,6 @@ frontpage = (function(){
     //   Generate new plot tab using currently selected parameters
     //
     var make_plot = function(ev) {
-        console.log("make_plot");
         var basename = "xyzzy";
         var plot_link_name = "tab_plot_" + basename;
         var plot_panel_name = "panel-plot-" + basename;
@@ -436,16 +466,127 @@ frontpage = (function(){
                                     .tab("show");
                             });
         plot_content.append(plot_close);
-        // TODO: create plot content
         var plotly_div_name = "plotly-" + basename;
         var plotly_div = $("<div/>", { "id": plotly_div_name,
                                        "css": { "width": "600px",
                                                 "height": "250px" } });
         plot_content.append(plotly_div);
-        Plotly.plot(plotly_div.get(0), [{
+        var raw_div = plotly_div.get(0);
+        var metadata = experiment_metadata[browse_exp_id];
+        var exp = experiment_stats[browse_exp_id];
+        var stats = JSON.parse(exp.experiment_data);
+        // console.log(metadata.exptype);
+        // TODO: create plot for this type of experiment
+        // make_plot_placeholder(raw_div, plotly_div_name, metadata, stats);
+        make_plot_violin(raw_div, plotly_div_name, metadata, stats);
+    }
+
+    //
+    // make_plot_placeholder:
+    //   Only used during development to show generic plot
+    //   "div" argument must be a Javascript element, not a jQuery object
+    //
+    var make_plot_placeholder = function(div, div_name, metadata, stats) {
+        Plotly.plot(div, [{
             x: [1, 2, 3, 4, 5],
             y: [1, 2, 4, 8, 16] }], {
             margin: { t: 0 } });
+    }
+
+    //
+    // make_plot_violin:
+    //   Create violin plot for abundance experiment.
+    //   y = abundance
+    //   trace = category name
+    //
+    var make_plot_violin = function(div, div_name, metadata, stats) {
+        normalize_counts(metadata, stats);
+        var traces = [];
+        Object.keys(stats.category_counts).sort().forEach(function(cat_name) {
+            y = [];
+            text = [];
+            $.each(stats.category_counts[cat_name], function(pid, counts) {
+                var protein = stats.proteins[pid];
+                var label = protein["Acc #"];
+                var gene = protein["Gene"];
+                if (gene)
+                    label += " (" + gene + ")";
+                var sum = counts.reduce(function(a, b) { return a + b; });
+                var avg = sum / counts.length;
+                y.push(avg);
+                text.push(label);
+            });
+            traces.push({
+                legendgroup: cat_name,
+                name: cat_name,
+                scalegroup: "Yes",
+                x0: cat_name,
+                type: "violin",
+                y: y,
+                text: text,
+            });
+        });
+        var layout = {
+            showLegend: true,
+            legend: { x:1, y:0.5 },
+            hovermode: "closest",
+            xaxis: { title: "", automargin: true },
+            yaxis: { title: "Abundance", automargin: true },
+            title: metadata.title,
+            violinmode: "overlay",
+            violingap: 0,
+            violingroupgap: 0,
+        };
+        Plotly.newPlot(div_name, traces, layout);
+        var d3 = Plotly.d3;
+        var gd3 = d3.select("#" + div_name)
+                    .style({ "width": "94%",
+                             "margin-left": "3%",
+                             "height": "95vh",
+                             "margin-top": "2.5vh", });
+        var gd = gd3.node();
+        Plotly.Plots.resize(gd);
+        window.onresize = function() { Plotly.Plots.resize(gd); }
+    }
+
+    //
+    // normalize_counts:
+    //   Compute normalized peptide counts for run categories
+    //
+    var normalize_counts = function(metadata, stats) {
+        // Create run-category map
+        var run2category = {};
+        $.each(metadata.runs, function(run_name, run_md) {
+            run2category[run_name] = run_md.category;
+        });
+        // Compute count totals and find normalizing scale factor
+        var run_total = {};
+        $.each(stats.runs, function(run_name, run) {
+            var total = 0;
+            $.each(run.protein_stats, function(protein_id, values) {
+                var count = values["Peptide Count"];
+                total += count;
+            });
+            run_total[run_name] = total;
+        });
+        var max_count = Math.max.apply(null, Object.values(run_total));
+        // Collect normalized counts for each protein in each category
+        var cat_counts = {};
+        $.each(stats.runs, function(run_name, run) {
+            var scale = run_total[run_name] / max_count;
+            var category = cat_counts[run2category[run_name]];
+            if (category === undefined)
+                category = cat_counts[run2category[run_name]] = {}
+            $.each(run.protein_stats, function(protein_id, values) {
+                var norm_count = values["Peptide Count"] * scale;
+                counts = category[protein_id];
+                if (counts === undefined)
+                    category[protein_id] = [ norm_count ];
+                else
+                    counts.push(norm_count);
+            });
+        });
+        stats.category_counts = cat_counts;
     }
 
     //
@@ -453,7 +594,7 @@ frontpage = (function(){
     //   No-op for now
     //
     var cancel_plot = function(ev) {
-        console.log("cancel_plot");
+        // console.log("cancel_plot");
     }
 
     // =================================================================
@@ -820,7 +961,7 @@ frontpage = (function(){
     }
 
     // --------------------------------------------------------------------
-    // Edit experiment metadata section
+    // Edit experiment and runs section
     // --------------------------------------------------------------------
 
     var EditExperimentsTableOptions = {
@@ -966,7 +1107,7 @@ frontpage = (function(){
     }
 
     // --------------------------------------------------------------------
-    // Experiment metadata section
+    // Edit experiment metadata section
     // --------------------------------------------------------------------
 
     var metadata_fields;
@@ -1086,7 +1227,7 @@ frontpage = (function(){
     }
 
     // -----------------------------------------------------------------
-    // Runs metadata section
+    // Edit runs metadata section
     // -----------------------------------------------------------------
 
     var cv_runcats = [];
@@ -1225,7 +1366,7 @@ frontpage = (function(){
     // =================================================================
 
     var tab_funcs = {
-        tab_analyze: init_tab_analyze,
+        tab_browse: init_tab_browse,
         tab_edit: init_tab_edit,
     };
     var experiment_metadata = {}      // All experiment metadata
@@ -1300,7 +1441,7 @@ frontpage = (function(){
         if (data.status != "success")
             show_error(data.status, data.reason, data.cause);
         else {
-            fill_analyze_experiments(data.results);
+            fill_browse_experiments(data.results);
             fill_edit_experiments(data.results);
             experiment_metadata = data.results;
         }
