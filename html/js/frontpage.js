@@ -210,21 +210,64 @@ frontpage = (function(){
     //
     var fill_browse_runs = function(exp_id) {
         var exp = experiment_metadata[exp_id];
-        var rid = 1;
         var runs = exp["runs"];
         var rows = [];
-        var run_order = [];
+        var run_label = {};
+        var cat_index = {};
+        var labels = []
+        var label_name = {}
+        Object.keys(runs).forEach(function(run_name) {
+            var run_data = runs[run_name];
+            var cat_name = run_data["category"];
+            var index = cat_index[cat_name];
+            if (index === undefined)
+                index = 1;
+            else
+                index += 1;
+            cat_index[cat_name] = index;
+            var label = cat_name + "/" + index;
+            run_label[run_name] = label;
+            label_name[label] = run_name;
+            labels.push(label);
+        });
+        labels.sort();
+        run_order = $.map(labels, function(lab) { return label_name[lab]; });
+        $.each(run_order, function(run_index, run_name) {
+            var run_data = runs[run_name];
+            var row = { "id": run_index + 1,
+                        "name": run_name,
+                        "date": run_data["date"],
+                        "category": run_label[run_name], };
+            rows.push(row);
+        });
+        exp.run_order = run_order;
+        exp.run_label = run_label;
+        /*
+        var run_order = [];     
+        var run_label = {};
+        var cat_index = {};
         Object.keys(runs).sort().forEach(function(run_name) {
             var run_data = runs[run_name];
+            var cat_name = run_data["category"];
+            var index = cat_index[cat_name];
+            if (index === undefined)
+                index = 1;
+            else
+                index += 1;
+            cat_index[cat_name] = index;
+            var label = cat_name + "/" + index;
+            run_label[run_name] = label;
             var row = { "id": rid,
                         "name": run_name,
                         "date": run_data["date"],
-                        "category": run_data["category"], };
+                        "category": label, };
             rows.push(row);
             run_order.push(run_name);
             rid += 1;
         });
         exp.run_order = run_order;
+        exp.run_label = run_label;
+        */
         var tbl = $("#browse-runs-table");
         function select_all_first_time() {
             tbl.off('selected.rs.jquery.bootgrid')
@@ -259,9 +302,9 @@ frontpage = (function(){
     };
     var BrowseStatsColumns = [
         [ "unique_peptides", "Num Unique", "Unique", false, ],
-        [ "peptide_count", "Peptide Count", "Count", false, ],
+        [ "peptide_count", "Peptide Count", "Count", true, ],
         [ "coverage", "% Cov", "Cov", false, ],
-        [ "best_score", "Best Disc Score", "Score", true, ],
+        [ "best_score", "Best Disc Score", "Score", false, ],
         [ "best_expected", "Best Expect Val", "Exp", false, ],
     ];
 
@@ -336,12 +379,14 @@ frontpage = (function(){
                         .text("Protein"));
         htr.append($("<th/>", { "data-column-id": "gene" })
                         .text("Gene"));
-        var run_order = experiment_metadata[exp_id].run_order;
+        var exp = experiment_metadata[exp_id];
+        var run_order = exp.run_order;
+        var run_label = exp.run_label;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
             $.each(BrowseStatsColumns, function(index, column) {
                 var id = run_id + "-" + column[2];
-                var label = run_id + ": " + column[2];
+                var label = run_label[run_name] + "<br/>" + column[2];
                 htr.append($("<th/>", { "data-column-id": id,
                                         "data-type": "numeric",
                                         "data-visible": column[3],
@@ -1240,7 +1285,7 @@ frontpage = (function(){
         var htr = $("<tr/>");
         htr.append($("<th/>").text("Name"));
         htr.append($("<th/>").text("Date"));
-        htr.append($("<th/>").text("Category"));
+        htr.append($("<th/>").text("Category/Index"));
         var tbl = $("#edit-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"));
