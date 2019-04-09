@@ -1441,6 +1441,14 @@ frontpage = (function(){
     }
 
     // =================================================================
+    // Analyze tab functions
+    // =================================================================
+
+    var show_tab_analyze = function() {
+        console.log("show_tab_analyze");
+    }
+
+    // =================================================================
     // Main page functions
     // =================================================================
 
@@ -1450,6 +1458,7 @@ frontpage = (function(){
         "tab-browse-raw": fill_browse_raw,
         "tab-browse-runs": fill_browse_runs,
         "tab-edit": init_tab_edit,
+        "tab-analyze": show_tab_analyze,
     };
     var experiment_metadata = {}      // All experiment metadata
     var experiment_stats = {}         // Fetched experiment stats
@@ -1465,8 +1474,19 @@ frontpage = (function(){
             if (func)
                 func();
         });
+        /*
         var active = $("#frontpage .nav a.active").attr("id");
         tab_funcs[active]();
+        */
+        if (window.location.href.indexOf("upload") >= 0) {
+            // Make the edit/upload tab active
+            $("#tab-edit").tab("show");
+        } else {
+            // Blow away the edit/upload tabs and make browse tab active
+            $("#tab-edit").remove();
+            $("#edit-tab").remove();
+            $("#tab-browse").tab("show");
+        }
         reload_experiments_tables();
     };
 
