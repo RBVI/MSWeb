@@ -197,7 +197,7 @@ frontpage = (function(){
         htr.append($("<th/>", { "data-column-id": "date" })
                         .text("Date"));
         htr.append($("<th/>", { "data-column-id": "category" })
-                        .text("Category"));
+                        .text("Category/Index"));
         var tbl = $("#browse-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"))
@@ -1285,7 +1285,7 @@ frontpage = (function(){
         var htr = $("<tr/>");
         htr.append($("<th/>").text("Name"));
         htr.append($("<th/>").text("Date"));
-        htr.append($("<th/>").text("Category/Index"));
+        htr.append($("<th/>").text("Category"));
         var tbl = $("#edit-runs-table");
         tbl.append($("<thead/>").append(htr))
            .append($("<tbody/>"));

@@ -68,44 +68,56 @@
             </div>
             <!-- end Browse table of ready experiments -->
 
-            <fieldset id="browse-fieldset">
-            <!-- Browse table of runs -->
-            <div class="card" id="browse-runs">
-              <div class="card-header">
-                <h3 class="mb-0">
-                  <button class="btn btn-link" data-toggle="collapse" data-target="#browse-runs-card"
-                          aria-expanded="true" aria-controls="browse-runs-card">
-                    <span class="fa"></span>Runs
-                  </button>
-                </h3>
-              </div>
-              <div class="card-body collapse show" id="browse-runs-card">
-                <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
-              </div>
-            </div>
-            <!-- end Browse table of runs -->
+            <!-- all experiment stats -->
+            <div id="all-exp-data" class="container col-xs-12">
+              <nav>
+                <div class="nav nav-tabs" role="tablist">
+                  <a class="nav-item nav-link" id="tab-exp-summary" data-toggle="tab"
+                     href="#exp-summary-tab" role="tab" aria-controls="exp-summary-tab" aria-selected="false">
+                    Summary
+                  </a>
+                  <a class="nav-item nav-link active" id="tab-exp-raw" data-toggle="tab"
+                     href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="true">
+                    Raw Data
+                  </a>
+                  <a class="nav-item nav-link" id="tab-exp-runs" data-toggle="tab"
+                     href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
+                    Runs
+                  </a>
+                </div>
+              </nav>
 
-            <!-- Browse table of experiment stats -->
-            <div class="card" id="browse-stats">
-              <div class="card-header">
-                <h3 class="mb-0">
-                  <button class="btn btn-link" data-toggle="collapse" data-target="#browse-stats-card"
-                          aria-expanded="true" aria-controls="browse-stats-card">
-                    <span class="fa"></span>Data and Plots
-                  </button>
-                </h3>
-              </div>
-              <div class="card-body collapse show" id="browse-stats-card">
-                <div id="browse-stats-columns">
-                  <span>Show Stats Columns:</span>
+              <div class="tab-content py-3 px-3 px-sm-0">
+                <!-- experiment summary tab -->
+                <div class="tab-pane fade" id="exp-summary-tab"
+                     role="tabpanel" aria-labelledby="tab-exp-summary">
+                  <div class="panel-group">
+                  </div>
                 </div>
-                <div class="entire-bootgrid-table">
-                  <table class="table table-condensed table-hover table-striped" id="browse-stats-table"></table>
+                <!-- end experiment summary tab -->
+                <!-- experiment raw tab -->
+                <div class="tab-pane fade show active" id="exp-raw-tab"
+                     role="tabpanel" aria-labelledby="tab-exp-raw">
+                  <fieldset id="browse-fieldset">
+                    <div id="browse-stats-columns">
+                      <span>Show Stats Columns:</span>
+                    </div>
+                  </fieldset>
+                  <div class="entire-bootgrid-table">
+                      <table class="table table-condensed table-hover table-striped" id="browse-stats-table"></table>
+                  </div>
                 </div>
+                <!-- end experiment raw tab -->
+                <!-- experiment runs tab -->
+                <div class="tab-pane fade" id="exp-runs-tab"
+                     role="tabpanel" aria-labelledby="tab-exp-runs">
+                  <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
+                </div>
+                <!-- end experiment runs tab -->
               </div>
+
             </div>
-            <!-- end Browse table of experiment stats -->
-            </fieldset>
+            <!-- end all experiment stats -->
 
           </div>
           <!-- end panel group -->
