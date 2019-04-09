@@ -57,7 +57,9 @@ frontpage = (function(){
     // Currently selected values in browse tab
     //
     var browse_exp_id;
-    var browse_stats_rows;
+    var browse_summary_id;
+    var browse_raw_id;
+    var browse_raw_rows;
 
     //
     // Options for experiments table in browse tab
@@ -136,16 +138,8 @@ frontpage = (function(){
         if (rows[0].id == browse_exp_id)
             return;
         browse_exp_id = rows[0].id;
-        // First update the runs table and generate a mapping from
-        // run name to short integer.  Then update stats table.
-        fill_browse_runs(browse_exp_id);
-        if (experiment_stats[browse_exp_id])
-            show_experiment_stats(browse_exp_id);
-        else {
-            show_status("fetching experiment data...", true)
-            get_experiment_stats(browse_exp_id);
-            // Table will be shown after data is fetched
-        }
+        set_run_order(browse_exp_id);
+        fill_browse();
     }
 
     //
@@ -158,7 +152,9 @@ frontpage = (function(){
             // XXX: clear out runs and data tables?
             $("#browse-fieldset").attr("disabled", "disabled");
             browse_exp_id = undefined;
-            browse_stats_rows = undefined;
+            browse_summary_id = undefined;
+            browse_raw_id = undefined;
+            browse_raw_rows = undefined;
         }
         $("#download").attr("disabled", "disabled");
         $("#showplot").attr("disabled", "disabled");
@@ -208,10 +204,48 @@ frontpage = (function(){
     // fill_browse_runs:
     //   Display runs in selected experiment
     //
-    var fill_browse_runs = function(exp_id) {
-        var exp = experiment_metadata[exp_id];
+    var fill_browse_runs = function() {
+        if (!browse_exp_id)
+            return;
+        var exp = experiment_metadata[browse_exp_id];
         var runs = exp["runs"];
         var rows = [];
+        $.each(exp.run_order, function(run_index, run_name) {
+            var run_data = runs[run_name];
+            var row = { "id": run_index + 1,
+                        "name": run_name,
+                        "date": run_data["date"],
+                        "category": exp.run_label[run_name], };
+            rows.push(row);
+        });
+        var tbl = $("#browse-runs-table");
+        function select_all_first_time() {
+            tbl.off('selected.rs.jquery.bootgrid')
+               .off('deselected.rs.jquery.bootgrid')
+               .off('loaded.rs.jquery.bootgrid', select_all_first_time)
+               .bootgrid("select")
+               .on('selected.rs.jquery.bootgrid', function() {
+                    update_stats_columns();
+                })
+               .on('deselected.rs.jquery.bootgrid', function() {
+                    update_stats_columns();
+                });
+        }
+        tbl.bootgrid("clear")
+           .bootgrid("append", rows)
+           .on('loaded.rs.jquery.bootgrid', select_all_first_time);
+    }
+
+    //
+    // set_run_order:
+    //   Set the order in which runs will be displayed in
+    //   runs tab and stats table columns
+    //
+    var set_run_order = function(exp_id) {
+        var exp = experiment_metadata[exp_id];
+        if (exp.run_order)
+            return;
+        var runs = exp["runs"];
         var run_label = {};
         var cat_index = {};
         var labels = []
@@ -232,58 +266,8 @@ frontpage = (function(){
         });
         labels.sort();
         run_order = $.map(labels, function(lab) { return label_name[lab]; });
-        $.each(run_order, function(run_index, run_name) {
-            var run_data = runs[run_name];
-            var row = { "id": run_index + 1,
-                        "name": run_name,
-                        "date": run_data["date"],
-                        "category": run_label[run_name], };
-            rows.push(row);
-        });
         exp.run_order = run_order;
         exp.run_label = run_label;
-        /*
-        var run_order = [];     
-        var run_label = {};
-        var cat_index = {};
-        Object.keys(runs).sort().forEach(function(run_name) {
-            var run_data = runs[run_name];
-            var cat_name = run_data["category"];
-            var index = cat_index[cat_name];
-            if (index === undefined)
-                index = 1;
-            else
-                index += 1;
-            cat_index[cat_name] = index;
-            var label = cat_name + "/" + index;
-            run_label[run_name] = label;
-            var row = { "id": rid,
-                        "name": run_name,
-                        "date": run_data["date"],
-                        "category": label, };
-            rows.push(row);
-            run_order.push(run_name);
-            rid += 1;
-        });
-        exp.run_order = run_order;
-        exp.run_label = run_label;
-        */
-        var tbl = $("#browse-runs-table");
-        function select_all_first_time() {
-            tbl.off('selected.rs.jquery.bootgrid')
-               .off('deselected.rs.jquery.bootgrid')
-               .off('loaded.rs.jquery.bootgrid', select_all_first_time)
-               .bootgrid("select")
-               .on('selected.rs.jquery.bootgrid', function() {
-                    update_stats_columns();
-                })
-               .on('deselected.rs.jquery.bootgrid', function() {
-                    update_stats_columns();
-                });
-        }
-        tbl.bootgrid("clear")
-           .bootgrid("append", rows)
-           .on('loaded.rs.jquery.bootgrid', select_all_first_time);
     }
 
     // -----------------------------------------------------------------
@@ -337,6 +321,7 @@ frontpage = (function(){
     //   Get experiment data from server
     //
     var get_experiment_stats = function(exp_id) {
+        show_status("fetching experiment data...", true)
         $("#browse-fieldset").attr("disabled", "disabled");
         $.ajax({
             dataType: "json",
@@ -353,9 +338,8 @@ frontpage = (function(){
                     show_error(data.status, data.reason, data.cause);
                 } else {
                     var exp_id = data.results.experiment_id;
-                    experiment_stats[exp_id] = data.results;
-                    show_experiment_stats(exp_id);
-                    // TODO: remove old plots
+                    experiment_stats[exp_id] = JSON.parse(data.results.experiment_data);
+                    fill_browse();
                 }
             },
         });
@@ -366,6 +350,8 @@ frontpage = (function(){
     //   Display data for given experiment in browse tab
     //
     var show_experiment_stats = function(exp_id) {
+        if (browse_raw_id == browse_exp_id)
+            return;
         var table = $("#browse-stats-table");
         table.bootgrid("destroy").empty();
         var htr = $("<tr/>");
@@ -395,7 +381,7 @@ frontpage = (function(){
             });
         });
 
-        var stats = JSON.parse(experiment_stats[exp_id].experiment_data);
+        var stats = experiment_stats[exp_id];
         var rows = [];
         $.each(stats.proteins, function(index, protein) {
             var row = { id: index };
@@ -415,7 +401,8 @@ frontpage = (function(){
             });
             rows.push(row);
         });
-        browse_stats_rows = rows;
+        browse_raw_rows = rows;
+        browse_raw_id = browse_exp_id;
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
              .bootgrid(BrowseStatsTableOptions)
@@ -427,7 +414,6 @@ frontpage = (function(){
     //   Show or hide all the columns for a particular run
     //
     var update_stats_columns = function() {
-        console.log("update_stats_columns");
         if (!browse_exp_id)
             return;
         var selected = $("#browse-runs-table").bootgrid("getSelectedRows");
@@ -445,8 +431,56 @@ frontpage = (function(){
             });
         });
         table.bootgrid(BrowseStatsTableOptions)
-             .bootgrid("append", browse_stats_rows);
+             .bootgrid("append", browse_raw_rows);
     }
+
+    //
+    // fill_browse_raw:
+    //   Fill browse raw tab
+    //
+    var fill_browse_raw = function() {
+        if (!browse_exp_id)
+            return;
+        if (!experiment_stats[browse_exp_id])
+            get_experiment_stats(browse_exp_id);
+        else
+            show_experiment_stats(browse_exp_id);
+    }
+
+    //
+    // fill_browse_summary:
+    //   Fill browse summary tab
+    //
+    var fill_browse_summary = function() {
+        if (!browse_exp_id)
+            return;
+        if (!experiment_stats[browse_exp_id]) {
+            get_experiment_stats(browse_exp_id);
+            return;
+        }
+        // TODO: more here
+        console.log("show experiment stats summary")
+    }
+
+    //
+    // fill_browse:
+    //   Fill active browse experiment tab
+    //
+    var fill_browse = function() {
+        if (!browse_exp_id)
+            return;
+        var active = $("#exp-stats-tabs nav a.active").attr("id");
+        if (active == "tab-browse-summary")
+            fill_browse_summary();
+        else if (active == "tab-browse-raw")
+            fill_browse_raw();
+        else if (active == "tab-browse-runs")
+            fill_browse_runs();
+    }
+
+    // -----------------------------------------------------------------
+    // Code for various browse buttons
+    // -----------------------------------------------------------------
 
     //
     // download_experiment:
@@ -518,8 +552,7 @@ frontpage = (function(){
         plot_content.append(plotly_div);
         var raw_div = plotly_div.get(0);
         var metadata = experiment_metadata[browse_exp_id];
-        var exp = experiment_stats[browse_exp_id];
-        var stats = JSON.parse(exp.experiment_data);
+        var stats = experiment_stats[browse_exp_id];
         // console.log(metadata.exptype);
         // TODO: create plot for this type of experiment
         // make_plot_placeholder(raw_div, plotly_div_name, metadata, stats);
@@ -632,6 +665,7 @@ frontpage = (function(){
             });
         });
         stats.category_counts = cat_counts;
+        console.log(cat_counts);
     }
 
     //
@@ -1411,8 +1445,11 @@ frontpage = (function(){
     // =================================================================
 
     var tab_funcs = {
-        tab_browse: init_tab_browse,
-        tab_edit: init_tab_edit,
+        "tab-browse": init_tab_browse,
+        "tab-browse-summary": fill_browse_summary,
+        "tab-browse-raw": fill_browse_raw,
+        "tab-browse-runs": fill_browse_runs,
+        "tab-edit": init_tab_edit,
     };
     var experiment_metadata = {}      // All experiment metadata
     var experiment_stats = {}         // Fetched experiment stats
