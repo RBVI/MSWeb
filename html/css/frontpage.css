@@ -25,6 +25,9 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     margin-left: 1rem;
     margin-right: 0.2rem;
 }
+.exp-buttons {
+    float: right;
+}
 #browse-stats-table {
     width: inherit;
 }

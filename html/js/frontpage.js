@@ -32,12 +32,14 @@ frontpage = (function(){
     //   Initialize all sections of the "browse" tab
     //
     var init_tab_browse = function() {
+        // console.log("init_tab_browse");
         init_browse_experiments();
         init_browse_runs();
         init_browse_stats();
+        browse_initialized = true;
 
         // Reset tab callback
-        tab_funcs.tab_browse = show_tab_browse;
+        tab_funcs["tab-browse"] = show_tab_browse;
         show_tab_browse();
     }
 
@@ -46,6 +48,7 @@ frontpage = (function(){
     //   Display "browse" tab
     //
     var show_tab_browse = function() {
+        // console.log("show_tab_browse");
         fill_browse_experiments(experiment_metadata);
     }
 
@@ -56,6 +59,7 @@ frontpage = (function(){
     //
     // Currently selected values in browse tab
     //
+    var browse_initialized = false;
     var browse_exp_id;
     var browse_summary_id;
     var browse_raw_id;
@@ -98,7 +102,9 @@ frontpage = (function(){
            .bootgrid(BrowseExperimentsTableOptions)
            .on("selected.rs.jquery.bootgrid", browse_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", browse_experiment_deselected);
-        $("#download").click(download_experiment).attr("disabled", "disabled");
+        $("#download-raw").click(download_experiment);
+        $("#download-csv").click(unimplemented);
+        $("#download-selected").click(unimplemented);
         $("#showplot").click(show_plot).attr("disabled", "disabled");
         $(".make-plot-button").click(make_plot);
         $(".cancel-plot-button").click(cancel_plot);
@@ -109,6 +115,8 @@ frontpage = (function(){
     //   Display the list of experiments in browse table
     //
     var fill_browse_experiments = function(results) {
+        if (!browse_initialized)
+            return;
         var tbl = $("#browse-exp-table");
         tbl.bootgrid("clear");
         var rows = [];
@@ -132,7 +140,7 @@ frontpage = (function(){
     //   Event callback when user clicks on a row in browse table
     //
     var browse_experiment_selected = function(ev, rows) {
-        $("#download").removeAttr("disabled");
+        $("#download").removeClass("disabled");
         $("#showplot").removeAttr("disabled");
         $("#browse-fieldset").removeAttr("disabled");
         if (rows[0].id == browse_exp_id)
@@ -140,6 +148,7 @@ frontpage = (function(){
         browse_exp_id = rows[0].id;
         set_run_order(browse_exp_id);
         fill_browse();
+        $("#exp-stats-tabs").collapse("show");
     }
 
     //
@@ -156,9 +165,10 @@ frontpage = (function(){
             browse_raw_id = undefined;
             browse_raw_rows = undefined;
         }
-        $("#download").attr("disabled", "disabled");
+        $("#download").addClass("disabled");
         $("#showplot").attr("disabled", "disabled");
         $("#browse-fieldset").attr("disabled", "disabled");
+        $("#exp-stats-tabs").collapse("hide");
     }
 
     // -----------------------------------------------------------------
@@ -284,6 +294,37 @@ frontpage = (function(){
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
     };
+    var BrowseSummaryTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+        converters: {
+            floats: {
+                from: function(value) {
+                    return value;
+                },
+                to: function(value) {
+                    if (value == "-")
+                        return value;
+                    else
+                        return value[0];
+                },
+            }
+        },
+        formatters: {
+            floats: function(column, row) {
+                var value = row[column.id];
+                if (value == "-")
+                    return value;
+                else {
+                    // console.log(value[0] + '+' + value[1]);
+                    return value[0].toFixed(2) + " &plusmn; " + value[1].toFixed(2);
+                }
+            }
+        },
+    };
     var BrowseStatsColumns = [
         [ "unique_peptides", "Num Unique", "Unique", false, ],
         [ "peptide_count", "Peptide Count", "Count", true, ],
@@ -338,7 +379,10 @@ frontpage = (function(){
                     show_error(data.status, data.reason, data.cause);
                 } else {
                     var exp_id = data.results.experiment_id;
-                    experiment_stats[exp_id] = JSON.parse(data.results.experiment_data);
+                    var metadata = experiment_metadata[exp_id];
+                    var raw = JSON.parse(data.results.experiment_data);
+                    var norm = normalize_counts(metadata, raw);
+                    experiment_stats[exp_id] = { raw: raw, normalized: norm };
                     fill_browse();
                 }
             },
@@ -346,11 +390,55 @@ frontpage = (function(){
     }
 
     //
-    // show_experiment_stats:
+    // normalize_counts:
+    //   Compute normalized peptide counts for run categories
+    //   If we need more complex normalization methods, they should
+    //   be done on the server and returned as part of JSON reply above.
+    //
+    var normalize_counts = function(metadata, stats) {
+        // Create run-category map
+        var run2category = {};
+        $.each(metadata.runs, function(run_name, run_md) {
+            run2category[run_name] = run_md.category;
+        });
+        // Compute count totals and find normalizing scale factor
+        var run_total = {};
+        $.each(stats.runs, function(run_name, run) {
+            var total = 0;
+            $.each(run.protein_stats, function(protein_id, values) {
+                var count = values["Peptide Count"];
+                total += count;
+            });
+            run_total[run_name] = total;
+        });
+        var max_count = Math.max.apply(null, Object.values(run_total));
+        // Collect normalized counts for each protein in each category
+        var cat_counts = {};
+        $.each(stats.runs, function(run_name, run) {
+            var scale = run_total[run_name] / max_count;
+            var category = cat_counts[run2category[run_name]];
+            if (category === undefined)
+                category = cat_counts[run2category[run_name]] = {}
+            $.each(run.protein_stats, function(protein_id, values) {
+                var norm_count = values["Peptide Count"] * scale;
+                counts = category[protein_id];
+                if (counts === undefined)
+                    category[protein_id] = [ norm_count ];
+                else
+                    counts.push(norm_count);
+            });
+        });
+        console.log(cat_counts);
+        return cat_counts;
+    }
+
+    //
+    // show_experiment_raw:
     //   Display data for given experiment in browse tab
     //
-    var show_experiment_stats = function(exp_id) {
-        if (browse_raw_id == browse_exp_id)
+    var show_experiment_raw = function(exp_id) {
+        // console.log("show_experiment_raw");
+        if (browse_raw_id == exp_id)
             return;
         var table = $("#browse-stats-table");
         table.bootgrid("destroy").empty();
@@ -381,28 +469,31 @@ frontpage = (function(){
             });
         });
 
-        var stats = experiment_stats[exp_id];
+        var raw = experiment_stats[exp_id].raw;
         var rows = [];
-        $.each(stats.proteins, function(index, protein) {
+        $.each(raw.proteins, function(index, protein) {
             var row = { id: index };
-            row.protein = protein["Acc #"] ? protein["Acc #"].toString() : "-";
-            row.gene = protein["Gene"] ? protein["Gene"].toString() : "-";
+            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
+            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
             $.each(run_order, function(run_index, run_name) {
                 var run_id = run_index + 1;
-                var run_data = stats.runs[run_name].protein_stats[index];
+                // Matches loop above
+                var run_data = raw.runs[run_name].protein_stats[index];
                 if (run_data)
                     $.each(BrowseStatsColumns, function(index, column) {
-                        row[run_id + "-" + column[2]] = run_data[column[1]];
+                        var column_id = run_id + "-" + column[2];
+                        row[column_id] = run_data[column[1]];
                     });
                 else
                     $.each(BrowseStatsColumns, function(index, column) {
-                        row[run_id + "-" + column[2]] = "-";
+                        var column_id = run_id + "-" + column[2];
+                        row[column_id] = "-";
                     });
             });
             rows.push(row);
         });
         browse_raw_rows = rows;
-        browse_raw_id = browse_exp_id;
+        browse_raw_id = exp_id;
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
              .bootgrid(BrowseStatsTableOptions)
@@ -435,6 +526,69 @@ frontpage = (function(){
     }
 
     //
+    // show_experiment_summary:
+    //   Display summary for given experiment in browse tab
+    //
+    var show_experiment_summary = function(exp_id) {
+        // console.log("show_experiment_summary " + browse_summary_id + " " + exp_id);
+        if (browse_summary_id == exp_id)
+            return;
+        $("#browse-summary-table").bootgrid("destroy");
+        var table = $("#browse-summary-table").empty();
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": false,
+                                "data-visible": false })
+                        .text("Id"));
+        htr.append($("<th/>", { "data-column-id": "protein" })
+                        .text("Protein"));
+        htr.append($("<th/>", { "data-column-id": "gene" })
+                        .text("Gene"));
+        var exp = experiment_metadata[exp_id];
+        var raw = experiment_stats[exp_id].raw;
+        var norm = experiment_stats[exp_id].normalized;
+        var cat_order = Object.keys(norm).sort();
+        $.each(cat_order, function(cat_index, cat_name) {
+            var id = "summary-" + cat_name;
+            htr.append($("<th/>", { "data-column-id": id,
+                                    // "data-converter": "string",
+                                    // Really array of two floats
+                                    "data-formatter": "floats",
+                                    "data-visible": true,
+                                    "data-searchable": false })
+                            .text(cat_name));
+        });
+
+        var rows = [];
+        $.each(raw.proteins, function(index, protein) {
+            var row = { id: index };
+            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
+            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
+            $.each(cat_order, function(cat_index, cat_name) {
+                // Matches loop above
+                var column_id = "summary-" + cat_name;
+                var counts = norm[cat_name][index];
+                if (!counts)
+                    row[column_id] = "-";
+                else {
+                    var n = counts.length;
+                    var mean = counts.reduce((a, b) => a + b) / n;
+                    var sd = Math.sqrt(counts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+                    row[column_id] = [mean, sd];
+                }
+            });
+            rows.push(row);
+        });
+        browse_summary_id = exp_id;
+        table.append($("<thead/>").append(htr))
+             .append($("<tbody/>"))
+             .bootgrid(BrowseSummaryTableOptions)
+             .bootgrid("append", rows);
+    }
+
+    //
     // fill_browse_raw:
     //   Fill browse raw tab
     //
@@ -444,7 +598,7 @@ frontpage = (function(){
         if (!experiment_stats[browse_exp_id])
             get_experiment_stats(browse_exp_id);
         else
-            show_experiment_stats(browse_exp_id);
+            show_experiment_raw(browse_exp_id);
     }
 
     //
@@ -454,12 +608,10 @@ frontpage = (function(){
     var fill_browse_summary = function() {
         if (!browse_exp_id)
             return;
-        if (!experiment_stats[browse_exp_id]) {
+        if (!experiment_stats[browse_exp_id])
             get_experiment_stats(browse_exp_id);
-            return;
-        }
-        // TODO: more here
-        console.log("show experiment stats summary")
+        else
+            show_experiment_summary(browse_exp_id);
     }
 
     //
@@ -467,9 +619,11 @@ frontpage = (function(){
     //   Fill active browse experiment tab
     //
     var fill_browse = function() {
+        // console.log("fill_browse " + browse_exp_id);
         if (!browse_exp_id)
             return;
         var active = $("#exp-stats-tabs nav a.active").attr("id");
+        // console.log("  active " + active);
         if (active == "tab-browse-summary")
             fill_browse_summary();
         else if (active == "tab-browse-raw")
@@ -495,6 +649,15 @@ frontpage = (function(){
                       browse_exp_id;
             window.location.href = url;
         }
+    }
+
+    //
+    // unimplemented:
+    //   Show alert saying functionality not ready yet
+    //
+    var unimplemented = function(ev) {
+        ev.preventDefault();
+        alert(ev.target.innerHTML + ": not implemented");
     }
 
     //
@@ -578,13 +741,14 @@ frontpage = (function(){
     //   trace = category name
     //
     var make_plot_violin = function(div, div_name, metadata, stats) {
-        normalize_counts(metadata, stats);
+        var raw = stats.raw;
+        var normalized = stats.normalized;
         var traces = [];
-        Object.keys(stats.category_counts).sort().forEach(function(cat_name) {
+        Object.keys(normalized).sort().forEach(function(cat_name) {
             y = [];
             text = [];
-            $.each(stats.category_counts[cat_name], function(pid, counts) {
-                var protein = stats.proteins[pid];
+            $.each(normalized[cat_name], function(pid, counts) {
+                var protein = raw.proteins[pid];
                 var label = protein["Acc #"];
                 var gene = protein["Gene"];
                 if (gene)
@@ -628,47 +792,6 @@ frontpage = (function(){
     }
 
     //
-    // normalize_counts:
-    //   Compute normalized peptide counts for run categories
-    //
-    var normalize_counts = function(metadata, stats) {
-        // Create run-category map
-        var run2category = {};
-        $.each(metadata.runs, function(run_name, run_md) {
-            run2category[run_name] = run_md.category;
-        });
-        // Compute count totals and find normalizing scale factor
-        var run_total = {};
-        $.each(stats.runs, function(run_name, run) {
-            var total = 0;
-            $.each(run.protein_stats, function(protein_id, values) {
-                var count = values["Peptide Count"];
-                total += count;
-            });
-            run_total[run_name] = total;
-        });
-        var max_count = Math.max.apply(null, Object.values(run_total));
-        // Collect normalized counts for each protein in each category
-        var cat_counts = {};
-        $.each(stats.runs, function(run_name, run) {
-            var scale = run_total[run_name] / max_count;
-            var category = cat_counts[run2category[run_name]];
-            if (category === undefined)
-                category = cat_counts[run2category[run_name]] = {}
-            $.each(run.protein_stats, function(protein_id, values) {
-                var norm_count = values["Peptide Count"] * scale;
-                counts = category[protein_id];
-                if (counts === undefined)
-                    category[protein_id] = [ norm_count ];
-                else
-                    counts.push(norm_count);
-            });
-        });
-        stats.category_counts = cat_counts;
-        console.log(cat_counts);
-    }
-
-    //
     // cancel_plot:
     //   No-op for now
     //
@@ -679,6 +802,8 @@ frontpage = (function(){
     // =================================================================
     // Edit tab functions
     // =================================================================
+
+    var edit_initialized = false;
 
     //
     // init_tab_edit:
@@ -697,9 +822,10 @@ frontpage = (function(){
         init_controlled_vocabulary();
         init_metadata_form();
         init_runs_form();
+        edit_initialized = true;
 
         // Reset tab callback
-        tab_funcs.tab_edit = show_tab_edit;
+        tab_funcs["tab-edit"] = show_tab_edit;
         show_tab_edit();
     }
 
@@ -1113,6 +1239,8 @@ frontpage = (function(){
     //   Display the list of experiments in edit table
     //
     var fill_edit_experiments = function(results) {
+        if (!edit_initialized)
+            return;
         var tbl = $("#edit-table");
         if (tbl.find("tbody").length == 0)
             return;

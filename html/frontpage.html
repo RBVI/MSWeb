@@ -64,63 +64,82 @@
                 <div class="entire-bootgrid-table">
                   <table class="table table-condensed table-hover table-striped" id="browse-exp-table"></table>
                 </div>
-                <div>
-                  <button type="button" class="btn" id="download">Download</button>
-                  <button type="button" class="btn" id="showplot"
-                          data-toggle="modal" data-target="#plot-modal">Show Plot</button>
-                </div>
               </div>
             </div>
             <!-- end Browse table of ready experiments -->
 
             <!-- all experiment stats -->
-            <div id="exp-stats-tabs" class="container col-xs-12">
-              <nav>
-                <div class="nav nav-tabs" role="tablist">
-                  <a class="nav-item nav-link" id="tab-browse-summary" data-toggle="tab"
-                     href="#exp-summary-tab" role="tab" aria-controls="exp-summary-tab" aria-selected="false">
-                    Summary
-                  </a>
-                  <a class="nav-item nav-link active" id="tab-browse-raw" data-toggle="tab"
-                     href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="true">
-                    Raw Data
-                  </a>
-                  <a class="nav-item nav-link" id="tab-browse-runs" data-toggle="tab"
-                     href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
-                    Runs
-                  </a>
-                </div>
-              </nav>
-
-              <div class="tab-content py-3 px-3 px-sm-0">
-                <!-- experiment summary tab -->
-                <div class="tab-pane fade" id="exp-summary-tab"
-                     role="tabpanel" aria-labelledby="tab-browse-summary">
-                  <div class="panel-group">
-                  </div>
-                </div>
-                <!-- end experiment summary tab -->
-                <!-- experiment raw tab -->
-                <div class="tab-pane fade show active" id="exp-raw-tab"
-                     role="tabpanel" aria-labelledby="tab-browse-raw">
-                  <fieldset id="browse-fieldset">
-                    <div id="browse-stats-columns">
-                      <span>Show Stats Columns:</span>
+            <div class="card" id="browse-experiment-data">
+              <div class="card-header">
+                <h3 class="mb-0">
+                  <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#exp-stats-tabs"
+                          aria-expanded="false" aria-controls="exp-stats-tabs">
+                    <span class="fa"></span>Experiment Data
+                  </button>
+                  <div class="exp-buttons">
+                    <div class="dropdown" style="display:inline;">
+                      <button type="button" class="btn btn-secondary dropdown-toggle disabled" id="download"
+                              data-toggle="dropdown" aria-haspopup=true' aria-expanded="false">Download</button>
+                      <div class="dropdown-menu aria-labelledby="download">
+                        <a class="dropdown-item" id="download-raw">Download Raw Data</a>
+                        <a class="dropdown-item" id="download-csv">Download CSV</a>
+                        <a class="dropdown-item" id="download-selected">Download CSV (selected rows)</a>
+                      </div>
                     </div>
-                  </fieldset>
-                  <div class="entire-bootgrid-table">
-                      <table class="table table-condensed table-hover table-striped" id="browse-stats-table"></table>
+                    <button type="button" class="btn" id="showplot"
+                            data-toggle="modal" data-target="#plot-modal">Show Plot</button>
                   </div>
-                </div>
-                <!-- end experiment raw tab -->
-                <!-- experiment runs tab -->
-                <div class="tab-pane fade" id="exp-runs-tab"
-                     role="tabpanel" aria-labelledby="tab-browse-runs">
-                  <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
-                </div>
-                <!-- end experiment runs tab -->
+                </h3>
               </div>
+              <div class="card-body collapse" id="exp-stats-tabs">
+                <nav>
+                  <div class="nav nav-tabs" role="tablist">
+                    <a class="nav-item nav-link active" id="tab-browse-summary" data-toggle="tab"
+                       href="#exp-summary-tab" role="tab" aria-controls="exp-summary-tab" aria-selected="true">
+                      Summary
+                    </a>
+                    <a class="nav-item nav-link" id="tab-browse-raw" data-toggle="tab"
+                       href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="false">
+                      Raw Data
+                    </a>
+                    <a class="nav-item nav-link" id="tab-browse-runs" data-toggle="tab"
+                       href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
+                      Runs
+                    </a>
+                  </div>
+                </nav>
 
+                <div class="tab-content py-3 px-3 px-sm-0">
+                  <!-- experiment summary tab -->
+                  <div class="tab-pane fade show active" id="exp-summary-tab"
+                       role="tabpanel" aria-labelledby="tab-browse-summary">
+                    <div class="entire-bootgrid-table">
+                        <table class="table table-condensed table-hover table-striped" id="browse-summary-table"></table>
+                    </div>
+                  </div>
+                  <!-- end experiment summary tab -->
+                  <!-- experiment raw tab -->
+                  <div class="tab-pane fade" id="exp-raw-tab"
+                       role="tabpanel" aria-labelledby="tab-browse-raw">
+                    <fieldset id="browse-fieldset">
+                      <div id="browse-stats-columns">
+                        <span>Show Stats Columns:</span>
+                      </div>
+                    </fieldset>
+                    <div class="entire-bootgrid-table">
+                        <table class="table table-condensed table-hover table-striped" id="browse-stats-table"></table>
+                    </div>
+                  </div>
+                  <!-- end experiment raw tab -->
+                  <!-- experiment runs tab -->
+                  <div class="tab-pane fade" id="exp-runs-tab"
+                       role="tabpanel" aria-labelledby="tab-browse-runs">
+                    <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
+                  </div>
+                  <!-- end experiment runs tab -->
+                </div>
+
+              </div>
             </div>
             <!-- end all experiment stats -->
           </div>
