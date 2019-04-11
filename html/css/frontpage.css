@@ -38,16 +38,19 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     font-weight: bold;
     margin-left: 0.5rem;
 }
-.an-op-icon {
-    min-width: 2rem;
-    min-height: 2rem;
-    max-width: 2rem;
-    max-height: 2rem;
+.op-row {
+    margin-bottom: 0.3rem;
 }
 .op-button {
     height: 100%;
     width: 6rem;
     margin-right: 0.5rem;
+}
+.op-icon {
+    min-width: 2rem;
+    min-height: 2rem;
+    max-width: 2rem;
+    max-height: 2rem;
 }
 /* Add disclosure triangle before collapse link */
 [data-toggle="collapse"] .fa:before {   

@@ -43,9 +43,9 @@ analyze = (function(){
                             .append($("<span/>", { "id": close_id,
                                                    "class": "tab-close-button"})
                                             .html("&times;"))
+                            .click(ev => this.close(ev))
                             .appendTo(this.tab_container.children("nav")
                                                         .find(".nav-tabs"));
-            $("#" + close_id).click(ev => this.close(ev));
 
             // Save references
             this.tab = tab;
@@ -57,33 +57,41 @@ analyze = (function(){
         }
 
         make_operations(container) {
-            var ops = $("<div/>", { "class": "row" }).appendTo(container);
+            var ops = $("<div/>", { "class": "row op-row" }).appendTo(container);
             var ops_a = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
-            this.make_ops_text(ops_a, "op-diff", "Differential Abundance");
-            this.make_ops_text(ops_a, "op-enrich", "Enrichment");
-            this.make_ops_text(ops_a, "op-string", "STRING");
+            this.make_ops_text(ops_a, "op-diff", "Differential Abundance",
+                               this.op_differential);
+            this.make_ops_text(ops_a, "op-enrich", "Enrichment",
+                               this.op_enrichment);
+            this.make_ops_text(ops_a, "op-string", "STRING",
+                               this.op_string);
             var ops_p = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
-            this.make_ops_image(ops_p, "plot-violin", "violin.png", "Violin");
-            this.make_ops_image(ops_p, "plot-heatmap", "heatmap.svg", "Heat Map");
-            this.make_ops_image(ops_p, "plot-volcano", "volcano.svg", "Volcano");
+            this.make_ops_image(ops_p, "plot-violin", "violin.png", "Violin",
+                                this.plot_violin);
+            this.make_ops_image(ops_p, "plot-heatmap", "heatmap.svg", "Heat Map",
+                                this.plot_heatmap);
+            this.make_ops_image(ops_p, "plot-volcano", "volcano.svg", "Volcano",
+                                this.plot_volcano);
         }
 
-        make_ops_text(parent, id, name) {
+        make_ops_text(parent, id, name, method) {
             $("<button/>", { "type": "button",
                              "class": "btn btn-outline-secondary op-button",
                              "id":id })
                     .text(name)
+                    .click(method.bind(this))
                     .appendTo(parent);
         }
 
-        make_ops_image(parent, id, icon_file, name) {
+        make_ops_image(parent, id, icon_file, name, method) {
             var button = $("<button/>", { "type": "button",
                                           "class": "btn btn-outline-primary op-button",
                                           "id": id });
-            $("<img/>", { "class": "an-op-icon",
+            $("<img/>", { "class": "op-icon",
                           "src": "icons/" + icon_file }).appendTo(button);
             button.append($("<br/>"))
                   .append($("<span/>").text(name))
+                  .click(method.bind(this))
                   .appendTo(parent);
         }
         
@@ -115,6 +123,34 @@ analyze = (function(){
             this.tab.remove();
             this.pane.remove();
             prev.tab("show");
+        }
+
+        op_differential(ev, a, b) {
+            this.unimplemented("Differential abundance");
+        }
+
+        op_enrichment(ev) {
+            this.unimplemented("Enrichment");
+        }
+
+        op_string(ev) {
+            this.unimplemented("STRING");
+        }
+
+        plot_violin(ev) {
+            this.unimplemented("Violin plot");
+        }
+
+        plot_heatmap(ev) {
+            this.unimplemented("Heatmap");
+        }
+
+        plot_volcano(ev) {
+            this.unimplemented("Volcano plot");
+        }
+
+        unimplemented(name) {
+            alert(name + " has not been implemented yet.");
         }
 
     };
