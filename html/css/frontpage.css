@@ -25,14 +25,27 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     margin-left: 1rem;
     margin-right: 0.2rem;
 }
-.exp-buttons {
-    float: right;
+.right-aligned {
+    position: absolute;
+    right: 1rem;
+}
+.display-inline {
+    display: inline-block;
 }
 #browse-stats-table {
     width: inherit;
 }
 #upload-file-name {
     font-weight: bold;
+}
+.an-op-icon {
+    min-width: 2rem;
+    min-height: 2rem;
+    max-width: 2rem;
+    max-height: 2rem;
+}
+.op-button {
+    height: 100%;
 }
 /* Add disclosure triangle before collapse link */
 [data-toggle="collapse"] .fa:before {   

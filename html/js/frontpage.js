@@ -105,7 +105,7 @@ frontpage = (function(){
         $("#download-raw").click(download_experiment);
         $("#download-csv").click(unimplemented);
         $("#download-selected").click(unimplemented);
-        $("#showplot").click(show_plot).attr("disabled", "disabled");
+        $("#analyze").click(analyze_experiment);
         $(".make-plot-button").click(make_plot);
         $(".cancel-plot-button").click(cancel_plot);
     }
@@ -140,8 +140,8 @@ frontpage = (function(){
     //   Event callback when user clicks on a row in browse table
     //
     var browse_experiment_selected = function(ev, rows) {
-        $("#download").removeClass("disabled");
-        $("#showplot").removeAttr("disabled");
+        $("#analyze").removeClass("disabled");
+        $("#plot-violin").removeAttr("disabled");
         $("#browse-fieldset").removeAttr("disabled");
         if (rows[0].id == browse_exp_id)
             return;
@@ -165,8 +165,8 @@ frontpage = (function(){
             browse_raw_id = undefined;
             browse_raw_rows = undefined;
         }
-        $("#download").addClass("disabled");
-        $("#showplot").attr("disabled", "disabled");
+        $("#analyze").addClass("disabled");
+        $("#plot-violin").attr("disabled", "disabled");
         $("#browse-fieldset").attr("disabled", "disabled");
         $("#exp-stats-tabs").collapse("hide");
     }
@@ -1572,8 +1572,21 @@ frontpage = (function(){
     // Analyze tab functions
     // =================================================================
 
+    var analyze_exp_id;
+
+    var analyze_experiment = function() {
+        if ($("#analyze").hasClass("disabled"))
+            return;
+        analyze_exp_id = browse_exp_id;
+        $("#tab-analyze").tab("show");
+    }
+
     var show_tab_analyze = function() {
-        console.log("show_tab_analyze");
+        // console.log("show_tab_analyze");
+        if (analyze_exp_id === undefined)
+            return;
+        var exp = experiment_metadata[analyze_exp_id];
+        $("#an-title").text("Experiment: " + exp.title);
     }
 
     // =================================================================
