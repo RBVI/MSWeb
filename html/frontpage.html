@@ -20,6 +20,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.fa.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/1.45.2/plotly.min.js"></script>
     <script type="text/javascript" src="js/frontpage.js"></script>
+    <script type="text/javascript" src="js/fp-analyze.js"></script>
+    <script type="text/javascript" src="js/fp-plot.js"></script>
   </head>
   <body>
     <div id="frontpage" class="container col-xs-12">
@@ -37,10 +39,6 @@
           <a class="nav-item nav-link" id="tab-browse" data-toggle="tab" href="#browse-tab" role="tab"
              aria-controls="browse-tab" aria-selected="false">
             Browse
-          </a>
-          <a class="nav-item nav-link" id="tab-analyze" data-toggle="tab" href="#analyze-tab" role="tab"
-             aria-controls="analyze-tab" aria-selected="false">
-            Analyze
           </a>
         </div>
       </nav>
@@ -264,55 +262,6 @@
         </div>
         <!-- end "Upload/Edit" tab -->
 
-        <!-- ===================================== "Analyze" tab ================================= -->
-
-        <div class="tab-pane fade" id="analyze-tab" role="tabpanel" aria-labelledby="tab-analyze">
-          <h1 id="an-title">Analyze Tab placeholder</h1>
-          <div class="container">
-            <div id="an-operations" class="row">
-              <div id="an-op-analysis" class="col-sm-6">
-                <button type="button" class="btn btn-outline-secondary btn-lg op-button" id="op-diff">
-                Differential<br/>Abundance</button>
-                <button type="button" class="btn btn-outline-secondary btn-lg op-button" id="op-enrich">
-                Enrichment</button>
-                <button type="button" class="btn btn-outline-secondary btn-lg op-button" id="op-string">
-                STRING</button>
-              </div>
-              <div class="divider"></div>
-              <div id="an-op-plot" class="col-sm-6" style="text-align:right;">
-                <button type="button" class="btn btn-outline-primary op-button" id="plot-violin"
-                        data-toggle="modal" data-target="#plot-modal">
-                        <img class="an-op-icon" src="icons/violin.png"/><br/>
-                        Violin Plot</button>
-                <button type="button" class="btn btn-outline-primary op-button" id="plot-heatmap">
-                        <img class="an-op-icon" src="icons/heatmap.svg"/><br/>
-                        Heat Map</button>
-                <button type="button" class="btn btn-outline-primary op-button" id="plot-volcano">
-                        <img class="an-op-icon" src="icons/volcano.svg"/><br/>
-                        Volcano</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Analysis summary table -->
-          <div class="card" id="an-summary">
-            <div class="card-header">
-              <h3 class="mb-0">
-                <button class="btn btn-link" data-toggle="collapse" data-target="#an-summary-card"
-                        aria-expanded="true" aria-controls="an-summary-card">
-                  <span class="fa"></span>Summary Table
-                </button>
-              </h3>
-            </div>
-            <div class="card-body collapse show" id="an-summary-card">
-              <div class="entire-bootgrid-table">
-                <table class="table table-condensed table-hover table-striped" id="an-summary-table"></table>
-              </div>
-            </div>
-          </div>
-          <!-- end Analysis summary table -->
-        </div>
-        <!-- end "Analyze" tab -->
       </div>
       <!-- end frontpage tabs -->
 

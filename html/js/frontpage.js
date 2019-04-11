@@ -1,10 +1,5 @@
 // vim: set expandtab shiftwidth=4 softtabstop=4:
 
-//
-// TODO:
-//   Add plot area
-//
-
 frontpage = (function(){
 
     var BaseURL = "/MSWeb/cgi-bin/upload.py"
@@ -31,7 +26,7 @@ frontpage = (function(){
     // init_tab_browse:
     //   Initialize all sections of the "browse" tab
     //
-    var init_tab_browse = function() {
+    function init_tab_browse() {
         // console.log("init_tab_browse");
         init_browse_experiments();
         init_browse_runs();
@@ -47,7 +42,7 @@ frontpage = (function(){
     // show_tab_browse:
     //   Display "browse" tab
     //
-    var show_tab_browse = function() {
+    function show_tab_browse() {
         // console.log("show_tab_browse");
         fill_browse_experiments(experiment_metadata);
     }
@@ -80,7 +75,7 @@ frontpage = (function(){
     // init_browse_experiments:
     //   Initialize table of experiments in "browse" tab
     //
-    var init_browse_experiments = function() {
+    function init_browse_experiments() {
         var columns = [
             ["Title", "title"],
             ["Researcher", "researcher"],
@@ -106,15 +101,15 @@ frontpage = (function(){
         $("#download-csv").click(unimplemented);
         $("#download-selected").click(unimplemented);
         $("#analyze").click(analyze_experiment);
-        $(".make-plot-button").click(make_plot);
-        $(".cancel-plot-button").click(cancel_plot);
+        $(".make-plot-button").click(plot.make_plot);
+        $(".cancel-plot-button").click(plot.cancel_plot);
     }
 
     //
     // fill_browse_experiments:
     //   Display the list of experiments in browse table
     //
-    var fill_browse_experiments = function(results) {
+    function fill_browse_experiments(results) {
         if (!browse_initialized)
             return;
         var tbl = $("#browse-exp-table");
@@ -139,9 +134,8 @@ frontpage = (function(){
     // browse_experiment_selected:
     //   Event callback when user clicks on a row in browse table
     //
-    var browse_experiment_selected = function(ev, rows) {
+    function browse_experiment_selected(ev, rows) {
         $("#analyze").removeClass("disabled");
-        $("#plot-violin").removeAttr("disabled");
         $("#browse-fieldset").removeAttr("disabled");
         if (rows[0].id == browse_exp_id)
             return;
@@ -156,7 +150,7 @@ frontpage = (function(){
     //   Event callback when user deselects row in uploads table or
     //   selects a different row
     //
-    var browse_experiment_deselected = function(ev, rows) {
+    function browse_experiment_deselected(ev, rows) {
         if (browse_exp_id) {
             // XXX: clear out runs and data tables?
             $("#browse-fieldset").attr("disabled", "disabled");
@@ -166,7 +160,6 @@ frontpage = (function(){
             browse_raw_rows = undefined;
         }
         $("#analyze").addClass("disabled");
-        $("#plot-violin").attr("disabled", "disabled");
         $("#browse-fieldset").attr("disabled", "disabled");
         $("#exp-stats-tabs").collapse("hide");
     }
@@ -190,7 +183,7 @@ frontpage = (function(){
     // init_browse_runs:
     //   Initialize runs table headers
     //
-    var init_browse_runs = function() {
+    function init_browse_runs() {
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
@@ -214,7 +207,7 @@ frontpage = (function(){
     // fill_browse_runs:
     //   Display runs in selected experiment
     //
-    var fill_browse_runs = function() {
+    function fill_browse_runs() {
         if (!browse_exp_id)
             return;
         var exp = experiment_metadata[browse_exp_id];
@@ -251,7 +244,7 @@ frontpage = (function(){
     //   Set the order in which runs will be displayed in
     //   runs tab and stats table columns
     //
-    var set_run_order = function(exp_id) {
+    function set_run_order(exp_id) {
         var exp = experiment_metadata[exp_id];
         if (exp.run_order)
             return;
@@ -337,7 +330,7 @@ frontpage = (function(){
     // init_browse_stats:
     //   Initialize stats user interface in "browse" tab
     //
-    var init_browse_stats = function() {
+    function init_browse_stats() {
         var columns = $("#browse-stats-columns");
         $.each(BrowseStatsColumns, function(index, column) {
             var checkbox = $("<input/>",
@@ -361,7 +354,7 @@ frontpage = (function(){
     // get_experiment_stats:
     //   Get experiment data from server
     //
-    var get_experiment_stats = function(exp_id) {
+    function get_experiment_stats(exp_id) {
         show_status("fetching experiment data...", true)
         $("#browse-fieldset").attr("disabled", "disabled");
         $.ajax({
@@ -395,7 +388,7 @@ frontpage = (function(){
     //   If we need more complex normalization methods, they should
     //   be done on the server and returned as part of JSON reply above.
     //
-    var normalize_counts = function(metadata, stats) {
+    function normalize_counts(metadata, stats) {
         // Create run-category map
         var run2category = {};
         $.each(metadata.runs, function(run_name, run_md) {
@@ -428,7 +421,7 @@ frontpage = (function(){
                     counts.push(norm_count);
             });
         });
-        console.log(cat_counts);
+        // console.log(cat_counts);
         return cat_counts;
     }
 
@@ -436,7 +429,7 @@ frontpage = (function(){
     // show_experiment_raw:
     //   Display data for given experiment in browse tab
     //
-    var show_experiment_raw = function(exp_id) {
+    function show_experiment_raw(exp_id) {
         // console.log("show_experiment_raw");
         if (browse_raw_id == exp_id)
             return;
@@ -504,7 +497,7 @@ frontpage = (function(){
     // update_stats_columns:
     //   Show or hide all the columns for a particular run
     //
-    var update_stats_columns = function() {
+    function update_stats_columns() {
         if (!browse_exp_id)
             return;
         var selected = $("#browse-runs-table").bootgrid("getSelectedRows");
@@ -529,7 +522,7 @@ frontpage = (function(){
     // show_experiment_summary:
     //   Display summary for given experiment in browse tab
     //
-    var show_experiment_summary = function(exp_id) {
+    function show_experiment_summary(exp_id) {
         // console.log("show_experiment_summary " + browse_summary_id + " " + exp_id);
         if (browse_summary_id == exp_id)
             return;
@@ -592,7 +585,7 @@ frontpage = (function(){
     // fill_browse_raw:
     //   Fill browse raw tab
     //
-    var fill_browse_raw = function() {
+    function fill_browse_raw() {
         if (!browse_exp_id)
             return;
         if (!experiment_stats[browse_exp_id])
@@ -605,7 +598,7 @@ frontpage = (function(){
     // fill_browse_summary:
     //   Fill browse summary tab
     //
-    var fill_browse_summary = function() {
+    function fill_browse_summary() {
         if (!browse_exp_id)
             return;
         if (!experiment_stats[browse_exp_id])
@@ -618,7 +611,7 @@ frontpage = (function(){
     // fill_browse:
     //   Fill active browse experiment tab
     //
-    var fill_browse = function() {
+    function fill_browse() {
         // console.log("fill_browse " + browse_exp_id);
         if (!browse_exp_id)
             return;
@@ -640,7 +633,7 @@ frontpage = (function(){
     // download_experiment:
     //   Download raw file for selected experiment
     //
-    var download_experiment = function(ev) {
+    function download_experiment(ev) {
         ev.preventDefault();
         if (!browse_exp_id)
             alert("No experiment selected");
@@ -655,148 +648,9 @@ frontpage = (function(){
     // unimplemented:
     //   Show alert saying functionality not ready yet
     //
-    var unimplemented = function(ev) {
+    function unimplemented(ev) {
         ev.preventDefault();
         alert(ev.target.innerHTML + ": not implemented");
-    }
-
-    //
-    // show_plot:
-    //   Update modal plot parameters dialog with plot tabs
-    //   suitable for currently selected experiment
-    //
-    var show_plot = function(ev) {
-        // console.log("show_plot");
-        var exp = experiment_metadata[browse_exp_id];
-        // console.log(exp.exptype);
-        // TODO: create UI for this type of experiment
-    }
-
-    //
-    // make_plot:
-    //   Generate new plot tab using currently selected parameters
-    //
-    var make_plot = function(ev) {
-        var basename = "xyzzy";
-        var plot_link_name = "tab_plot_" + basename;
-        var plot_panel_name = "panel-plot-" + basename;
-        var plot_panel = $("<div/>", { "class":"tab-pane fade",
-                                       "id": plot_panel_name,
-                                       "role": "tabpanel",
-                                       "aria-labelledby": plot_link_name });
-        var plot_content = $("<div/>");
-        plot_panel.append(plot_content);
-        $("#frontpage > div.tab-content").append(plot_panel);
-        var plot_link = $("<a/>", { "class": "nav-item nav-link",
-                                    "id": plot_link_name,
-                                    "href": "#" + plot_panel_name,
-                                    "data-toggle": "tab",
-                                    "role": "tab",
-                                    "aria-controls": plot_panel_name,
-                                    "aria-selected": false }).text(basename);
-        $("#frontpage > nav div").append(plot_link);
-        plot_link.tab("show");
-        plot_close = $("<button/>", { "class": "close",
-                                      "aria-label": "Close" })
-                            .append($("<span/>", { "aria-hidden": "true" })
-                                        .html("&times;"))
-                            .click(function(ev) {
-                                console.log("close " + basename)
-                                plot_link.remove();
-                                plot_panel.remove();
-                                $("#frontpage > nav .nav-link:first-child")
-                                    .tab("show");
-                            });
-        plot_content.append(plot_close);
-        var plotly_div_name = "plotly-" + basename;
-        var plotly_div = $("<div/>", { "id": plotly_div_name,
-                                       "css": { "width": "600px",
-                                                "height": "250px" } });
-        plot_content.append(plotly_div);
-        var raw_div = plotly_div.get(0);
-        var metadata = experiment_metadata[browse_exp_id];
-        var stats = experiment_stats[browse_exp_id];
-        // console.log(metadata.exptype);
-        // TODO: create plot for this type of experiment
-        // make_plot_placeholder(raw_div, plotly_div_name, metadata, stats);
-        make_plot_violin(raw_div, plotly_div_name, metadata, stats);
-    }
-
-    //
-    // make_plot_placeholder:
-    //   Only used during development to show generic plot
-    //   "div" argument must be a Javascript element, not a jQuery object
-    //
-    var make_plot_placeholder = function(div, div_name, metadata, stats) {
-        Plotly.plot(div, [{
-            x: [1, 2, 3, 4, 5],
-            y: [1, 2, 4, 8, 16] }], {
-            margin: { t: 0 } });
-    }
-
-    //
-    // make_plot_violin:
-    //   Create violin plot for abundance experiment.
-    //   y = abundance
-    //   trace = category name
-    //
-    var make_plot_violin = function(div, div_name, metadata, stats) {
-        var raw = stats.raw;
-        var normalized = stats.normalized;
-        var traces = [];
-        Object.keys(normalized).sort().forEach(function(cat_name) {
-            y = [];
-            text = [];
-            $.each(normalized[cat_name], function(pid, counts) {
-                var protein = raw.proteins[pid];
-                var label = protein["Acc #"];
-                var gene = protein["Gene"];
-                if (gene)
-                    label += " (" + gene + ")";
-                var sum = counts.reduce(function(a, b) { return a + b; });
-                var avg = sum / counts.length;
-                y.push(avg);
-                text.push(label);
-            });
-            traces.push({
-                legendgroup: cat_name,
-                name: cat_name,
-                scalegroup: "Yes",
-                x0: cat_name,
-                type: "violin",
-                y: y,
-                text: text,
-            });
-        });
-        var layout = {
-            showLegend: true,
-            legend: { x:1, y:0.5 },
-            hovermode: "closest",
-            xaxis: { title: "", automargin: true },
-            yaxis: { title: "Abundance", automargin: true },
-            title: metadata.title,
-            violinmode: "overlay",
-            violingap: 0,
-            violingroupgap: 0,
-        };
-        Plotly.newPlot(div_name, traces, layout);
-        var d3 = Plotly.d3;
-        var gd3 = d3.select("#" + div_name)
-                    .style({ "width": "94%",
-                             "margin-left": "3%",
-                             "height": "95vh",
-                             "margin-top": "2.5vh", });
-        var gd = gd3.node();
-        Plotly.Plots.resize(gd);
-        window.onresize = function() { Plotly.Plots.resize(gd); }
-    }
-
-    //
-    // cancel_plot:
-    //   No-op for now
-    //
-    var cancel_plot = function(ev) {
-        // console.log("cancel_plot");
     }
 
     // =================================================================
@@ -809,7 +663,7 @@ frontpage = (function(){
     // init_tab_edit:
     //   Initialize all sections of the "edit" tab
     //
-    var init_tab_edit = function() {
+    function init_tab_edit() {
         // Setup upload file elements
         $("#upload-drop").on("dragover", stop_default)
                          .on("dragenter", stop_default)
@@ -834,7 +688,7 @@ frontpage = (function(){
     //   Display "edit" tab.  Currently does nothing,
     //   but may (in the future), refresh the list of experiments.
     //
-    var show_tab_edit = function() {
+    function show_tab_edit() {
         fill_edit_experiments(experiment_metadata);
     }
 
@@ -846,7 +700,7 @@ frontpage = (function(){
     // file_dropped:
     //   Event callback when user drops a file on our upload box
     //
-    var file_dropped = function(ev) {
+    function file_dropped(ev) {
         ev.preventDefault();
         var data_transfer = ev.originalEvent.dataTransfer;
         var file;
@@ -869,7 +723,7 @@ frontpage = (function(){
     // file_selected:
     //   Event callback when user selects a file from <input type=file>
     //
-    var file_selected = function(ev) {
+    function file_selected(ev) {
         var files = ev.target.files;
         if (files.length != 1) {
             alert("You can only upload one file at a time.");
@@ -887,7 +741,7 @@ frontpage = (function(){
     // set_file:
     //   Display the selected file name and size
     //
-    var set_file = function(file) {
+    function set_file(file) {
         if (!file) {
             $("#upload-button").attr("disabled", "disabled");
         } else {
@@ -902,7 +756,7 @@ frontpage = (function(){
     // upload_file:
     //   Upload selected file to server
     //
-    var upload_file = function(ev) {
+    function upload_file(ev) {
         stop_default(ev);
         if (!selected_file) {
             alert("Please select a file to upload");
@@ -948,7 +802,7 @@ frontpage = (function(){
     // upload_progress:
     //   Event callback to display upload progress
     //
-    var upload_progress = function(ev) {
+    function upload_progress(ev) {
         var msg;
         if (!ev.lengthComputable)
             msg = "unavailable";
@@ -963,7 +817,7 @@ frontpage = (function(){
     // set_upload_status:
     //   Display status message about upload (progress, completion, etc)
     //
-    var set_upload_status = function(msg) {
+    function set_upload_status(msg) {
         $("#upload-status").text(msg);
     }
 
@@ -978,7 +832,7 @@ frontpage = (function(){
     // init_controlled_vocabulary:
     //   Initialize controlled vocabulary elements
     //
-    var init_controlled_vocabulary = function() {
+    function init_controlled_vocabulary() {
         var v = add_editable_vocab("exptype-vocab", "experiment-type");
         $("#exptype-vocab-div").append(v[0]);
         v[1].prop("placeholder", "experiment type name");
@@ -995,7 +849,7 @@ frontpage = (function(){
     // reload_controlled_vocabulary:
     //   Update list of known controlled vocabulary terms
     //
-    var reload_controlled_vocabulary = function() {
+    function reload_controlled_vocabulary() {
         // Setup controlled vocabulary and metadata elements
         $.ajax({
             dataType: "json",
@@ -1012,7 +866,7 @@ frontpage = (function(){
     // fill_controlled_vocabulary:
     //   Add elements for selecting and adding controlled vocabulary terms
     //
-    var fill_controlled_vocabulary = function(data) {
+    function fill_controlled_vocabulary(data) {
         if (data)
             controlled_vocabulary = data.results;
         var root = $("#frontpage");
@@ -1024,7 +878,7 @@ frontpage = (function(){
         experiment_type_changed();
     }
 
-    var fill_dropdown = function(root, eid, list) {
+    function fill_dropdown(root, eid, list) {
         var input = root.find("#" + eid);
         var input_group = input.parent();
         var menu = input_group.find(".dropdown-menu");
@@ -1046,7 +900,7 @@ frontpage = (function(){
         }
     }
 
-    var fill_selector = function(root, eid, values) {
+    function fill_selector(root, eid, values) {
         var select = root.find("#" + eid);
         select.empty();
         select.append($("<option/>", { "value": ""}));
@@ -1059,7 +913,7 @@ frontpage = (function(){
     // vocab_changed:
     //   Update button status when vocabulary input field changes
     //
-    var vocab_changed = function(v, vid, values) {
+    function vocab_changed(v, vid, values) {
         var add = $("#add-" + vid);
         var remove = $("#remove-" + vid);
         if (v && controlled_vocabulary) {
@@ -1081,7 +935,7 @@ frontpage = (function(){
     //   Add a editable dropdown input for controlled vocabulary
     //   without filling it in with the actual vocabulary terms
     //
-    var add_editable_vocab = function(input_id, name) {
+    function add_editable_vocab(input_id, name) {
         var div = $("<div/>", { "class": "input-group mb-3" });
         var predefined = $("<div/>", { "class": "input-group-prepend" });
         var button = $("<button/>", { "class": "btn btn-outline-secondary dropdown-toggle",
@@ -1109,7 +963,7 @@ frontpage = (function(){
     // add_exptype_vocab:
     //   Add selector for experiment type
     //
-    var add_exptype_vocab = function(input_id) {
+    function add_exptype_vocab(input_id) {
         var select = $("<select/>", { "class": "form-control",
                                       "id": input_id });
         if (cv_exptypes.indexOf(input_id) == -1)
@@ -1121,7 +975,7 @@ frontpage = (function(){
     // experiment_type_changed:
     //   Event callback when user changes value of experiment input field
     //
-    var experiment_type_changed = function() {
+    function experiment_type_changed() {
         if (controlled_vocabulary)
             vocab_changed($("#exptype-vocab").val(), "experiment-type",
                           controlled_vocabulary.experiment_types);
@@ -1131,7 +985,7 @@ frontpage = (function(){
     // vocab_server:
     //   Send a request for controlled vocabulary change
     //
-    var vocab_server = function(action, value) {
+    function vocab_server(action, value) {
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -1153,7 +1007,7 @@ frontpage = (function(){
     // add_experiment_type:
     //   Upload a new experiment type to server
     //
-    var add_experiment_type = function() {
+    function add_experiment_type() {
         vocab_server("add_experiment_type", $("#exptype-vocab").val());
     }
 
@@ -1161,7 +1015,7 @@ frontpage = (function(){
     // remove_experiment_type:
     //   Upload a new experiment type to server
     //
-    var remove_experiment_type = function() {
+    function remove_experiment_type() {
         vocab_server("remove_experiment_type", $("#exptype-vocab").val());
     }
 
@@ -1188,7 +1042,7 @@ frontpage = (function(){
     // init_edit_experiments:
     //   Initialize the edit experiments table with appropriate headers
     //
-    var init_edit_experiments = function() {
+    function init_edit_experiments() {
         var columns = [
             ["Upload Date", "uploaddate"],
             ["Uploader", "uploader"],
@@ -1238,7 +1092,7 @@ frontpage = (function(){
     // fill_edit_experiments:
     //   Display the list of experiments in edit table
     //
-    var fill_edit_experiments = function(results) {
+    function fill_edit_experiments(results) {
         if (!edit_initialized)
             return;
         var tbl = $("#edit-table");
@@ -1271,7 +1125,7 @@ frontpage = (function(){
     // edit_experiment_selected:
     //   Event callback when user clicks on a row in edit table
     //
-    var edit_experiment_selected = function(ev, rows) {
+    function edit_experiment_selected(ev, rows) {
         $("#edit-metadata-fieldset").removeAttr("disabled");
         $(".edit-metadata").removeClass("disabled")
         edit_exp_id = rows[0].id;
@@ -1283,7 +1137,7 @@ frontpage = (function(){
     //   Event callback when user deselects row in uploads table or
     //   selects a different row
     //
-    var edit_experiment_deselected = function(ev, rows) {
+    function edit_experiment_deselected(ev, rows) {
         $("#edit-metadata-fieldset").attr("disabled", "disabled");
         $(".edit-metadata").addClass("disabled")
         edit_exp_id = undefined;
@@ -1294,7 +1148,7 @@ frontpage = (function(){
     // delete_experiment:
     //   Delete experiment on server
     //
-    var delete_experiment = function(exp_id) {
+    function delete_experiment(exp_id) {
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -1324,7 +1178,7 @@ frontpage = (function(){
     // init_metadata_form:
     //   Display metadata upload form
     //
-    var init_metadata_form = function() {
+    function init_metadata_form() {
         $("#edit-metadata-button").click(update_metadata);
         $("#edit-revert-metadata-button").click(revert_metadata);
         $.ajax({
@@ -1342,7 +1196,7 @@ frontpage = (function(){
     // fill_metadata_form:
     //   Lay out experiment attribute name and value fields in metadata form
     //
-    var fill_metadata_form = function(data) {
+    function fill_metadata_form(data) {
         var div = $("#edit-metadata-exp");
         $.each(data.results, function(index, val) {
             var input_type = val[1];
@@ -1373,7 +1227,7 @@ frontpage = (function(){
     // show_metadata:
     //   Display experiment attribute values in metadata form
     //
-    var show_metadata = function(exp_id) {
+    function show_metadata(exp_id) {
         fill_controlled_vocabulary(null);
         fill_run_category_vocabulary(exp_id, null);
         var exp = experiment_metadata[exp_id];
@@ -1390,7 +1244,7 @@ frontpage = (function(){
     //   Send current metadata values to server
     //   NB: run category vocabulary is not included!
     //
-    var update_metadata = function(ev) {
+    function update_metadata(ev) {
         stop_default(ev);
         var form_data = {
             "action": "update_experiment",
@@ -1429,7 +1283,7 @@ frontpage = (function(){
     // revert_metadata:
     //   Revert metadata values to unchanged values
     //
-    var revert_metadata = function() {
+    function revert_metadata() {
         show_metadata(edit_exp_id);
     }
 
@@ -1443,7 +1297,7 @@ frontpage = (function(){
     // init_runs_form:
     //   Initialize the edit runs table with appropriate headers
     //
-    var init_runs_form = function() {
+    function init_runs_form() {
         var htr = $("<tr/>");
         htr.append($("<th/>").text("Name"));
         htr.append($("<th/>").text("Date"));
@@ -1465,7 +1319,7 @@ frontpage = (function(){
     // fill_edit_runs:
     //   Display experiment attribute values in metadata form
     //
-    var fill_edit_runs = function(exp_id) {
+    function fill_edit_runs(exp_id) {
         var exp = experiment_metadata[exp_id];
         var tbl = $("#edit-runs-table");
         var tbody = tbl.find("tbody");
@@ -1493,7 +1347,7 @@ frontpage = (function(){
     // add_runcat_vocab:
     //   Add selector for run category
     //
-    var add_runcat_vocab = function(input_id) {
+    function add_runcat_vocab(input_id) {
         var select = $("<select/>", { "class": "form-control",
                                       "id": input_id });
         if (cv_runcats.indexOf(input_id) == -1)
@@ -1505,7 +1359,7 @@ frontpage = (function(){
     // fill_run_category_vocabulary:
     //   Reload run category dropdowns
     //
-    var fill_run_category_vocabulary = function(exp_id, categories) {
+    function fill_run_category_vocabulary(exp_id, categories) {
         var exp = experiment_metadata[exp_id];
         if (categories != null)
             exp.run_categories = categories;
@@ -1521,7 +1375,7 @@ frontpage = (function(){
     // run_category_vocab_server:
     //   Send a request for controlled vocabulary change
     //
-    var run_category_vocab_server = function(action, exp_id, value) {
+    function run_category_vocab_server(action, exp_id, value) {
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -1545,7 +1399,7 @@ frontpage = (function(){
     // add_run_category:
     //   Upload a new run category to server
     //
-    var add_run_category = function() {
+    function add_run_category() {
         run_category_vocab_server("add_run_category", edit_exp_id,
                                   $("#runcat-vocab").val());
     }
@@ -1554,7 +1408,7 @@ frontpage = (function(){
     // remove_run_category:
     //   Upload a new run category to server
     //
-    var remove_run_category = function() {
+    function remove_run_category() {
         run_category_vocab_server("remove_run_category", edit_exp_id,
                                   $("#runcat-vocab").val());
     }
@@ -1563,30 +1417,22 @@ frontpage = (function(){
     // run_category_changed:
     //   Event callback when user changes value of category input field
     //
-    var run_category_changed = function(ev) {
+    function run_category_changed(ev) {
         vocab_changed($("#runcat-vocab").val(), "run-category",
                       experiment_metadata[edit_exp_id].run_categories);
     }
 
-    // =================================================================
-    // Analyze tab functions
-    // =================================================================
-
-    var analyze_exp_id;
-
-    var analyze_experiment = function() {
+    function analyze_experiment() {
         if ($("#analyze").hasClass("disabled"))
             return;
+        // TODO: when analyzing selected rows, need to
+        // filter and rebuild BOTH metadata and stats
+        // so that the protein/gene indices match
+        analyze.create_tab($("#frontpage"),
+                           experiment_metadata[browse_exp_id],
+                           experiment_stats[browse_exp_id]);
         analyze_exp_id = browse_exp_id;
         $("#tab-analyze").tab("show");
-    }
-
-    var show_tab_analyze = function() {
-        // console.log("show_tab_analyze");
-        if (analyze_exp_id === undefined)
-            return;
-        var exp = experiment_metadata[analyze_exp_id];
-        $("#an-title").text("Experiment: " + exp.title);
     }
 
     // =================================================================
@@ -1599,7 +1445,6 @@ frontpage = (function(){
         "tab-browse-raw": fill_browse_raw,
         "tab-browse-runs": fill_browse_runs,
         "tab-edit": init_tab_edit,
-        "tab-analyze": show_tab_analyze,
     };
     var experiment_metadata = {}      // All experiment metadata
     var experiment_stats = {}         // Fetched experiment stats
@@ -1608,7 +1453,7 @@ frontpage = (function(){
     // init_main:
     //   Initialize front page
     //
-    var init_main = function() {
+    function init_main() {
         get_themes();
         $("#frontpage").on("shown.bs.tab", function(e) {
             var func = tab_funcs[e.target["id"]];
@@ -1635,7 +1480,7 @@ frontpage = (function(){
     // get_themes:
     //   Fetch list of Bootstrap themes from cdnjs
     //
-    var get_themes = function() {
+    function get_themes() {
         $.ajax({
             dataType: "json",
             method: "GET",
@@ -1664,7 +1509,7 @@ frontpage = (function(){
     // reload_experiments_tables:
     //   Upload list of experiments in edit tab
     //
-    var reload_experiments_tables = function() {
+    function reload_experiments_tables() {
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -1680,7 +1525,7 @@ frontpage = (function(){
     // fill_experiment_tables:
     //   Display the list of experiments in edit table
     //
-    var fill_experiment_tables = function(data) {
+    function fill_experiment_tables(data) {
         if (data.status != "success")
             show_error(data.status, data.reason, data.cause);
         else {
@@ -1698,7 +1543,7 @@ frontpage = (function(){
     // stop_default:
     //   Event callback that prevents default action and propagation
     //  
-    var stop_default = function(ev) {
+    function stop_default(ev) {
         ev.preventDefault();
         ev.stopPropagation();
     }
@@ -1707,7 +1552,7 @@ frontpage = (function(){
     // readable_size:
     //   Return file size in human-readable form
     //
-    var readable_size = function(size) {
+    function readable_size(size) {
         var gb = 1024 * 1024 * 1024;
         var mb = 1024 * 1024;
         var kb = 1024;
@@ -1726,7 +1571,7 @@ frontpage = (function(){
     // show_error:
     //   Display error from server
     //
-    var show_error = function(status, reason, cause) {
+    function show_error(status, reason, cause) {
         if (cause)
             console.log("cause of error: " + cause);
         var msg = status + ": " + reason;
@@ -1737,7 +1582,7 @@ frontpage = (function(){
     // show_status:
     //   Display status at status box at top of page
     //
-    var show_status = function(msg, busy) {
+    function show_status(msg, busy) {
         $("#top-status-box").text(msg);
         $("body").css("cursor", busy ? "progress" : "default");
     }
@@ -1747,6 +1592,8 @@ frontpage = (function(){
             init_main();
             console.log("MSWeb initialization complete");
         },
+        url: BaseURL,
+        show_status: show_status,
     };
 })();
 
