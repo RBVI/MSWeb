@@ -6,9 +6,9 @@ analyze = (function(){
 
     class AnalyzeTab {
 
-        constructor(container, exp, stats) {
+        constructor(container, metadata, stats) {
             this.tab_container = container;
-            this.exp = exp;
+            this.metadata = metadata;
             this.stats = stats;
             this.initialize();
             this.tab.tab("show");
@@ -16,6 +16,7 @@ analyze = (function(){
 
         initialize() {
             serial += 1;
+            this.serial = serial;
             var tab_id = "tab-analyze-" + serial;
             var pane_id = "analyze-tab-" + serial;
             var close_id = "analyze-close-" + serial;
@@ -39,7 +40,7 @@ analyze = (function(){
                                   "role": "tab",
                                   "aria-controls": pane_id,
                                   "aria-selected": "false" })
-                            .append($("<span/>").text("Analyze: " + this.exp.title))
+                            .append($("<span/>").text("Analyze: " + this.metadata.title))
                             .append($("<span/>", { "id": close_id,
                                                    "class": "tab-close-button"})
                                             .html("&times;"))
@@ -53,7 +54,7 @@ analyze = (function(){
         }
 
         make_title(container) {
-            $("<h1/>").text(this.exp.title).appendTo(container);
+            $("<h1/>").text(this.metadata.title).appendTo(container);
         }
 
         make_operations(container) {
@@ -96,9 +97,17 @@ analyze = (function(){
         }
         
         make_summary(container) {
-            var card_id = "analyze-summary-" + serial;
-            var body_id = "analyze-summary-body-" + serial;
-            var table_id = "analyze-summary-table-" + serial;
+            var card = this.make_collapsible_card(container, "summary", "Summary Table");
+            var body = card.find(".card-body");
+            var table_id = this.make_id("summary", "table");
+            $("<table/>", { "class": "table table-condensed table-hover table-striped",
+                            "id": table_id }).appendTo(body);
+            this.summary_table_id = table_id;
+        }
+
+        make_collapsible_card(container, name, title) {
+            var card_id = this.make_id(name, "card");
+            var body_id = this.make_id(name, "body");
             var card = $("<div/>", { "class": "card",
                                      "id": card_id }).appendTo(container);
             var header = $("<div/>", { "class": "card-header" }).appendTo(card);
@@ -108,13 +117,15 @@ analyze = (function(){
                              "aria-expanded": "true",
                              "aria-controls": body_id })
                     .append($("<span/>", { "class": "fa" }))
-                    .append($("<span/>").text("Summary Table"))
+                    .append($("<span/>").text(title))
                     .appendTo(header);
-            var body = $("<div/>", { "class": "card-body collapse show",
-                                     "id": body_id }).appendTo(card);
-            $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                            "id": table_id }).appendTo(body);
-            this.summary_table_id = table_id;
+            $("<div/>", { "class": "card-body collapse show",
+                          "id": body_id }).appendTo(card);
+            return card;
+        }
+
+        make_id(name, subtype) {
+            return "analyze-" + name + "-" + subtype + "-" + this.serial;
         }
 
         close(ev) {
@@ -138,7 +149,16 @@ analyze = (function(){
         }
 
         plot_violin(ev) {
-            this.unimplemented("Violin plot");
+            var container = this.pane.children(".container");
+            var card = this.make_collapsible_card(container, "violin", "Violin Plot");
+            var body = card.find(".card-body");
+            var plot_id = this.make_id("violin", "plot");
+            var div = $("<div/>", { "id": plot_id,
+                                    "css": { "width": "600px",
+                                             "height": "250px" } })
+                            .appendTo(body);
+            var raw_div = div.get(0);
+            plot.make_plot_violin(raw_div, plot_id, this.metadata, this.stats);
         }
 
         plot_heatmap(ev) {
@@ -155,8 +175,8 @@ analyze = (function(){
 
     };
 
-    function create_tab(container, exp, stats) {
-        return new AnalyzeTab(container, exp, stats);
+    function create_tab(container, metadata, stats) {
+        return new AnalyzeTab(container, metadata, stats);
     }
 
     return {

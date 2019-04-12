@@ -132,5 +132,7 @@ plot = (function(){
     return {
         make_plot: make_plot,
         cancel_plot: cancel_plot,
+        make_plot_placeholder: make_plot_placeholder,
+        make_plot_violin: make_plot_violin,
     };
 })();
