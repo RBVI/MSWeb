@@ -103,6 +103,8 @@ analyze = (function(){
             $("<table/>", { "class": "table table-condensed table-hover table-striped",
                             "id": table_id }).appendTo(body);
             this.summary_table_id = table_id;
+            frontpage.show_summary_table(table_id, this.metadata, this.stats);
+            body.collapse("hide");
         }
 
         make_collapsible_card(container, name, title) {

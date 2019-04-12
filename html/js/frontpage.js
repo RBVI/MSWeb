@@ -526,8 +526,21 @@ frontpage = (function(){
         // console.log("show_experiment_summary " + browse_summary_id + " " + exp_id);
         if (browse_summary_id == exp_id)
             return;
-        $("#browse-summary-table").bootgrid("destroy");
-        var table = $("#browse-summary-table").empty();
+        show_summary_table("browse-summary-table",
+                           experiment_metadata[exp_id],
+                           experiment_stats[exp_id]);
+        browse_summary_id = exp_id;
+    }
+
+    //
+    // show_summary_table:
+    //   Display summary for given data.
+    //   Used from fp-analyze.js as well
+    //
+    function show_summary_table(table_id, metadata, stats) {
+        var selector = "#" + table_id;
+        $(selector).bootgrid("destroy");
+        var table = $(selector).empty();
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
@@ -539,9 +552,9 @@ frontpage = (function(){
                         .text("Protein"));
         htr.append($("<th/>", { "data-column-id": "gene" })
                         .text("Gene"));
-        var exp = experiment_metadata[exp_id];
-        var raw = experiment_stats[exp_id].raw;
-        var norm = experiment_stats[exp_id].normalized;
+        var exp = metadata;
+        var raw = stats.raw;
+        var norm = stats.normalized;
         var cat_order = Object.keys(norm).sort();
         $.each(cat_order, function(cat_index, cat_name) {
             var id = "summary-" + cat_name;
@@ -574,7 +587,6 @@ frontpage = (function(){
             });
             rows.push(row);
         });
-        browse_summary_id = exp_id;
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
              .bootgrid(BrowseSummaryTableOptions)
@@ -1593,6 +1605,7 @@ frontpage = (function(){
             console.log("MSWeb initialization complete");
         },
         url: BaseURL,
+        show_summary_table: show_summary_table,
         show_status: show_status,
     };
 })();
