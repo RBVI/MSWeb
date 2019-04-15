@@ -27,7 +27,7 @@ analyze = (function(){
                                      "role": "tabpanel",
                                      "aria-labelledby": tab_id })
                             .appendTo(this.tab_container.children(".tab-content"));
-            var container = $("<div/>", { "class": "container" }).appendTo(pane);
+            var container = $("<div/>", { "class": "container-fluid" }).appendTo(pane);
             this.make_title(container);
             this.make_operations(container);
             this.make_summary(container);
@@ -43,8 +43,8 @@ analyze = (function(){
                             .append($("<span/>").text("Analyze: " + this.metadata.title))
                             .append($("<span/>", { "id": close_id,
                                                    "class": "tab-close-button"})
-                                            .html("&times;"))
-                            .click(ev => this.close(ev))
+                                            .html("&times;")
+                                        .click(ev => this.close(ev)))
                             .appendTo(this.tab_container.children("nav")
                                                         .find(".nav-tabs"));
 
@@ -151,7 +151,7 @@ analyze = (function(){
         }
 
         plot_violin(ev) {
-            var container = this.pane.children(".container");
+            var container = this.pane.children(".container-fluid");
             var card = this.make_collapsible_card(container, "violin", "Violin Plot");
             var body = card.find(".card-body");
             var plot_id = this.make_id("violin", "plot");
