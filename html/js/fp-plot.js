@@ -70,7 +70,7 @@ plot = (function(){
     //   y = abundance
     //   trace = category name
     //
-    function make_plot_violin(div, div_name, metadata, stats) {
+    function make_plot_violin(div, metadata, stats) {
         var raw = stats.raw;
         var normalized = stats.normalized;
         var traces = [];
@@ -109,16 +109,27 @@ plot = (function(){
             violingap: 0,
             violingroupgap: 0,
         };
-        Plotly.newPlot(div_name, traces, layout);
+        var div_id = div.attr("id");
+        Plotly.newPlot(div_id, traces, layout);
         var d3 = Plotly.d3;
-        var gd3 = d3.select("#" + div_name)
+        var gd3 = d3.select("#" + div_id)
                     .style({ "width": "94%",
+                             "height": "40vh",
                              "margin-left": "3%",
-                             "height": "95vh",
                              "margin-top": "2.5vh", });
         var gd = gd3.node();
         Plotly.Plots.resize(gd);
-        window.onresize = function() { Plotly.Plots.resize(gd); }
+
+        // Simulate detecting resize by looking for style changes
+        div.observer = new MutationObserver(function(mutations) {
+            $.each(mutations, function(m) {
+                Plotly.Plots.resize(gd);
+            });
+        });
+        div.each(function() {
+            div.observer.observe(this, { attributes: true,
+                                         attributeFilter: [ "style" ] });
+        });
     }
 
     //

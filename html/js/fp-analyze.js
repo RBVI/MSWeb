@@ -156,11 +156,12 @@ analyze = (function(){
             var body = card.find(".card-body");
             var plot_id = this.make_id("violin", "plot");
             var div = $("<div/>", { "id": plot_id,
-                                    "css": { "width": "600px",
+                                    "css": { "resize": "vertical",
+                                             "overflow": "hidden",
+                                             "width": "600px",
                                              "height": "250px" } })
                             .appendTo(body);
-            var raw_div = div.get(0);
-            plot.make_plot_violin(raw_div, plot_id, this.metadata, this.stats);
+            plot.make_plot_violin(div, this.metadata, this.stats);
         }
 
         plot_heatmap(ev) {
