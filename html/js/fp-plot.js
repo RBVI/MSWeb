@@ -132,6 +132,24 @@ plot = (function(){
         });
     }
 
+    function pop_out(div, title) {
+        Plotly.toImage(div.attr("id"), { format: "svg" })
+              .then(function(dataurl) {
+                var doc = $("<html/>");
+                var head = $("<head/>").appendTo(doc);
+                $("<title/>").text(title).appendTo(head);
+                var body = $("<body/>").appendTo(doc);
+                $("<img/>", { "src": dataurl })
+                    .css("width", "100%")
+                    .appendTo(body);
+                var win = window.open("", "");
+                var d = win.document;
+                d.open();
+                d.write(doc.html());
+                d.close();
+              });
+    }
+
     //
     // cancel_plot:
     //   No-op for now
@@ -142,6 +160,7 @@ plot = (function(){
 
     return {
         make_plot: make_plot,
+        pop_out: pop_out,
         cancel_plot: cancel_plot,
         make_plot_placeholder: make_plot_placeholder,
         make_plot_violin: make_plot_violin,

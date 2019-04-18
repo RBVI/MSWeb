@@ -126,6 +126,19 @@ analyze = (function(){
             return card;
         }
 
+        add_card_buttons(card, buttons) {
+            var header = card.find(".card-header");
+            var div = $("<div/>", { "class": "float-right btn" })
+                            .css("font-size", "large")
+                            .appendTo(header);
+            $.each(buttons, function(index, v) {
+                var klasses = ["fa", v[0]].join(' ');
+                var span = $("<span/>", { "class": klasses })
+                                .click(v[1])
+                                .appendTo(div);
+            });
+        }
+
         make_id(name, subtype) {
             return "analyze-" + name + "-" + subtype + "-" + this.serial;
         }
@@ -162,6 +175,10 @@ analyze = (function(){
                                              "height": "250px" } })
                             .appendTo(body);
             plot.make_plot_violin(div, this.metadata, this.stats);
+            var pop_out = function() {
+                plot.pop_out(div, this.metadata.title + " - Violin Plot")
+            }.bind(this);
+            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ] ]);
         }
 
         plot_heatmap(ev) {
