@@ -2,7 +2,7 @@
 
 frontpage = (function(){
 
-    var BaseURL = "/MSWeb/cgi-bin/upload.py"
+    var BaseURL = "/MSWeb/cgi-bin/frontpage.py"
 
     // The front page consists of multiple tabs.
     // Tabs may (or may not) need initialization.
@@ -1001,7 +1001,7 @@ frontpage = (function(){
         $.ajax({
             dataType: "json",
             method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
+            url: BaseURL,
             data: {
                 action: action,
                 exp_type: value,
@@ -1391,7 +1391,7 @@ frontpage = (function(){
         $.ajax({
             dataType: "json",
             method: "POST",
-            url: BaseURL + "/cgi-bin/upload.py",
+            url: BaseURL,
             data: {
                 action: action,
                 exp_id: exp_id,
