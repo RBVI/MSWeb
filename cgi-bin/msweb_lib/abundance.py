@@ -199,7 +199,15 @@ class Experiment:
                      for n, d in data["runs"].items() }
         return exp
 
-    def normalize_counts(self, metadata):
+    def normalize(self, metadata, cgi_form):
+        if not cgi_form.has_key("method"):
+            raise ValueError("no normalization method specified")
+        method = cgi_form.getfirst("method")
+        if method == "default":
+            return method, self.normalize_default(metadata)
+        raise ValueError("unsupported normalization method: %s" % method)
+
+    def normalize_default(self, metadata):
         #
         # Find maximum sum of peptide counts per run.
         # It will be used to scale run counts later.
@@ -209,7 +217,6 @@ class Experiment:
             run_total[run] = sum([stat.peptide_count
                                   for stat in run.protein_stats.values()])
         max_total = float(max(run_total.values()))
-        print("max_total", max_total)
         #
         # Create map from run to category name
         #
@@ -239,20 +246,32 @@ class Experiment:
         # mean, standard deviation and count
         #
         import numpy
-        proteins = set()
-        for category in cat_counts.values():
-            proteins.update(category.keys())
+        # proteins = set()
+        # for category in cat_counts.values():
+        #     proteins.update(category.keys())
+        # summary = {}
+        # for protein in proteins:
+        #     summary[protein] = protein_summary = {}
+        #     for cat_name, category in cat_counts.items():
+        #         try:
+        #             counts = numpy.array(category[protein])
+        #         except KeyError:
+        #             continue
+        #         mean = numpy.mean(counts)
+        #         sd = numpy.std(counts)
+        #         protein_summary[cat_name] = (mean, sd, len(counts))
         summary = {}
-        for protein in proteins:
-            summary[protein] = protein_summary = {}
-            for cat_name, category in cat_counts.items():
+        for cat_name, category in cat_counts.items():
+            cat_summary = summary[cat_name] = {}
+            for pi, protein in enumerate(self.proteins):
                 try:
                     counts = numpy.array(category[protein])
                 except KeyError:
-                    continue
-                mean = numpy.mean(counts)
-                sd = numpy.std(counts)
-                protein_summary[cat_name] = (mean, sd, len(counts))
+                    pass
+                else:
+                    mean = numpy.mean(counts)
+                    sd = numpy.std(counts)
+                    cat_summary[pi] = (mean, sd, len(counts))
         return summary
 
 
@@ -357,5 +376,5 @@ if __name__ == "__main__":
         exp_id = "17"
         metadata = ds.experiments[exp_id]
         exp = parse_cooked(ds.cooked_file_name(exp_id))
-        print(exp.normalize_counts(metadata))
+        print(exp.normalize_default(metadata))
     test_abundance()

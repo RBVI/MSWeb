@@ -1290,7 +1290,7 @@ frontpage = (function(){
 
     function analyze_experiment() {
         // TODO: use class matching experiment type to create tab
-        abundance.create_tab($("#frontpage"),
+        abundance.create_tab($("#frontpage"), browse_exp_id,
                              experiment_metadata[browse_exp_id],
                              experiment_stats[browse_exp_id]);
     }

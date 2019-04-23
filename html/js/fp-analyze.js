@@ -15,21 +15,20 @@ abundance = (function(){
                 exptype: "abundance",
             },
             success: function(data) {
-                if (data.status != "success") {
-                    set_upload_status("error: " + data.reason);
+                if (data.status != "success")
                     frontpage.show_ajax_error(data.status, data.reason,
                                               data.cause);
-                } else {
+                else
                     normalization_methods = data.results.methods;
-                }
             },
         });
     }
 
     class AnalyzeTab {
 
-        constructor(container, metadata, stats) {
+        constructor(container, exp_id, metadata, stats) {
             this.tab_container = container;
+            this.exp_id = exp_id;
             this.metadata = metadata;
             this.stats = stats;
             this.initialize();
@@ -194,15 +193,32 @@ abundance = (function(){
             var okay = dialog.find(".modal-okay-button");
             okay.on("click", function(ev) {
                 okay.off("click");
-                console.log("normalize using " + sel.val());
-                // TODO: actually normalize
-                var stats = this.stats;
-                stats.normalized = normalize_counts(this.metadata, stats.raw);
-                var container = this.pane.find(".container-fluid");
-                this.make_summary(container);
-                container.find(".need-normalized")
-                         .removeClass("disabled")
-                         .removeAttr("disabled");
+                // console.log("normalize using " + sel.val());
+                $.ajax({
+                    dataType: "json",
+                    method: "POST",
+                    url: frontpage.url,
+                    data: {
+                        action: "normalize",
+                        exp_id: this.exp_id,
+                        method: sel.val(),
+                    },
+                    success: function(data) {
+                        if (data.status != "success")
+                            frontpage.show_ajax_error(data.status, data.reason,
+                                                      data.cause);
+                        else {
+                            this.stats.norm_method = data.results.method;
+                            this.stats.normalized = data.results.normalized;
+                            console.log(this.stats.normalized);
+                            var container = this.pane.find(".container-fluid");
+                            this.make_summary(container);
+                            container.find(".need-normalized")
+                                     .removeClass("disabled")
+                                     .removeAttr("disabled");
+                        }
+                    }.bind(this),
+                });
             }.bind(this));
             dialog.modal();
         }
@@ -255,51 +271,8 @@ abundance = (function(){
 
     };
 
-    function create_tab(container, metadata, stats) {
-        return new AnalyzeTab(container, metadata, stats);
-    }
-
-    //
-    // normalize_counts:
-    //   Compute normalized peptide counts for run categories
-    //   If we need more complex normalization methods, they should
-    //   be done on the server and returned as part of JSON reply above.
-    //
-    function normalize_counts(metadata, stats) {
-        // Create run-category map
-        var run2category = {};
-        $.each(metadata.runs, function(run_name, run_md) {
-            run2category[run_name] = run_md.category;
-        });
-        // Compute count totals and find normalizing scale factor
-        var run_total = {};
-        $.each(stats.runs, function(run_name, run) {
-            var total = 0;
-            $.each(run.protein_stats, function(protein_id, values) {
-                var count = values["Peptide Count"];
-                total += count;
-            });
-            run_total[run_name] = total;
-        });
-        var max_count = Math.max.apply(null, Object.values(run_total));
-        // Collect normalized counts for each protein in each category
-        var cat_counts = {};
-        $.each(stats.runs, function(run_name, run) {
-            var scale = max_count / run_total[run_name];
-            var category = cat_counts[run2category[run_name]];
-            if (category === undefined)
-                category = cat_counts[run2category[run_name]] = {}
-            $.each(run.protein_stats, function(protein_id, values) {
-                var norm_count = values["Peptide Count"] * scale;
-                counts = category[protein_id];
-                if (counts === undefined)
-                    category[protein_id] = [ norm_count ];
-                else
-                    counts.push(norm_count);
-            });
-        });
-        // console.log(cat_counts);
-        return cat_counts;
+    function create_tab(container, exp_id, metadata, stats) {
+        return new AnalyzeTab(container, exp_id, metadata, stats);
     }
 
     var SummaryTableOptions = {
@@ -370,21 +343,24 @@ abundance = (function(){
         });
 
         var rows = [];
-        $.each(raw.proteins, function(index, protein) {
-            var row = { id: index };
+        $.each(raw.proteins, function(protein_index, protein) {
+            var row = { id: protein_index };
             row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
             row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
             $.each(cat_order, function(cat_index, cat_name) {
                 // Matches loop above
                 var column_id = "summary-" + cat_name;
-                var counts = norm[cat_name][index];
+                var counts = norm[cat_name][protein_index];
                 if (!counts)
                     row[column_id] = "-";
                 else {
+                    /*
                     var n = counts.length;
                     var mean = counts.reduce((a, b) => a + b) / n;
                     var sd = Math.sqrt(counts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
                     row[column_id] = [mean, sd];
+                    */
+                    row[column_id] = [counts[0], counts[1]];
                 }
             });
             rows.push(row);

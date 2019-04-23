@@ -234,6 +234,22 @@ def do_normalization_methods(out, form):
     _send_success(out, {"methods":m.normalization_methods})
 
 
+def do_normalize(out, form):
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    cooked = ds.cooked_file_name(exp_id)
+    from msweb_lib import abundance
+    exp = abundance.parse_cooked(cooked)
+    try:
+        method, norm = exp.normalize(exp_meta, form)
+    except ValueError as e:
+        _send_failed(out, str(e))
+        return
+    _send_success(out, {"method":method, "normalized":norm})
+
+
 def _get_exp_metadata(out, form):
     from msweb_lib import datastore
     if not form.has_key("exp_id"):
