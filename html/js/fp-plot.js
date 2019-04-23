@@ -3,56 +3,6 @@
 plot = (function(){
 
     //
-    // make_plot:
-    //   Generate new plot tab using currently selected parameters
-    //
-    function make_plot(ev) {
-        var basename = "xyzzy";
-        var plot_link_name = "tab_plot_" + basename;
-        var plot_panel_name = "panel-plot-" + basename;
-        var plot_panel = $("<div/>", { "class":"tab-pane fade",
-                                       "id": plot_panel_name,
-                                       "role": "tabpanel",
-                                       "aria-labelledby": plot_link_name });
-        var plot_content = $("<div/>");
-        plot_panel.append(plot_content);
-        $("#frontpage > div.tab-content").append(plot_panel);
-        var plot_link = $("<a/>", { "class": "nav-item nav-link",
-                                    "id": plot_link_name,
-                                    "href": "#" + plot_panel_name,
-                                    "data-toggle": "tab",
-                                    "role": "tab",
-                                    "aria-controls": plot_panel_name,
-                                    "aria-selected": false }).text(basename);
-        $("#frontpage > nav div").append(plot_link);
-        plot_link.tab("show");
-        plot_close = $("<button/>", { "class": "close",
-                                      "aria-label": "Close" })
-                            .append($("<span/>", { "aria-hidden": "true" })
-                                        .html("&times;"))
-                            .click(function(ev) {
-                                console.log("close " + basename)
-                                plot_link.remove();
-                                plot_panel.remove();
-                                $("#frontpage > nav .nav-link:first-child")
-                                    .tab("show");
-                            });
-        plot_content.append(plot_close);
-        var plotly_div_name = "plotly-" + basename;
-        var plotly_div = $("<div/>", { "id": plotly_div_name,
-                                       "css": { "width": "600px",
-                                                "height": "250px" } });
-        plot_content.append(plotly_div);
-        var raw_div = plotly_div.get(0);
-        var metadata = experiment_metadata[browse_exp_id];
-        var stats = experiment_stats[browse_exp_id];
-        // console.log(metadata.exptype);
-        // TODO: create plot for this type of experiment
-        // make_plot_placeholder(raw_div, plotly_div_name, metadata, stats);
-        make_plot_violin(raw_div, plotly_div_name, metadata, stats);
-    }
-
-    //
     // make_plot_placeholder:
     //   Only used during development to show generic plot
     //   "div" argument must be a Javascript element, not a jQuery object
@@ -150,18 +100,8 @@ plot = (function(){
               });
     }
 
-    //
-    // cancel_plot:
-    //   No-op for now
-    //
-    function cancel_plot(ev) {
-        // console.log("cancel_plot");
-    }
-
     return {
-        make_plot: make_plot,
         pop_out: pop_out,
-        cancel_plot: cancel_plot,
         make_plot_placeholder: make_plot_placeholder,
         make_plot_violin: make_plot_violin,
     };

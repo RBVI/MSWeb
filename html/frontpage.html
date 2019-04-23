@@ -73,28 +73,24 @@
                         aria-expanded="false" aria-controls="exp-stats-tabs">
                   <span class="fa"></span>Experiment Data
                 </button>
-                <div class="float-right">
-                  <div class="dropdown" style="display-inline;">
-                    <button type="button" class="btn btn-secondary dropdown-toggle disabled" id="download"
-                            data-toggle="dropdown" aria-haspopup=true' aria-expanded="false">Download</button>
-                    <div class="dropdown-menu aria-labelledby="download">
-                      <a class="dropdown-item" id="download-raw">Download Raw Data</a>
-                      <a class="dropdown-item" id="download-csv">Download CSV</a>
-                      <a class="dropdown-item" id="download-selected">Download CSV (selected rows)</a>
-                    </div>
-                    <button type="button" class="btn btn-primary disabled" id="analyze">Analyze</button>
+                <div class="dropdown" style="display:inline-block;">
+                  <button type="button" class="btn btn-secondary dropdown-toggle disabled" id="download"
+                          data-toggle="dropdown" aria-haspopup=true' aria-expanded="false">Download</button>
+                  <div class="dropdown-menu aria-labelledby="download">
+                    <a class="dropdown-item" id="download-raw">Download Raw Data</a>
+                    <a class="dropdown-item" id="download-csv">Download CSV</a>
+                    <a class="dropdown-item" id="download-selected">Download CSV (selected rows)</a>
                   </div>
+                </div>
+                <div class="float-right">
+                  <button type="button" class="btn btn-primary disabled" id="analyze">Analyze</button>
                 </div>
               </h3>
             </div>
             <div class="card-body collapse" id="exp-stats-tabs">
               <nav>
                 <div class="nav nav-tabs" role="tablist">
-                  <a class="nav-item nav-link active" id="tab-browse-summary" data-toggle="tab"
-                     href="#exp-summary-tab" role="tab" aria-controls="exp-summary-tab" aria-selected="true">
-                    Summary
-                  </a>
-                  <a class="nav-item nav-link" id="tab-browse-raw" data-toggle="tab"
+                  <a class="nav-item nav-link active" id="tab-browse-raw" data-toggle="tab"
                      href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="false">
                     Raw Data
                   </a>
@@ -106,17 +102,8 @@
               </nav>
 
               <div class="tab-content py-3 px-3 px-sm-0">
-                <!-- experiment summary tab -->
-                <div class="tab-pane fade show active" id="exp-summary-tab"
-                     role="tabpanel" aria-labelledby="tab-browse-summary">
-                  <div class="entire-bootgrid-table">
-                      <table class="table table-condensed table-hover table-striped"
-                             id="browse-summary-table"></table>
-                  </div>
-                </div>
-                <!-- end experiment summary tab -->
                 <!-- experiment raw tab -->
-                <div class="tab-pane fade" id="exp-raw-tab"
+                <div class="tab-pane fade show active" id="exp-raw-tab"
                      role="tabpanel" aria-labelledby="tab-browse-raw">
                   <fieldset id="browse-fieldset">
                     <div id="browse-stats-columns">
@@ -266,16 +253,16 @@
       <!-- end frontpage tabs -->
 
       <!-- Plot parameters dialog -->
-      <div class="modal" id="plot-modal">
+      <div class="modal" id="modal-dialog">
         <!-- modal dialog -->
         <div class="modal-dialog">
           <!-- modal content -->
           <div class="modal-content">
             <!-- modal header -->
             <div class="modal-header">
-              <h4 class="modal-title">Create Plot</h4>
-              <button type="button" class="close cancel-plot-button" data-dismiss="modal">&times;</button>
-            </div>
+              <h4 class="modal-title">Modal Dialog Title</h4>
+              <button type="button" class="close modal-cancel-button" data-dismiss="modal">&times;</button>
+              </div>
             <!-- end modal header -->
             <!-- modal body -->
             <div class="modal-body">
@@ -284,10 +271,10 @@
             <!-- end modal body -->
             <!-- modal footer -->
             <div class="modal-footer">
-              <button type="button" class="btn cancel-plot-button"
+              <button type="button" class="btn modal-cancel-button"
                       value="cancel" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary make-plot-button"
-                      value="plot" data-dismiss="modal">Plot</button>
+              <button type="button" class="btn btn-primary modal-okay-button"
+                      value="plot" data-dismiss="modal">Okay</button>
             </div>
             <!-- end modal footer -->
           </div>

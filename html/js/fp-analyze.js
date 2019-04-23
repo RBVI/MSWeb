@@ -1,8 +1,30 @@
 // vim: set expandtab shiftwidth=4 softtabstop=4:
 
-analyze = (function(){
+abundance = (function(){
 
     var serial = 0;
+    var normalization_methods;
+
+    function init() {
+        $.ajax({
+            dataType: "json",
+            method: "POST",
+            url: frontpage.url,
+            data: {
+                action: "normalization_methods",
+                exptype: "abundance",
+            },
+            success: function(data) {
+                if (data.status != "success") {
+                    set_upload_status("error: " + data.reason);
+                    frontpage.show_ajax_error(data.status, data.reason,
+                                              data.cause);
+                } else {
+                    normalization_methods = data.results.methods;
+                }
+            },
+        });
+    }
 
     class AnalyzeTab {
 
@@ -30,7 +52,10 @@ analyze = (function(){
             var container = $("<div/>", { "class": "container-fluid" }).appendTo(pane);
             this.make_title(container);
             this.make_operations(container);
-            this.make_summary(container);
+            // this.make_summary(container);
+            container.find(".need-normalized")
+                     .addClass("disabled")
+                     .attr("disabled", "disabled");
 
             // Create tab
             var tab = $("<a/>", { "class": "nav-item nav-link",
@@ -60,33 +85,39 @@ analyze = (function(){
         make_operations(container) {
             var ops = $("<div/>", { "class": "row op-row" }).appendTo(container);
             var ops_a = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
+            this.make_ops_text(ops_a, "op-normalize", "Normalize",
+                               "", this.op_normalize);
             this.make_ops_text(ops_a, "op-diff", "Differential Abundance",
-                               this.op_differential);
+                               "need-normalized", this.op_differential);
             this.make_ops_text(ops_a, "op-enrich", "Enrichment",
-                               this.op_enrichment);
-            this.make_ops_text(ops_a, "op-string", "STRING",
-                               this.op_string);
+                               "need-normalized", this.op_enrichment);
             var ops_p = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
-            this.make_ops_image(ops_p, "plot-violin", "violin.png", "Violin",
+            this.make_ops_image(ops_p, "plot-violin", "violin.png",
+                                "Violin", "need-normalized",
                                 this.plot_violin);
-            this.make_ops_image(ops_p, "plot-heatmap", "heatmap.svg", "Heat Map",
+            this.make_ops_image(ops_p, "plot-heatmap", "heatmap.svg",
+                                "Heat Map", "need-normalized",
                                 this.plot_heatmap);
-            this.make_ops_image(ops_p, "plot-volcano", "volcano.svg", "Volcano",
+            this.make_ops_image(ops_p, "plot-volcano", "volcano.svg",
+                                "Volcano", "need-normalized",
                                 this.plot_volcano);
+            this.make_ops_image(ops_p, "plot-string", "string.png",
+                                "STRING", "need-normalized",
+                                this.plot_string);
         }
 
-        make_ops_text(parent, id, name, method) {
-            $("<button/>", { "type": "button",
-                             "class": "btn btn-outline-secondary op-button",
-                             "id":id })
-                    .text(name)
-                    .click(method.bind(this))
-                    .appendTo(parent);
+        make_ops_text(parent, id, name, classes, method) {
+            var klass = "btn btn-outline-secondary op-button " + classes
+            $("<button/>", { "type": "button", "class": klass, "id":id })
+                .text(name)
+                .click(method.bind(this))
+                .appendTo(parent);
         }
 
-        make_ops_image(parent, id, icon_file, name, method) {
+        make_ops_image(parent, id, icon_file, name, classes, method) {
+            var klass = "btn btn-outline-primary op-button " + classes
             var button = $("<button/>", { "type": "button",
-                                          "class": "btn btn-outline-primary op-button",
+                                          "class": klass,
                                           "id": id });
             $("<img/>", { "class": "op-icon",
                           "src": "icons/" + icon_file }).appendTo(button);
@@ -103,7 +134,7 @@ analyze = (function(){
             $("<table/>", { "class": "table table-condensed table-hover table-striped",
                             "id": table_id }).appendTo(body);
             this.summary_table_id = table_id;
-            frontpage.show_summary_table(table_id, this.metadata, this.stats);
+            show_summary_table(table_id, this.metadata, this.stats);
             body.collapse("hide");
         }
 
@@ -151,6 +182,31 @@ analyze = (function(){
             prev.tab("show");
         }
 
+        op_normalize(ev, a, b) {
+            var dialog = $("#modal-dialog");
+            var body = dialog.find(".modal-body").empty();
+            var sid = this.make_id("normalize", "select")
+            var sel = $("<select/>", { "id": sid }).appendTo(body);
+            $.each(normalization_methods, function(index, name) {
+                $("<option/>", { "value": name }).text(name).appendTo(sel);
+            });
+            sel.val(normalization_methods[0]);
+            var okay = dialog.find(".modal-okay-button");
+            okay.on("click", function(ev) {
+                okay.off("click");
+                console.log("normalize using " + sel.val());
+                // TODO: actually normalize
+                var stats = this.stats;
+                stats.normalized = normalize_counts(this.metadata, stats.raw);
+                var container = this.pane.find(".container-fluid");
+                this.make_summary(container);
+                container.find(".need-normalized")
+                         .removeClass("disabled")
+                         .removeAttr("disabled");
+            }.bind(this));
+            dialog.modal();
+        }
+
         op_differential(ev, a, b) {
             this.unimplemented("Differential abundance");
         }
@@ -189,6 +245,10 @@ analyze = (function(){
             this.unimplemented("Volcano plot");
         }
 
+        plot_string(ev) {
+            this.unimplemented("STRING plot");
+        }
+
         unimplemented(name) {
             alert(name + " has not been implemented yet.");
         }
@@ -199,7 +259,144 @@ analyze = (function(){
         return new AnalyzeTab(container, metadata, stats);
     }
 
+    //
+    // normalize_counts:
+    //   Compute normalized peptide counts for run categories
+    //   If we need more complex normalization methods, they should
+    //   be done on the server and returned as part of JSON reply above.
+    //
+    function normalize_counts(metadata, stats) {
+        // Create run-category map
+        var run2category = {};
+        $.each(metadata.runs, function(run_name, run_md) {
+            run2category[run_name] = run_md.category;
+        });
+        // Compute count totals and find normalizing scale factor
+        var run_total = {};
+        $.each(stats.runs, function(run_name, run) {
+            var total = 0;
+            $.each(run.protein_stats, function(protein_id, values) {
+                var count = values["Peptide Count"];
+                total += count;
+            });
+            run_total[run_name] = total;
+        });
+        var max_count = Math.max.apply(null, Object.values(run_total));
+        // Collect normalized counts for each protein in each category
+        var cat_counts = {};
+        $.each(stats.runs, function(run_name, run) {
+            var scale = max_count / run_total[run_name];
+            var category = cat_counts[run2category[run_name]];
+            if (category === undefined)
+                category = cat_counts[run2category[run_name]] = {}
+            $.each(run.protein_stats, function(protein_id, values) {
+                var norm_count = values["Peptide Count"] * scale;
+                counts = category[protein_id];
+                if (counts === undefined)
+                    category[protein_id] = [ norm_count ];
+                else
+                    counts.push(norm_count);
+            });
+        });
+        // console.log(cat_counts);
+        return cat_counts;
+    }
+
+    var SummaryTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [20, 50, 100, -1],
+        converters: {
+            floats: {
+                from: function(value) {
+                    return value;
+                },
+                to: function(value) {
+                    if (value == "-")
+                        return value;
+                    else
+                        return value[0];
+                },
+            }
+        },
+        formatters: {
+            floats: function(column, row) {
+                var value = row[column.id];
+                if (value == "-")
+                    return value;
+                else {
+                    // console.log(value[0] + '+' + value[1]);
+                    return value[0].toFixed(2) + " &plusmn; " + value[1].toFixed(2);
+                }
+            }
+        },
+    };
+
+    //
+    // show_summary_table:
+    //   Display summary for given data.
+    //   Used from fp-analyze.js as well
+    //
+    function show_summary_table(table_id, metadata, stats) {
+        var selector = "#" + table_id;
+        $(selector).bootgrid("destroy");
+        var table = $(selector).empty();
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": false,
+                                "data-visible": false })
+                        .text("Id"));
+        htr.append($("<th/>", { "data-column-id": "protein" })
+                        .text("Protein"));
+        htr.append($("<th/>", { "data-column-id": "gene" })
+                        .text("Gene"));
+        var exp = metadata;
+        var raw = stats.raw;
+        var norm = stats.normalized;
+        var cat_order = Object.keys(norm).sort();
+        $.each(cat_order, function(cat_index, cat_name) {
+            var id = "summary-" + cat_name;
+            htr.append($("<th/>", { "data-column-id": id,
+                                    // "data-converter": "string",
+                                    // Really array of two floats
+                                    "data-formatter": "floats",
+                                    "data-visible": true,
+                                    "data-searchable": false })
+                            .text(cat_name));
+        });
+
+        var rows = [];
+        $.each(raw.proteins, function(index, protein) {
+            var row = { id: index };
+            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
+            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
+            $.each(cat_order, function(cat_index, cat_name) {
+                // Matches loop above
+                var column_id = "summary-" + cat_name;
+                var counts = norm[cat_name][index];
+                if (!counts)
+                    row[column_id] = "-";
+                else {
+                    var n = counts.length;
+                    var mean = counts.reduce((a, b) => a + b) / n;
+                    var sd = Math.sqrt(counts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
+                    row[column_id] = [mean, sd];
+                }
+            });
+            rows.push(row);
+        });
+        table.append($("<thead/>").append(htr))
+             .append($("<tbody/>"))
+             .bootgrid(SummaryTableOptions)
+             .bootgrid("append", rows);
+    }
+
     return {
+        init: init,
         create_tab: create_tab,
     };
 })();

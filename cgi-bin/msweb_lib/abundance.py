@@ -3,6 +3,12 @@
 from __future__ import print_function
 
 
+normalization_methods = [
+    "default",
+    "fancy",
+]
+
+
 def parse_raw(filename, verbose=0):
     import xlrd
     exp = Experiment(filename)
@@ -193,6 +199,62 @@ class Experiment:
                      for n, d in data["runs"].items() }
         return exp
 
+    def normalize_counts(self, metadata):
+        #
+        # Find maximum sum of peptide counts per run.
+        # It will be used to scale run counts later.
+        #
+        run_total = {}
+        for run in self.runs.values():
+            run_total[run] = sum([stat.peptide_count
+                                  for stat in run.protein_stats.values()])
+        max_total = float(max(run_total.values()))
+        print("max_total", max_total)
+        #
+        # Create map from run to category name
+        #
+        run2cat = {}
+        for run_name, run_data in metadata["runs"].items():
+            run2cat[run_name] = run_data["category"]
+        #
+        # Compute per-category dictionary of normalized
+        # counts for each protein
+        #
+        cat_counts = {}
+        for run_name, run in self.runs.items():
+            scale = max_total / run_total[run]
+            cat_name = run2cat[run.name]
+            try:
+                category = cat_counts[cat_name]
+            except KeyError:
+                category = cat_counts[cat_name] = {}
+            for protein, stat in run.protein_stats.items():
+                norm_count = stat.peptide_count * scale
+                try:
+                    category[protein].append(norm_count)
+                except KeyError:
+                    category[protein] = [norm_count]
+        #
+        # Compute per-protein dictionary of per-category
+        # mean, standard deviation and count
+        #
+        import numpy
+        proteins = set()
+        for category in cat_counts.values():
+            proteins.update(category.keys())
+        summary = {}
+        for protein in proteins:
+            summary[protein] = protein_summary = {}
+            for cat_name, category in cat_counts.items():
+                try:
+                    counts = numpy.array(category[protein])
+                except KeyError:
+                    continue
+                mean = numpy.mean(counts)
+                sd = numpy.std(counts)
+                protein_summary[cat_name] = (mean, sd, len(counts))
+        return summary
+
 
 class _AttrLabelStore:
     """Base class for storing dictionary as instance attributes.
@@ -248,6 +310,7 @@ class Run:
         r = Run(data["name"])
         for n, d in data["protein_stats"].items():
             r.protein_stats[proteins[int(n)]] = Stats.from_json(d)
+        return r
 
 
 class Stats(_AttrLabelStore):
@@ -262,6 +325,7 @@ class Stats(_AttrLabelStore):
 
 
 if __name__ == "__main__":
+
     def main():
         import sys, getopt
         verbose = 0
@@ -285,4 +349,13 @@ if __name__ == "__main__":
         json_data = exp.json_data()
         exp2 = Experiment.from_json(json_data)
         print(exp2)
-    main()
+    # main()
+
+    def test_abundance():
+        from datastore import DataStore
+        ds = DataStore("../../experiments")
+        exp_id = "17"
+        metadata = ds.experiments[exp_id]
+        exp = parse_cooked(ds.cooked_file_name(exp_id))
+        print(exp.normalize_counts(metadata))
+    test_abundance()

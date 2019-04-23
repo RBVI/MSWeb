@@ -101,8 +101,7 @@ frontpage = (function(){
         $("#download-csv").click(unimplemented);
         $("#download-selected").click(unimplemented);
         $("#analyze").click(analyze_experiment);
-        $(".make-plot-button").click(plot.make_plot);
-        $(".cancel-plot-button").click(plot.cancel_plot);
+        browse_experiment_enable(false, true);
     }
 
     //
@@ -135,14 +134,11 @@ frontpage = (function(){
     //   Event callback when user clicks on a row in browse table
     //
     function browse_experiment_selected(ev, rows) {
-        $("#analyze").removeClass("disabled");
-        $("#browse-fieldset").removeAttr("disabled");
         if (rows[0].id == browse_exp_id)
             return;
         browse_exp_id = rows[0].id;
         set_run_order(browse_exp_id);
         fill_browse();
-        $("#exp-stats-tabs").collapse("show");
     }
 
     //
@@ -153,15 +149,32 @@ frontpage = (function(){
     function browse_experiment_deselected(ev, rows) {
         if (browse_exp_id) {
             // XXX: clear out runs and data tables?
-            $("#browse-fieldset").attr("disabled", "disabled");
             browse_exp_id = undefined;
             browse_summary_id = undefined;
             browse_raw_id = undefined;
             browse_raw_rows = undefined;
         }
-        $("#analyze").addClass("disabled");
-        $("#browse-fieldset").attr("disabled", "disabled");
-        $("#exp-stats-tabs").collapse("hide");
+        browse_experiment_enable(false, true);
+    }
+
+    //
+    // browse_experiment_enable:
+    //   Make buttons for browse experiment enabled/disabled
+    //
+    function browse_experiment_enable(enabled, toggle) {
+        if (enabled) {
+            $("#analyze").removeClass("disabled").removeAttr("disabled");
+            $("#download").removeClass("disabled").removeAttr("disabled");
+            $("#browse-fieldset").removeAttr("disabled");
+            if (toggle)
+                $("#exp-stats-tabs").collapse("show");
+        } else {
+            $("#analyze").addClass("disabled").attr("disabled", "disabled");
+            $("#download").addClass("disabled").attr("disabled", "disabled");
+            $("#browse-fieldset").attr("disabled", "disabled");
+            if (toggle)
+                $("#exp-stats-tabs").collapse("hide");
+        }
     }
 
     // -----------------------------------------------------------------
@@ -210,6 +223,10 @@ frontpage = (function(){
     function fill_browse_runs() {
         if (!browse_exp_id)
             return;
+        if (!experiment_stats[browse_exp_id]) {
+            get_experiment_stats(browse_exp_id);
+            return;
+        }
         var exp = experiment_metadata[browse_exp_id];
         var runs = exp["runs"];
         var rows = [];
@@ -237,6 +254,7 @@ frontpage = (function(){
         tbl.bootgrid("clear")
            .bootgrid("append", rows)
            .on('loaded.rs.jquery.bootgrid', select_all_first_time);
+        browse_experiment_enable(true, true);
     }
 
     //
@@ -287,37 +305,6 @@ frontpage = (function(){
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
     };
-    var BrowseSummaryTableOptions = {
-        selection: true,
-        rowSelect: true,
-        multiSelect: true,
-        keepSelection: true,
-        rowCount: [20, 50, 100, -1],
-        converters: {
-            floats: {
-                from: function(value) {
-                    return value;
-                },
-                to: function(value) {
-                    if (value == "-")
-                        return value;
-                    else
-                        return value[0];
-                },
-            }
-        },
-        formatters: {
-            floats: function(column, row) {
-                var value = row[column.id];
-                if (value == "-")
-                    return value;
-                else {
-                    // console.log(value[0] + '+' + value[1]);
-                    return value[0].toFixed(2) + " &plusmn; " + value[1].toFixed(2);
-                }
-            }
-        },
-    };
     var BrowseStatsColumns = [
         [ "unique_peptides", "Num Unique", "Unique", false, ],
         [ "peptide_count", "Peptide Count", "Count", true, ],
@@ -356,7 +343,7 @@ frontpage = (function(){
     //
     function get_experiment_stats(exp_id) {
         show_status("fetching experiment data...", true)
-        $("#browse-fieldset").attr("disabled", "disabled");
+        browse_experiment_enable(false, true);
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -366,63 +353,18 @@ frontpage = (function(){
                 exp_id: exp_id,
             },
             success: function(data) {
-                $("#browse-fieldset").removeAttr("disabled");
                 show_status("", false)
                 if (data.status != "success") {
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 } else {
                     var exp_id = data.results.experiment_id;
                     var metadata = experiment_metadata[exp_id];
                     var raw = JSON.parse(data.results.experiment_data);
-                    var norm = normalize_counts(metadata, raw);
-                    experiment_stats[exp_id] = { raw: raw, normalized: norm };
+                    experiment_stats[exp_id] = { raw: raw };
                     fill_browse();
                 }
             },
         });
-    }
-
-    //
-    // normalize_counts:
-    //   Compute normalized peptide counts for run categories
-    //   If we need more complex normalization methods, they should
-    //   be done on the server and returned as part of JSON reply above.
-    //
-    function normalize_counts(metadata, stats) {
-        // Create run-category map
-        var run2category = {};
-        $.each(metadata.runs, function(run_name, run_md) {
-            run2category[run_name] = run_md.category;
-        });
-        // Compute count totals and find normalizing scale factor
-        var run_total = {};
-        $.each(stats.runs, function(run_name, run) {
-            var total = 0;
-            $.each(run.protein_stats, function(protein_id, values) {
-                var count = values["Peptide Count"];
-                total += count;
-            });
-            run_total[run_name] = total;
-        });
-        var max_count = Math.max.apply(null, Object.values(run_total));
-        // Collect normalized counts for each protein in each category
-        var cat_counts = {};
-        $.each(stats.runs, function(run_name, run) {
-            var scale = run_total[run_name] / max_count;
-            var category = cat_counts[run2category[run_name]];
-            if (category === undefined)
-                category = cat_counts[run2category[run_name]] = {}
-            $.each(run.protein_stats, function(protein_id, values) {
-                var norm_count = values["Peptide Count"] * scale;
-                counts = category[protein_id];
-                if (counts === undefined)
-                    category[protein_id] = [ norm_count ];
-                else
-                    counts.push(norm_count);
-            });
-        });
-        // console.log(cat_counts);
-        return cat_counts;
     }
 
     //
@@ -519,104 +461,18 @@ frontpage = (function(){
     }
 
     //
-    // show_experiment_summary:
-    //   Display summary for given experiment in browse tab
-    //
-    function show_experiment_summary(exp_id) {
-        // console.log("show_experiment_summary " + browse_summary_id + " " + exp_id);
-        if (browse_summary_id == exp_id)
-            return;
-        show_summary_table("browse-summary-table",
-                           experiment_metadata[exp_id],
-                           experiment_stats[exp_id]);
-        browse_summary_id = exp_id;
-    }
-
-    //
-    // show_summary_table:
-    //   Display summary for given data.
-    //   Used from fp-analyze.js as well
-    //
-    function show_summary_table(table_id, metadata, stats) {
-        var selector = "#" + table_id;
-        $(selector).bootgrid("destroy");
-        var table = $(selector).empty();
-        var htr = $("<tr/>");
-        htr.append($("<th/>", { "data-column-id": "id",
-                                "data-identifier": true,
-                                "data-type": "numeric",
-                                "data-searchable": false,
-                                "data-visible": false })
-                        .text("Id"));
-        htr.append($("<th/>", { "data-column-id": "protein" })
-                        .text("Protein"));
-        htr.append($("<th/>", { "data-column-id": "gene" })
-                        .text("Gene"));
-        var exp = metadata;
-        var raw = stats.raw;
-        var norm = stats.normalized;
-        var cat_order = Object.keys(norm).sort();
-        $.each(cat_order, function(cat_index, cat_name) {
-            var id = "summary-" + cat_name;
-            htr.append($("<th/>", { "data-column-id": id,
-                                    // "data-converter": "string",
-                                    // Really array of two floats
-                                    "data-formatter": "floats",
-                                    "data-visible": true,
-                                    "data-searchable": false })
-                            .text(cat_name));
-        });
-
-        var rows = [];
-        $.each(raw.proteins, function(index, protein) {
-            var row = { id: index };
-            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
-            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
-            $.each(cat_order, function(cat_index, cat_name) {
-                // Matches loop above
-                var column_id = "summary-" + cat_name;
-                var counts = norm[cat_name][index];
-                if (!counts)
-                    row[column_id] = "-";
-                else {
-                    var n = counts.length;
-                    var mean = counts.reduce((a, b) => a + b) / n;
-                    var sd = Math.sqrt(counts.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
-                    row[column_id] = [mean, sd];
-                }
-            });
-            rows.push(row);
-        });
-        table.append($("<thead/>").append(htr))
-             .append($("<tbody/>"))
-             .bootgrid(BrowseSummaryTableOptions)
-             .bootgrid("append", rows);
-    }
-
-    //
     // fill_browse_raw:
     //   Fill browse raw tab
     //
     function fill_browse_raw() {
         if (!browse_exp_id)
             return;
-        if (!experiment_stats[browse_exp_id])
+        if (!experiment_stats[browse_exp_id]) {
             get_experiment_stats(browse_exp_id);
-        else
-            show_experiment_raw(browse_exp_id);
-    }
-
-    //
-    // fill_browse_summary:
-    //   Fill browse summary tab
-    //
-    function fill_browse_summary() {
-        if (!browse_exp_id)
             return;
-        if (!experiment_stats[browse_exp_id])
-            get_experiment_stats(browse_exp_id);
-        else
-            show_experiment_summary(browse_exp_id);
+        }
+        show_experiment_raw(browse_exp_id);
+        browse_experiment_enable(true, true);
     }
 
     //
@@ -629,9 +485,7 @@ frontpage = (function(){
             return;
         var active = $("#exp-stats-tabs nav a.active").attr("id");
         // console.log("  active " + active);
-        if (active == "tab-browse-summary")
-            fill_browse_summary();
-        else if (active == "tab-browse-raw")
+        if (active == "tab-browse-raw")
             fill_browse_raw();
         else if (active == "tab-browse-runs")
             fill_browse_runs();
@@ -789,7 +643,7 @@ frontpage = (function(){
             success: function(data) {
                 if (data.status != "success") {
                     set_upload_status("error: " + data.reason);
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 } else {
                     set_upload_status("finished");
                     reload_experiments_tables();
@@ -1008,7 +862,7 @@ frontpage = (function(){
             },
             success: function(data) {
                 if (data.status != "success")
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 else
                     reload_controlled_vocabulary();
             },
@@ -1171,7 +1025,7 @@ frontpage = (function(){
             },
             success: function(data) {
                 if (data.status != "success") {
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 } else {
                     reload_experiments_tables();
                 }
@@ -1284,7 +1138,7 @@ frontpage = (function(){
             data: form_data,
             success: function(data) {
                 if (data.status != "success")
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 else
                     reload_experiments_tables();
             },
@@ -1399,7 +1253,7 @@ frontpage = (function(){
             },
             success: function(data) {
                 if (data.status != "success")
-                    show_error(data.status, data.reason, data.cause);
+                    show_ajax_error(data.status, data.reason, data.cause);
                 else
                     fill_run_category_vocabulary(data.results.exp_id,
                                                  data.results.run_categories);
@@ -1435,16 +1289,10 @@ frontpage = (function(){
     }
 
     function analyze_experiment() {
-        if ($("#analyze").hasClass("disabled"))
-            return;
-        // TODO: when analyzing selected rows, need to
-        // filter and rebuild BOTH metadata and stats
-        // so that the protein/gene indices match
-        analyze.create_tab($("#frontpage"),
-                           experiment_metadata[browse_exp_id],
-                           experiment_stats[browse_exp_id]);
-        analyze_exp_id = browse_exp_id;
-        $("#tab-analyze").tab("show");
+        // TODO: use class matching experiment type to create tab
+        abundance.create_tab($("#frontpage"),
+                             experiment_metadata[browse_exp_id],
+                             experiment_stats[browse_exp_id]);
     }
 
     // =================================================================
@@ -1453,7 +1301,6 @@ frontpage = (function(){
 
     var tab_funcs = {
         "tab-browse": init_tab_browse,
-        "tab-browse-summary": fill_browse_summary,
         "tab-browse-raw": fill_browse_raw,
         "tab-browse-runs": fill_browse_runs,
         "tab-edit": init_tab_edit,
@@ -1485,6 +1332,7 @@ frontpage = (function(){
             $("#edit-tab").remove();
             $("#tab-browse").tab("show");
         }
+        abundance.init();
         reload_experiments_tables();
     };
 
@@ -1539,7 +1387,7 @@ frontpage = (function(){
     //
     function fill_experiment_tables(data) {
         if (data.status != "success")
-            show_error(data.status, data.reason, data.cause);
+            show_ajax_error(data.status, data.reason, data.cause);
         else {
             fill_browse_experiments(data.results);
             fill_edit_experiments(data.results);
@@ -1580,10 +1428,10 @@ frontpage = (function(){
     }
 
     //
-    // show_error:
+    // show_ajax_error:
     //   Display error from server
     //
-    function show_error(status, reason, cause) {
+    function show_ajax_error(status, reason, cause) {
         if (cause)
             console.log("cause of error: " + cause);
         var msg = status + ": " + reason;
@@ -1605,8 +1453,8 @@ frontpage = (function(){
             console.log("MSWeb initialization complete");
         },
         url: BaseURL,
-        show_summary_table: show_summary_table,
         show_status: show_status,
+        show_ajax_error: show_ajax_error,
     };
 })();
 

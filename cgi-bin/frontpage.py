@@ -226,6 +226,14 @@ def do_download_experiment(out, form):
         _send_download(out, f, exp_meta["datafile"]);
 
 
+def do_normalization_methods(out, form):
+    if not form.has_key("exptype"):
+        _send_failed(out, "no experiment type specified")
+        return
+    m = _module_for(form.getfirst("exptype"))
+    _send_success(out, {"methods":m.normalization_methods})
+
+
 def _get_exp_metadata(out, form):
     from msweb_lib import datastore
     if not form.has_key("exp_id"):
@@ -269,6 +277,13 @@ def _send_download(out, f, filename, content_type=None):
     print("Content-Disposition: attachment; filename=\"%s\"" % filename)
     print(file=out)
     out.write(f.read())
+
+
+def _module_for(exptype):
+    if exptype == "abundance":
+        from msweb_lib import abundance
+        return abundance
+    raise ValueError("unknown experiment type: %s" % exptype)
 
 
 DefaultContentType = "application/octet-stream"
