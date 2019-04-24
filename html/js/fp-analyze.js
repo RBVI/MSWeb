@@ -51,7 +51,6 @@ abundance = (function(){
             var container = $("<div/>", { "class": "container-fluid" }).appendTo(pane);
             this.make_title(container);
             this.make_operations(container);
-            // this.make_summary(container);
             container.find(".need-normalized")
                      .addClass("disabled")
                      .attr("disabled", "disabled");
@@ -75,6 +74,7 @@ abundance = (function(){
             // Save references
             this.tab = tab;
             this.pane = pane;
+            this.summary_table_id = undefined;
         }
 
         make_title(container) {
@@ -127,13 +127,15 @@ abundance = (function(){
         }
         
         make_summary(container) {
-            var card = this.make_collapsible_card(container, "summary", "Summary Table");
-            var body = card.find(".card-body");
-            var table_id = this.make_id("summary", "table");
-            $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                            "id": table_id }).appendTo(body);
-            this.summary_table_id = table_id;
-            show_summary_table(table_id, this.metadata, this.stats);
+            if (this.summary_table_id === undefined) {
+                var card = this.make_collapsible_card(container, "summary", "Summary Table");
+                var body = card.find(".card-body");
+                var table_id = this.make_id("summary", "table");
+                $("<table/>", { "class": "table table-condensed table-hover table-striped",
+                                "id": table_id }).appendTo(body);
+                this.summary_table_id = table_id;
+            }
+            show_summary_table(this.summary_table_id, this.metadata, this.stats);
             body.collapse("hide");
         }
 
