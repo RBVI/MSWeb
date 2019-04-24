@@ -136,7 +136,7 @@ abundance = (function(){
                 this.summary_table_id = table_id;
             }
             show_summary_table(this.summary_table_id, this.metadata, this.stats);
-            body.collapse("hide");
+            // body.collapse("hide");
         }
 
         make_collapsible_card(container, name, title) {
@@ -185,6 +185,7 @@ abundance = (function(){
 
         op_normalize(ev, a, b) {
             var dialog = $("#modal-dialog");
+            dialog.find(".modal-title").text("Normalize");
             var body = dialog.find(".modal-body").empty();
             var sid = this.make_id("normalize", "select")
             var sel = $("<select/>", { "id": sid }).appendTo(body);

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # vim: set expandtab ts=4 sw=4:
 from __future__ import print_function
 

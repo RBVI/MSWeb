@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # vim: expandtab shiftwidth=4 softtabstop=4:
 from __future__ import print_function
 
@@ -26,8 +26,12 @@ UploadFields = [
 
 
 def cgi_main():
-    import StringIO, cgi, sys
-    out = StringIO.StringIO()
+    try:
+        from StringIO import StringIO
+    except ImportError:
+        from io import StringIO
+    import cgi, sys
+    out = StringIO()
     try:
         form = cgi.FieldStorage()
         action = form.getfirst("action", "none")
@@ -227,7 +231,7 @@ def do_download_experiment(out, form):
 
 
 def do_normalization_methods(out, form):
-    if not form.has_key("exptype"):
+    if "exptype" not in form:
         _send_failed(out, "no experiment type specified")
         return
     m = _module_for(form.getfirst("exptype"))
@@ -255,7 +259,7 @@ def do_normalize(out, form):
 
 def _get_exp_metadata(out, form):
     from msweb_lib import datastore
-    if not form.has_key("exp_id"):
+    if "exp_id" not in form:
         _send_failed(out, "no experiment specified", "missing experiment id")
         raise ValueError("no experiment specified")
     ds = datastore.DataStore(DataStorePath)
@@ -323,9 +327,10 @@ def _content_type(filename, content_type):
 
 if __name__ == "__main__":
     import os
-    am_cgi = os.environ.has_key("REQUEST_METHOD")
+    am_cgi = "REQUEST_METHOD" in os.environ
     if am_cgi:
         cgi_main()
     else:
-        import sys
-        do_delete_experiment(sys.stdout, None)
+        #import sys
+        #do_delete_experiment(sys.stdout, None)
+        cgi_main()

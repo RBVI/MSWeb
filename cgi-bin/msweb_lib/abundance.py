@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 # vim: set expandtab ts=4 sw=4:
 from __future__ import print_function
 
@@ -174,6 +174,7 @@ class Experiment:
         self.normalized = {}    # map of name to NormalizedAbundance instance
 
     def add_protein(self, protein):
+        protein.index = len(self.proteins)
         self.proteins.append(protein)
 
     def add_run(self, run):
@@ -184,13 +185,12 @@ class Experiment:
         json.dump(self.json_data(), f)
 
     def json_data(self):
-        protein_index = { p: i for i, p in enumerate(self.proteins) }
         return {
             "name": self.name,
             "proteins": [ p.json_data() for p in self.proteins ],
-            "runs": { r.name: r.json_data(protein_index)
+            "runs": { r.name: r.json_data()
                       for r in self.runs.values() },
-            "normalized": { n.name: n.json_data(protein_index)
+            "normalized": { n.name: n.json_data()
                             for n in self.normalized.values() },
         }
 
@@ -198,6 +198,8 @@ class Experiment:
     def from_json(data):
         exp = Experiment(data["name"])
         exp.proteins = [ Protein.from_json(d) for d in data["proteins"] ]
+        for i, p in enumerate(exp.proteins):
+            p.index = i
         exp.runs = { n: Run.from_json(d, exp.proteins)
                      for n, d in data["runs"].items() }
         if "normalized" in data:
@@ -206,13 +208,12 @@ class Experiment:
         return exp
 
     def normalize(self, metadata, cgi_form):
-        if not cgi_form.has_key("method"):
+        if "method" not in cgi_form:
             raise ValueError("no normalization method specified")
         method = cgi_form.getfirst("method")
         if method == "default":
             norm, cached = self.normalize_default(metadata)
-            protein_index = { p: i for i, p in enumerate(self.proteins) }
-            return norm.json_data(protein_index), cached
+            return norm.json_data(), cached
         raise ValueError("unsupported normalization method: %s" % method)
 
     def normalize_default(self, metadata):
@@ -288,15 +289,40 @@ class NormalizedAbundance:
         self.params = params
         self.stats = stats
 
-    def json_data(self, protein_index):
+    def json_data(self):
         """Returns normalized stats, replacing Protein instances by indices."""
 
         json_stats = {}
         for cat_name, category in self.stats.items():
             index_data = json_stats[cat_name] = {}
             for protein, protein_stats in category.items():
-                index_data[protein_index[protein]] = protein_stats
+                index_data[protein.index] = protein_stats
         return {"name":self.name, "params":self.params, "stats":json_stats}
+
+    def pandas_dataframe(self, proteins, categories):
+        # Return pandas data frame intended for use with
+        # differential abundance calculation.  Data frame
+        # always has "Rows" column corresponding to the given
+        # protein indices.  Each given category generates three
+        # additional columns: "<category_name> Mean",
+        # "<category_name> SD" and "<category_name> Count".
+        import pandas, numpy
+        df = {"Rows": pandas.Categorical([p.index for p in proteins])}
+        for cat_name in categories:
+            category = self.stats[cat_name]
+            mean = []
+            sd = []
+            count = []
+            default_stats = (numpy.nan, numpy.nan, numpy.nan)
+            for p in proteins:
+                protein_stats = category.get(p, default_stats)
+                mean.append(protein_stats[0])
+                sd.append(protein_stats[1])
+                count.append(protein_stats[2])
+            df[cat_name + " Mean"] = mean
+            df[cat_name + " SD"] = sd
+            df[cat_name + " Count"] = count
+        return pandas.DataFrame(df)
 
     @staticmethod
     def from_json(data, proteins):
@@ -350,10 +376,10 @@ class Run:
     def add_protein_stats(self, protein, stats):
         self.protein_stats[protein] = stats
 
-    def json_data(self, index_map):
+    def json_data(self):
         return {
             "name": self.name,
-            "protein_stats": { index_map[p]: s.json_data()
+            "protein_stats": { p.index: s.json_data()
                                for p, s in self.protein_stats.items() },
         }
 
@@ -411,8 +437,11 @@ if __name__ == "__main__":
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
         norm, cached = exp.normalize_default(metadata)
-        print(cached, norm)
-        if not cached:
-            with open(cooked, "w") as f:
-                exp.write_json(f)
+        cat_list = ["control", "L1"]
+        df = norm.pandas_dataframe(exp.proteins[:20], cat_list)
+        print(df)
+        from diff_abundance import calc_diff_abundance
+        da = calc_diff_abundance(df, cat_list, controlColumn="control",
+                                 fc_cutoff=1.0, mean_cutoff=0.0)
+        print(da)
     test_abundance()

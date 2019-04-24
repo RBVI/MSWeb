@@ -22,12 +22,12 @@ plot = (function(){
     //
     function make_plot_violin(div, metadata, stats) {
         var raw = stats.raw;
-        var normalized = stats.normalized;
+        var norm_stats = stats.norm_stats;
         var traces = [];
-        Object.keys(normalized).sort().forEach(function(cat_name) {
+        Object.keys(norm_stats).sort().forEach(function(cat_name) {
             y = [];
             text = [];
-            $.each(normalized[cat_name], function(pid, counts) {
+            $.each(norm_stats[cat_name], function(pid, counts) {
                 var protein = raw.proteins[pid];
                 var label = protein["Acc #"];
                 var gene = protein["Gene"];
@@ -70,6 +70,7 @@ plot = (function(){
         var gd = gd3.node();
         Plotly.Plots.resize(gd);
 
+        $(window).resize(function(m) { Plotly.Plots.resize(gd); });
         // Simulate detecting resize by looking for style changes
         div.observer = new MutationObserver(function(mutations) {
             $.each(mutations, function(m) {
