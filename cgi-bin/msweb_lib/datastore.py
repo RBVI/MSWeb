@@ -165,3 +165,14 @@ class DataStore:
         if not os.path.exists(dirname):
             os.mkdir(dirname)
         return os.path.join(dirname, filename)
+
+
+if __name__ == "__main__":
+    ds = DataStore("../../experiments")
+    exp_id = "17"
+    raw = ds.raw_file_name(exp_id)
+    import abundance
+    exp = abundance.parse_raw(raw)
+    cooked = ds.cooked_file_name(exp_id)
+    with open(cooked, "w") as f:
+        exp.write_json(f)

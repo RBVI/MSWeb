@@ -208,9 +208,10 @@ abundance = (function(){
                             frontpage.show_ajax_error(data.status, data.reason,
                                                       data.cause);
                         else {
-                            this.stats.norm_method = data.results.method;
-                            this.stats.normalized = data.results.normalized;
-                            console.log(this.stats.normalized);
+                            this.stats.norm_method = data.results.name;
+                            this.stats.norm_params = data.results.params;
+                            this.stats.norm_stats = data.results.stats;
+                            // console.log(this.stats.norm_stats);
                             var container = this.pane.find(".container-fluid");
                             this.make_summary(container);
                             container.find(".need-normalized")
@@ -329,7 +330,7 @@ abundance = (function(){
                         .text("Gene"));
         var exp = metadata;
         var raw = stats.raw;
-        var norm = stats.normalized;
+        var norm = stats.norm_stats;
         var cat_order = Object.keys(norm).sort();
         $.each(cat_order, function(cat_index, cat_name) {
             var id = "summary-" + cat_name;

@@ -168,9 +168,10 @@ A run consists of a list of proteins and their coverage statistics.
 class Experiment:
 
     def __init__(self, name):
-        self.name = name
-        self.proteins = []      # all proteins
-        self.runs = {}
+        self.name = name        # string
+        self.proteins = []      # list of all Protein instances
+        self.runs = {}          # map of name to Run instance
+        self.normalized = {}    # map of name to NormalizedAbundance instance
 
     def add_protein(self, protein):
         self.proteins.append(protein)
@@ -189,6 +190,8 @@ class Experiment:
             "proteins": [ p.json_data() for p in self.proteins ],
             "runs": { r.name: r.json_data(protein_index)
                       for r in self.runs.values() },
+            "normalized": { n.name: n.json_data(protein_index)
+                            for n in self.normalized.values() },
         }
 
     @staticmethod
@@ -197,6 +200,9 @@ class Experiment:
         exp.proteins = [ Protein.from_json(d) for d in data["proteins"] ]
         exp.runs = { n: Run.from_json(d, exp.proteins)
                      for n, d in data["runs"].items() }
+        if "normalized" in data:
+            exp.normalized = { n: NormalizedAbundance.from_json(d, exp.proteins)
+                               for n, d in data["normalized"].items() }
         return exp
 
     def normalize(self, metadata, cgi_form):
@@ -204,10 +210,19 @@ class Experiment:
             raise ValueError("no normalization method specified")
         method = cgi_form.getfirst("method")
         if method == "default":
-            return method, self.normalize_default(metadata)
+            norm, cached = self.normalize_default(metadata)
+            protein_index = { p: i for i, p in enumerate(self.proteins) }
+            return norm.json_data(protein_index), cached
         raise ValueError("unsupported normalization method: %s" % method)
 
     def normalize_default(self, metadata):
+        #
+        # First see if we already have it cached
+        #
+        try:
+            return self.normalized["default"], True
+        except KeyError:
+            pass
         #
         # Find maximum sum of peptide counts per run.
         # It will be used to scale run counts later.
@@ -246,24 +261,10 @@ class Experiment:
         # mean, standard deviation and count
         #
         import numpy
-        # proteins = set()
-        # for category in cat_counts.values():
-        #     proteins.update(category.keys())
-        # summary = {}
-        # for protein in proteins:
-        #     summary[protein] = protein_summary = {}
-        #     for cat_name, category in cat_counts.items():
-        #         try:
-        #             counts = numpy.array(category[protein])
-        #         except KeyError:
-        #             continue
-        #         mean = numpy.mean(counts)
-        #         sd = numpy.std(counts)
-        #         protein_summary[cat_name] = (mean, sd, len(counts))
-        summary = {}
+        stats = {}
         for cat_name, category in cat_counts.items():
-            cat_summary = summary[cat_name] = {}
-            for pi, protein in enumerate(self.proteins):
+            cat_stats = stats[cat_name] = {}
+            for protein in self.proteins:
                 try:
                     counts = numpy.array(category[protein])
                 except KeyError:
@@ -271,8 +272,40 @@ class Experiment:
                 else:
                     mean = numpy.mean(counts)
                     sd = numpy.std(counts)
-                    cat_summary[pi] = (mean, sd, len(counts))
-        return summary
+                    cat_stats[protein] = (mean, sd, len(counts))
+        norm = NormalizedAbundance("default", {}, stats)
+        self.normalized["default"] = norm
+        return norm, False
+
+
+class NormalizedAbundance:
+    """Normalized abundance values by category.
+
+    Each category is a map from protein to (mean, sd, count)."""
+
+    def __init__(self, name, params, stats):
+        self.name = name
+        self.params = params
+        self.stats = stats
+
+    def json_data(self, protein_index):
+        """Returns normalized stats, replacing Protein instances by indices."""
+
+        json_stats = {}
+        for cat_name, category in self.stats.items():
+            index_data = json_stats[cat_name] = {}
+            for protein, protein_stats in category.items():
+                index_data[protein_index[protein]] = protein_stats
+        return {"name":self.name, "params":self.params, "stats":json_stats}
+
+    @staticmethod
+    def from_json(data, proteins):
+        stats = {}
+        for cat_name, category in data["stats"].items():
+            protein_data = stats[cat_name] = {}
+            for n, protein_stats in category.items():
+                protein_data[proteins[int(n)]] = protein_stats
+        return NormalizedAbundance(data["name"], data["params"], stats)
 
 
 class _AttrLabelStore:
@@ -375,6 +408,11 @@ if __name__ == "__main__":
         ds = DataStore("../../experiments")
         exp_id = "17"
         metadata = ds.experiments[exp_id]
-        exp = parse_cooked(ds.cooked_file_name(exp_id))
-        print(exp.normalize_default(metadata))
+        cooked = ds.cooked_file_name(exp_id)
+        exp = parse_cooked(cooked)
+        norm, cached = exp.normalize_default(metadata)
+        print(cached, norm)
+        if not cached:
+            with open(cooked, "w") as f:
+                exp.write_json(f)
     test_abundance()

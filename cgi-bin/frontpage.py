@@ -243,11 +243,14 @@ def do_normalize(out, form):
     from msweb_lib import abundance
     exp = abundance.parse_cooked(cooked)
     try:
-        method, norm = exp.normalize(exp_meta, form)
+        norm, cached = exp.normalize(exp_meta, form)
     except ValueError as e:
         _send_failed(out, str(e))
         return
-    _send_success(out, {"method":method, "normalized":norm})
+    if not cached:
+        with open(cooked, "w") as f:
+            exp.write_json(f)
+    _send_success(out, norm)
 
 
 def _get_exp_metadata(out, form):
