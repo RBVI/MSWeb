@@ -2,6 +2,32 @@
 # vim: expandtab shiftwidth=4 softtabstop=4:
 from __future__ import print_function
 
+# Hack to make NaN/Inf/-Inf print as "null"
+import json.encoder
+class MyEncoder(json.encoder.JSONEncoder):
+
+    def iterencode(self, o, **kw):
+        def my_floatstr(o, _repr=float.__repr__,
+                        _inf=float("inf"), _neginf=float("-inf")):
+            if o != o or o == _inf or o == _neginf:
+                return "null"
+            else:
+                return _repr(o)
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = json.encoder.encode_basestring_ascii
+        else:
+            _encoder = json.encoder.encode_basestring
+        _iterencode = json.encoder._make_iterencode(
+            None, self.default, _encoder, self.indent, my_floatstr,
+            self.key_separator, self.item_separator, self.sort_keys,
+            self.skipkeys, False)
+        return _iterencode(o, 0)
+# End hack
+
 
 DataStorePath = "../experiments"
 UploadFields = [
@@ -214,9 +240,10 @@ def do_get_experiment(out, form):
     except ValueError:
         return
     cooked = ds.cooked_file_name(exp_id)
-    with open(cooked) as f:
-        _send_success(out, {"experiment_data":f.read(),
-                            "experiment_id":exp_id})
+    from msweb_lib import abundance
+    exp = abundance.parse_cooked(cooked)
+    _send_success(out, {"experiment_data":exp.xhr_data(),
+                        "experiment_id":exp_id})
 
 
 def do_download_experiment(out, form):
@@ -239,6 +266,10 @@ def do_normalization_methods(out, form):
 
 
 def do_normalize(out, form):
+    if "method" not in form:
+        raise ValueError("no normalization method specified")
+    method = form.getfirst("method")
+    params = form.getlist("params")
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:
@@ -247,14 +278,54 @@ def do_normalize(out, form):
     from msweb_lib import abundance
     exp = abundance.parse_cooked(cooked)
     try:
-        norm, cached = exp.normalize(exp_meta, form)
+        norm, cached = exp.normalize(exp_meta, method, params)
     except ValueError as e:
         _send_failed(out, str(e))
         return
     if not cached:
         with open(cooked, "w") as f:
             exp.write_json(f)
-    _send_success(out, norm)
+    _send_success(out, norm.json_data())
+
+
+def do_differential_abundance(out, form):
+    if "method" not in form:
+        raise ValueError("no normalization method specified")
+    norm_method = form.getfirst("method")
+    norm_params = form.getlist("params")
+    categories = form.getlist("categories")
+    if not categories:
+        raise ValueError("no differential categories specified")
+    if "control" not in form:
+        raise ValueError("no control category specified")
+    control = form.getfirst("control")
+    try:
+        fc_cutoff = float(form.getfirst("fc_cutoff", "1.0"))
+    except ValueError:
+        raise ValueError("non-number value for fold change cutoff")
+    try:
+        mean_cutoff = float(form.getfirst("mean_cutoff", "0.0"))
+    except ValueError:
+        raise ValueError("non-number value for mean cutoff")
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    cooked = ds.cooked_file_name(exp_id)
+    from msweb_lib import abundance
+    exp = abundance.parse_cooked(cooked)
+    try:
+        da, cached = exp.differential_abundance(exp_meta, norm_method,
+                                                norm_params, categories,
+                                                control, fc_cutoff,
+                                                mean_cutoff)
+    except ValueError as e:
+        _send_failed(out, str(e))
+        return
+    if not cached:
+        with open(cooked, "w") as f:
+            exp.write_json(f)
+    _send_success(out, da.xhr_data())
 
 
 def _get_exp_metadata(out, form):
@@ -292,7 +363,7 @@ def _send_json(out, value):
     import json
     print("Content-Type: application/json", file=out)
     print(file=out)
-    json.dump(value, out)
+    json.dump(value, out, cls=MyEncoder)
 
 
 def _send_download(out, f, filename, content_type=None):
@@ -331,6 +402,13 @@ if __name__ == "__main__":
     if am_cgi:
         cgi_main()
     else:
-        #import sys
-        #do_delete_experiment(sys.stdout, None)
-        cgi_main()
+        import sys
+        from msweb_lib import datastore
+        exp_id = "17"
+        ds = datastore.DataStore(DataStorePath)
+        exp = ds.experiments[exp_id]
+        cooked = ds.cooked_file_name(exp_id)
+        from msweb_lib import abundance
+        exp = abundance.parse_cooked(cooked)
+        _send_success(sys.stdout, {"experiment_data":exp.xhr_data(),
+                                   "experiment_id":exp_id})

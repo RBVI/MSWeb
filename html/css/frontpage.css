@@ -43,14 +43,15 @@ html, body, #frontpage, #browse-tab, #edit-tab {
 }
 .op-button {
     height: 100%;
-    width: 6rem;
-    margin-right: 0.5rem;
+    width: 7rem;
+    margin-right: 0.3rem;
 }
 .op-icon {
-    min-width: 2rem;
-    min-height: 2rem;
-    max-width: 2rem;
-    max-height: 2rem;
+    min-width: 3rem;
+    min-height: 3rem;
+    max-width: 3rem;
+    max-height: 3rem;
+    filter: contrast(200%);
 }
 /* Add disclosure triangle before collapse link */
 [data-toggle="collapse"] .fa:before {   

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # vim: set expandtab ts=4 sw=4:
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 
 normalization_methods = [
@@ -172,6 +172,7 @@ class Experiment:
         self.proteins = []      # list of all Protein instances
         self.runs = {}          # map of name to Run instance
         self.normalized = {}    # map of name to NormalizedAbundance instance
+        self.differential = {}  # map of name to DifferentialAbundance instance
 
     def add_protein(self, protein):
         protein.index = len(self.proteins)
@@ -192,6 +193,16 @@ class Experiment:
                       for r in self.runs.values() },
             "normalized": { n.name: n.json_data()
                             for n in self.normalized.values() },
+            "differential": { n.norm_method: n.json_data()
+                              for n in self.differential.values() },
+        }
+
+    def xhr_data(self):
+        return {
+            "name": self.name,
+            "proteins": [ p.json_data() for p in self.proteins ],
+            "runs": { r.name: r.json_data()
+                      for r in self.runs.values() },
         }
 
     @staticmethod
@@ -205,25 +216,28 @@ class Experiment:
         if "normalized" in data:
             exp.normalized = { n: NormalizedAbundance.from_json(d, exp.proteins)
                                for n, d in data["normalized"].items() }
+        if "differential" in data:
+            exp.differential = { n: DifferentialAbundance.from_json(d)
+                                 for n, d in data["differential"].items() }
         return exp
 
-    def normalize(self, metadata, cgi_form):
-        if "method" not in cgi_form:
-            raise ValueError("no normalization method specified")
-        method = cgi_form.getfirst("method")
-        if method == "default":
-            norm, cached = self.normalize_default(metadata)
-            return norm.json_data(), cached
-        raise ValueError("unsupported normalization method: %s" % method)
-
-    def normalize_default(self, metadata):
-        #
-        # First see if we already have it cached
-        #
+    def normalize(self, metadata, method, params):
         try:
-            return self.normalized["default"], True
+            return self._find_norm(method, params), True
         except KeyError:
             pass
+        if method == "default":
+            norm = self.normalize_default(metadata)
+            return norm, False
+        raise ValueError("unsupported normalization method: %s" % method)
+
+    def _find_norm(self, method, params):
+        norm = self.normalized[method]
+        if params and norm.params != params:
+            raise KeyError("mismatched parameters")
+        return norm
+
+    def normalize_default(self, metadata):
         #
         # Find maximum sum of peptide counts per run.
         # It will be used to scale run counts later.
@@ -276,7 +290,36 @@ class Experiment:
                     cat_stats[protein] = (mean, sd, len(counts))
         norm = NormalizedAbundance("default", {}, stats)
         self.normalized["default"] = norm
-        return norm, False
+        return norm
+
+    def differential_abundance(self, metadata, norm_method, norm_params,
+                               categories, control, fc_cutoff, mean_cutoff):
+        params = {"norm_params": norm_params,
+                  "categories": list(sorted(categories)),
+                  "control": control,
+                  "fc_cutoff": fc_cutoff,
+                  "mean_cutoff": mean_cutoff}
+        try:
+            return self._find_diff_abundance(norm_method, params), True
+        except KeyError:
+            pass
+        norm, cached = self.normalize(metadata, norm_method, norm_params)
+        df = norm.pandas_dataframe(self.proteins, categories)
+        try:
+            from .diff_abundance import calc_diff_abundance
+        except ImportError:
+            from diff_abundance import calc_diff_abundance
+        pda = calc_diff_abundance(df, categories, control,
+                                  fc_cutoff, mean_cutoff)
+        da = DifferentialAbundance(norm_method, params, pda)
+        self.differential[norm_method] = da
+        return da, False
+
+    def _find_diff_abundance(self, norm_method, params):
+        da = self.differential[norm_method]
+        if params != da.params:
+            raise KeyError("mismatched parameters")
+        return da
 
 
 class NormalizedAbundance:
@@ -332,6 +375,32 @@ class NormalizedAbundance:
             for n, protein_stats in category.items():
                 protein_data[proteins[int(n)]] = protein_stats
         return NormalizedAbundance(data["name"], data["params"], stats)
+
+
+class DifferentialAbundance:
+    """Differential abundance of proteins."""
+
+    def __init__(self, norm_method, params, dataframe):
+        self.norm_method = norm_method
+        self.params = params
+        self.dataframe = dataframe
+
+    def json_data(self):
+        return {"norm_method":self.norm_method,
+                "params":self.params,
+                "dataframe":self.dataframe.to_dict()}
+
+    def xhr_data(self):
+        # Return data for AJAX request
+        return {"norm_method":self.norm_method,
+                "params":self.params,
+                "stats":self.dataframe.to_dict(orient="split")}
+
+    @staticmethod
+    def from_json(data):
+        from pandas import DataFrame
+        return DifferentialAbundance(data["norm_method"], data["params"],
+                                     DataFrame.from_dict(data["dataframe"]))
 
 
 class _AttrLabelStore:
@@ -436,12 +505,11 @@ if __name__ == "__main__":
         metadata = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
-        norm, cached = exp.normalize_default(metadata)
-        cat_list = ["control", "L1"]
-        df = norm.pandas_dataframe(exp.proteins[:20], cat_list)
-        print(df)
-        from diff_abundance import calc_diff_abundance
-        da = calc_diff_abundance(df, cat_list, controlColumn="control",
-                                 fc_cutoff=1.0, mean_cutoff=0.0)
+        # norm = exp.normalize_default(metadata)
+        cat_list = ["control", "L1", "L2", "L3", "L4", "L5" ]
+        da, cached = exp.differential_abundance(metadata, "default", {},
+                                                cat_list, "control", 1.0, 0.0)
+        print(cached)
         print(da)
+        print(da.xhr_data())
     test_abundance()

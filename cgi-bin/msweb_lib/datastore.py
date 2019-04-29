@@ -156,8 +156,9 @@ class DataStore:
     def raw_file_name(self, exp_id):
         return self._full_path(self.raw_dir, "raw-%s" % exp_id)
 
-    def cooked_file_name(self, exp_id):
-        return self._full_path(self.cooked_dir, "cooked-%s.json" % exp_id)
+    def cooked_file_name(self, exp_id, suffix="json"):
+        return self._full_path(self.cooked_dir,
+                               "cooked-%s.%s" % (exp_id, suffix))
 
     def _full_path(self, subdir, filename):
         import os.path, os

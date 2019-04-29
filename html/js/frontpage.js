@@ -359,8 +359,7 @@ frontpage = (function(){
                 } else {
                     var exp_id = data.results.experiment_id;
                     var metadata = experiment_metadata[exp_id];
-                    var raw = JSON.parse(data.results.experiment_data);
-                    experiment_stats[exp_id] = { raw: raw };
+                    experiment_stats[exp_id] = { raw: data.results.experiment_data };
                     fill_browse();
                 }
             },
