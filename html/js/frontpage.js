@@ -646,6 +646,7 @@ frontpage = (function(){
                 } else {
                     set_upload_status("finished");
                     reload_experiments_tables();
+                    $("#edit-metadata-body").collapse("toggle");
                 }
             },
             error: function(jqXHR, text_status, error_thrown) {
@@ -935,7 +936,7 @@ frontpage = (function(){
            .on("selected.rs.jquery.bootgrid", edit_experiment_selected)
            .on("deselected.rs.jquery.bootgrid", edit_experiment_deselected)
            .on("loaded.rs.jquery.bootgrid", function() {
-                tbl.find(".exp-delete").on("click", function(ev) {
+                tbl.find("button.exp-delete").on("click", function(ev) {
                     stop_default(ev);
                     var exp_id = ev.target.dataset.rowId
                     var exp = experiment_metadata[exp_id];
