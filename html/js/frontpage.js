@@ -358,8 +358,8 @@ frontpage = (function(){
                     show_ajax_error(data.status, data.reason, data.cause);
                 } else {
                     var exp_id = data.results.experiment_id;
-                    var metadata = experiment_metadata[exp_id];
-                    experiment_stats[exp_id] = { raw: data.results.experiment_data };
+                    var raw = data.results.experiment_data;
+                    experiment_stats[exp_id] = { raw: raw };
                     fill_browse();
                 }
             },
@@ -374,8 +374,8 @@ frontpage = (function(){
         // console.log("show_experiment_raw");
         if (browse_raw_id == exp_id)
             return;
+        $("#browse-stats-table").bootgrid("destroy").empty();
         var table = $("#browse-stats-table");
-        table.bootgrid("destroy").empty();
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,

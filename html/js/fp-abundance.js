@@ -434,9 +434,12 @@ abundance = (function(){
                             this.stats.da_params.control + ")";
                 var card = this.make_collapsible_card(container, "da", title);
                 var body = card.find(".card-body");
+                var div = $("<div/>", { "class": "entire-bootgrid-table" })
+                            .appendTo(body);
                 var table_id = this.make_id("da", "table");
                 $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                                "id": table_id }).appendTo(body);
+                                "style": "width:inherit;",
+                                "id": table_id }).appendTo(div);
                 this.differential_table_id = table_id;
             }
             show_differential_table(this.differential_table_id, this.metadata, this.stats);
@@ -532,6 +535,11 @@ abundance = (function(){
         multiSelect: true,
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
+        formatters: {
+            nullmeric: function(column, row) {
+                var v = row[column.id];
+                return isFinite(v) ? v.toFixed(6) : "-" },
+        },
     };
 
     //
@@ -559,6 +567,7 @@ abundance = (function(){
                 var id = "nc-" + col_name;
                 htr.append($("<th/>", { "data-column-id": id,
                                         "data-converter": "numeric",
+                                        "data-formatter": "nullmeric",
                                         "data-visible": true,
                                         "data-searchable": false })
                                 .text(col_name));
@@ -580,7 +589,7 @@ abundance = (function(){
                 } else {
                     var column_id = "nc-" + col_name;
                     if (value === null)
-                        row[column_id] = "-";
+                        row[column_id] = Infinity;
                     else
                         row[column_id] = value;
                 }

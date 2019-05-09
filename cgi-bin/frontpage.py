@@ -285,7 +285,7 @@ def do_normalize(out, form):
     if not cached:
         with open(cooked, "w") as f:
             exp.write_json(f)
-    _send_success(out, norm.json_data())
+    _send_success(out, norm.json_data(), cls=MyEncoder)
 
 
 def do_differential_abundance(out, form):
@@ -325,7 +325,7 @@ def do_differential_abundance(out, form):
     if not cached:
         with open(cooked, "w") as f:
             exp.write_json(f)
-    _send_success(out, da.xhr_data())
+    _send_success(out, da.xhr_data(), cls=MyEncoder)
 
 
 def _get_exp_metadata(out, form):
@@ -344,7 +344,7 @@ def _get_exp_metadata(out, form):
     return ds, exp_id, exp
 
 
-def _send_failed(out, reason, cause=""):
+def _send_failed(out, reason, cause="", **kw):
     _send_json(out, {
         "status": "error",
         "reason": reason,
@@ -352,18 +352,18 @@ def _send_failed(out, reason, cause=""):
     })
 
 
-def _send_success(out, value):
+def _send_success(out, value, **kw):
     _send_json(out, {
         "status": "success",
         "results": value,
-    })
+    }, **kw)
 
 
-def _send_json(out, value):
+def _send_json(out, value, **kw):
     import json
     print("Content-Type: application/json", file=out)
     print(file=out)
-    json.dump(value, out, cls=MyEncoder)
+    json.dump(value, out, **kw)
 
 
 def _send_download(out, f, filename, content_type=None):

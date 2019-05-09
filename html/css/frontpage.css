@@ -28,9 +28,6 @@ html, body, #frontpage, #browse-tab, #edit-tab {
 .display-inline {
     display: inline-block;
 }
-#browse-stats-table {
-    width: inherit;
-}
 #upload-file-name {
     font-weight: bold;
 }
