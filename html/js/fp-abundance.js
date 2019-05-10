@@ -97,7 +97,7 @@ abundance = (function(){
                                 "Violin", "need-normalized",
                                 this.plot_violin);
             this.make_ops_image(ops_p, "plot-heatmap", "heatmap.svg",
-                                "Heat Map", "need-normalized",
+                                "Heat Map", "need-differential",
                                 this.plot_heatmap);
             this.make_ops_image(ops_p, "plot-volcano", "volcano.svg",
                                 "Volcano", "need-differential",
@@ -346,8 +346,34 @@ abundance = (function(){
         }
 
         plot_violin(ev) {
+            if (!this.stats.da_stats)
+                this.plot_violin_norm();
+            else {
+                var dialog = $("#modal-dialog");
+                dialog.find(".modal-title").text("Violin Plot");
+                var body = dialog.find(".modal-body").empty();
+                var sid = this.make_id("violin-plot", "select")
+                var field = this.add_field(body, sid, "Data");
+                var sel = this.add_select(field, sid, [ "Differential Abundance",
+                                                        "Normalized Counts" ]);
+                var okay = dialog.find(".modal-okay-button");
+                okay.off("click").on("click", function(ev) {
+                    var data = sel.val();
+                    if (data == "Differential Abundance")
+                        this.plot_violin_da();
+                    else if (data == "Normalized Counts")
+                        this.plot_violin_norm();
+                    else
+                        alert("Unknown violin plot type: " + data);
+                }.bind(this));
+                dialog.modal();
+            }
+        }
+
+        plot_violin_norm() {
             var container = this.pane.children(".container-fluid");
-            var card = this.make_collapsible_card(container, "violin", "Violin Plot");
+            var card = this.make_collapsible_card(container, "violin",
+                                                  "Violin Plot - Normalized Counts");
             var body = card.find(".card-body");
             var plot_id = this.make_id("violin", "plot");
             var div = $("<div/>", { "id": plot_id,
@@ -356,9 +382,32 @@ abundance = (function(){
                                              "width": "600px",
                                              "height": "250px" } })
                             .appendTo(body);
-            plot.make_plot_violin(div, this.metadata, this.stats);
+            plot.make_plot_violin_norm(div, this.metadata, this.stats);
             var pop_out = function() {
-                plot.pop_out(div, this.metadata.title + " - Violin Plot")
+                plot.pop_out(div, this.metadata.title + " - Normalized Counts")
+            }.bind(this);
+            var close_card = function() {
+                card.remove();
+            }.bind(this);
+            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
+                                          [ "fa-times-circle", close_card ] ]);
+        }
+
+        plot_violin_da() {
+            var container = this.pane.children(".container-fluid");
+            var card = this.make_collapsible_card(container, "violin",
+                                                  "Violin Plot - Differential Abundance");
+            var body = card.find(".card-body");
+            var plot_id = this.make_id("violin", "plot");
+            var div = $("<div/>", { "id": plot_id,
+                                    "css": { "resize": "vertical",
+                                             "overflow": "hidden",
+                                             "width": "600px",
+                                             "height": "250px" } })
+                            .appendTo(body);
+            plot.make_plot_violin_da(div, this.metadata, this.stats);
+            var pop_out = function() {
+                plot.pop_out(div, this.metadata.title + " - Differential Abundance")
             }.bind(this);
             var close_card = function() {
                 card.remove();
@@ -368,7 +417,26 @@ abundance = (function(){
         }
 
         plot_heatmap(ev) {
-            this.unimplemented("Heatmap");
+            var container = this.pane.children(".container-fluid");
+            var card = this.make_collapsible_card(container, "heatmap",
+                                                  "Heat Map - Differential Abundance");
+            var body = card.find(".card-body");
+            var plot_id = this.make_id("heatmap", "plot");
+            var div = $("<div/>", { "id": plot_id,
+                                    "css": { "resize": "vertical",
+                                             "overflow": "hidden",
+                                             "width": "600px",
+                                             "height": "500px" } })
+                            .appendTo(body);
+            plot.make_plot_heatmap_da(div, this.metadata, this.stats);
+            var pop_out = function() {
+                plot.pop_out(div, this.metadata.title + " - Differential Abundance")
+            }.bind(this);
+            var close_card = function() {
+                card.remove();
+            }.bind(this);
+            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
+                                          [ "fa-times-circle", close_card ] ]);
         }
 
         plot_volcano(ev) {

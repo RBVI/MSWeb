@@ -15,12 +15,12 @@ plot = (function(){
     }
 
     //
-    // make_plot_violin:
-    //   Create violin plot for abundance experiment.
+    // make_plot_violin_norm:
+    //   Create violin plot of normalized counts for abundance experiment.
     //   y = abundance
     //   trace = category name
     //
-    function make_plot_violin(div, metadata, stats) {
+    function make_plot_violin_norm(div, metadata, stats) {
         var raw = stats.raw;
         var norm_stats = stats.norm_stats;
         var traces = [];
@@ -53,7 +53,58 @@ plot = (function(){
             legend: { x:1, y:0.5 },
             hovermode: "closest",
             xaxis: { title: "", automargin: true },
-            yaxis: { title: "Abundance", automargin: true },
+            yaxis: { title: "Average Normalized Counts", automargin: true },
+            title: metadata.title,
+            violinmode: "overlay",
+            violingap: 0,
+            violingroupgap: 0,
+        };
+        Plotly.newPlot(div.attr("id"), traces, layout);
+        make_resizable(div);
+    }
+
+    //
+    // make_plot_violin_da:
+    //   Create violin plot of differential abundance for abundance experiment.
+    //   y = abundance
+    //   trace = category name
+    //
+    function make_plot_violin_da(div, metadata, stats) {
+        var raw = stats.raw;
+        var categories = stats.da_params.categories;
+        var da_stats = stats.da_stats;
+        var traces = [];
+        categories.sort().forEach(function(cat_name) {
+            var column_index = da_stats.columns.indexOf(cat_name + " log2FC");
+            if (column_index < 0)
+                return;
+            var y = [];
+            var text = [];
+            $.each(da_stats.data, function(pid, row_data) {
+                var protein = raw.proteins[pid];
+                var label = protein["Acc #"];
+                var gene = protein["Gene"];
+                if (gene)
+                    label += " (" + gene + ")";
+                y.push(row_data[column_index]);
+                text.push(label);
+            });
+            traces.push({
+                legendgroup: cat_name,
+                name: cat_name,
+                scalegroup: "Yes",
+                x0: cat_name,
+                type: "violin",
+                y: y,
+                text: text,
+            });
+        });
+        var layout = {
+            showLegend: true,
+            legend: { x:1, y:0.5 },
+            hovermode: "closest",
+            xaxis: { title: "", automargin: true },
+            yaxis: { title: "Differential Abundance (log2FC)", automargin: true },
             title: metadata.title,
             violinmode: "overlay",
             violingap: 0,
@@ -210,12 +261,65 @@ plot = (function(){
         return true;
     }
 
-    function make_resizable(div) {
+    //
+    // make_plot_heatmap_da:
+    //   Create volcano plot for abundance experiment.
+    //   x = category
+    //   y = protein
+    //   z = ???
+    //
+    function make_plot_heatmap_da(div, metadata, stats) {
+        var raw = stats.raw;
+        var da_stats = stats.da_stats;
+        var categories = stats.da_params.categories.filter(function(cat_name) {
+            return da_stats.columns.indexOf(cat_name + " log2FC") >= 0;
+        }).sort();
+        var indices = categories.map(function(cat_name) {
+            return da_stats.columns.indexOf(cat_name + " log2FC");
+        });
+        var names = raw.proteins.map(function(protein) {
+            return protein["Acc #"];
+        });
+        var texts = raw.proteins.map(function(protein) {
+            var label = protein["Acc #"];
+            var gene = protein["Gene"];
+            if (gene)
+                label += " (" + gene + ")";
+            return label;
+        });
+        var zvalues = [];
+        da_stats.data.forEach(function(row_data) {
+            zvalues.push(indices.map(n => row_data[n]));
+        });
+        var data = [{
+            x: categories,
+            y: texts,
+            z: zvalues,
+            zmid: 0.0,
+            type: "heatmap",
+            colorscale: [ [ 0, '#FF0000'], [ 0.5, '#FFFFFF' ], [ 1, '#0000FF' ] ],
+            showscale: false,
+        }];
+        var layout = {
+            title: metadata.title,
+            // annotations: [],
+            automargin: true,
+            xaxis: { side: 'top', ticks: '' },
+            yaxis: { side: 'right', ticks: '', ticksuffix: ' ' },
+        };
+        // TODO: fill annotations?
+        Plotly.newPlot(div.attr("id"), data, layout);
+        make_resizable(div, "80vh");
+    }
+
+    function make_resizable(div, size) {
         var div_id = div.attr("id");
         var d3 = Plotly.d3;
+        if (!size)
+            size = "40vh";
         var gd3 = d3.select("#" + div_id)
                     .style({ "width": "94%",
-                             "height": "40vh",
+                             "height": size,
                              "margin-left": "3%",
                              "margin-top": "2.5vh", });
         var gd = gd3.node();
@@ -255,7 +359,9 @@ plot = (function(){
     return {
         pop_out: pop_out,
         make_plot_placeholder: make_plot_placeholder,
-        make_plot_violin: make_plot_violin,
+        make_plot_violin_norm: make_plot_violin_norm,
+        make_plot_violin_da: make_plot_violin_da,
+        make_plot_heatmap_da: make_plot_heatmap_da,
         make_plot_volcano: make_plot_volcano,
     };
 })();
