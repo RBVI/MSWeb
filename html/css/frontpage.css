@@ -59,13 +59,6 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     margin-right: 0.5rem;
     content: "\f0da";
 }
-/* Put border around bootgrid tables to group UI elements */
-.entire-bootgrid-table {
-    background: #fff;
-    border: 1px solid lightgray;
-    padding: 0.25rem;
-    margin-bottom: 1rem;
-}
 /* File input styling */
 .file-input {
     display: inline-block;

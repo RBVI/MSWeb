@@ -68,7 +68,7 @@ abundance = (function(){
                             .append($("<span/>", { "id": close_id,
                                                    "class": "tab-close-button"})
                                             .html("&times;")
-                                        .click(ev => this.close(ev)))
+                                        .click(ev => this.close_tab(ev)))
                             .appendTo(this.tab_container.children("nav")
                                                         .find(".nav-tabs"));
 
@@ -222,7 +222,7 @@ abundance = (function(){
                                    .removeAttr("disabled");
         }
 
-        close(ev) {
+        close_tab(ev) {
             ev.stopPropagation();
             var prev = this.tab.prev();
             this.tab.remove();
@@ -231,15 +231,7 @@ abundance = (function(){
         }
 
         op_normalize(ev, a, b) {
-            var dialog = $("#modal-dialog");
-            dialog.find(".modal-title").text("Normalize Counts");
-            var body = dialog.find(".modal-body").empty();
-            var sid = this.make_id("normalize", "select")
-            var field = this.add_field(body, sid, "Method");
-            var sel = this.add_select(field, sid, normalization_methods);
-            var okay = dialog.find(".modal-okay-button");
-            okay.off("click");
-            okay.on("click", function(ev) {
+            function do_norm(method) {
                 // console.log("normalize using " + sel.val());
                 frontpage.show_status("normalizing counts...", true)
                 $.ajax({
@@ -249,7 +241,7 @@ abundance = (function(){
                     data: {
                         action: "normalize",
                         exp_id: this.exp_id,
-                        method: sel.val(),
+                        method: method,
                     },
                     success: function(data) {
                         frontpage.show_status("", false)
@@ -265,8 +257,22 @@ abundance = (function(){
                         }
                     }.bind(this),
                 });
-            }.bind(this));
-            dialog.modal();
+            }
+            if (normalization_methods.length == 1)
+                do_norm.call(this, normalization_methods[0]);
+            else {
+                var dialog = $("#modal-dialog");
+                dialog.find(".modal-title").text("Normalize Counts");
+                var body = dialog.find(".modal-body").empty();
+                var sid = this.make_id("normalize", "select")
+                var field = this.add_field(body, sid, "Method");
+                var sel = this.add_select(field, sid, normalization_methods);
+                var okay = dialog.find(".modal-okay-button");
+                okay.off("click").on("click", function(ev) {
+                    do_norm.call(this, sel.val());
+                }.bind(this));
+                dialog.modal();
+            }
         }
 
         op_differential(ev, a, b) {
@@ -354,7 +360,11 @@ abundance = (function(){
             var pop_out = function() {
                 plot.pop_out(div, this.metadata.title + " - Violin Plot")
             }.bind(this);
-            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ] ]);
+            var close_card = function() {
+                card.remove();
+            }.bind(this);
+            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
+                                          [ "fa-times-circle", close_card ] ]);
         }
 
         plot_heatmap(ev) {
@@ -398,7 +408,11 @@ abundance = (function(){
                     var pop_out = function() {
                         plot.pop_out(div, this.metadata.title + " - " + title)
                     }.bind(this);
-                    this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ] ]);
+                    var close_card = function() {
+                        card.remove();
+                    }.bind(this);
+                    this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
+                                                  [ "fa-times-circle", close_card ] ]);
                 } else {
                     card.remove();
                 }
@@ -419,9 +433,16 @@ abundance = (function(){
                 var title = "Normalized Counts (method: " + this.stats.norm_method + ")";
                 var card = this.make_collapsible_card(container, "nc", title);
                 var body = card.find(".card-body");
+                var div = $("<div/>", { "class": "table-responsive" })
+                            .appendTo(body);
                 var table_id = this.make_id("nc", "table");
                 $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                                "id": table_id }).appendTo(body);
+                                "id": table_id }).appendTo(div);
+                var close_card = function() {
+                    card.remove();
+                    this.normalized_counts_table_id = undefined;
+                }.bind(this);
+                this.add_card_buttons(card, [ [ "fa-times-circle", close_card ] ]);
                 this.normalized_counts_table_id = table_id;
             }
             show_normalized_counts_table(this.normalized_counts_table_id, this.metadata, this.stats);
@@ -434,12 +455,16 @@ abundance = (function(){
                             this.stats.da_params.control + ")";
                 var card = this.make_collapsible_card(container, "da", title);
                 var body = card.find(".card-body");
-                var div = $("<div/>", { "class": "entire-bootgrid-table" })
+                var div = $("<div/>", { "class": "table-responsive" })
                             .appendTo(body);
                 var table_id = this.make_id("da", "table");
                 $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                                "style": "width:inherit;",
                                 "id": table_id }).appendTo(div);
+                var close_card = function() {
+                    card.remove();
+                    this.differential_table_id = undefined;
+                }.bind(this);
+                this.add_card_buttons(card, [ [ "fa-times-circle", close_card ] ]);
                 this.differential_table_id = table_id;
             }
             show_differential_table(this.differential_table_id, this.metadata, this.stats);
