@@ -280,11 +280,17 @@ plot = (function(){
         var names = raw.proteins.map(function(protein) {
             return protein["Acc #"];
         });
+        // plotly heatmap wants all y labels to be unique, so
+        // we prepend a space to non-unique labels until they are
+        var dups = {};
         var texts = raw.proteins.map(function(protein) {
             var label = protein["Acc #"];
             var gene = protein["Gene"];
             if (gene)
                 label += " (" + gene + ")";
+            while (dups[label] !== undefined)
+                label = " " + label;
+            dups[label] = 1;
             return label;
         });
         var zvalues = [];
@@ -298,16 +304,15 @@ plot = (function(){
             zmid: 0.0,
             type: "heatmap",
             colorscale: [ [ 0, '#FF0000'], [ 0.5, '#FFFFFF' ], [ 1, '#0000FF' ] ],
-            showscale: false,
+            showscale: true,
+            colorbar: { title: { text: "Log2FC", side: "right", }, },
         }];
         var layout = {
             title: metadata.title,
-            // annotations: [],
             automargin: true,
             xaxis: { side: 'top', ticks: '' },
-            yaxis: { side: 'right', ticks: '', ticksuffix: ' ' },
+            yaxis: { side: 'left', automargin: true, ticks: '', ticksuffix: ' ' },
         };
-        // TODO: fill annotations?
         Plotly.newPlot(div.attr("id"), data, layout);
         make_resizable(div, "80vh");
     }
