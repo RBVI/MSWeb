@@ -202,6 +202,7 @@ abundance = (function(){
             var input = $("<input/>",  { "id": input_id,
                                          "class": "form-control",
                                          "type": "number",
+                                         "min": 0.0,
                                          "step": step })
                             .val(default_value).appendTo(div);
             return input;
