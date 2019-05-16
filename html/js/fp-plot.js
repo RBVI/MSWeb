@@ -59,8 +59,7 @@ plot = (function(){
             violingap: 0,
             violingroupgap: 0,
         };
-        Plotly.newPlot(div.attr("id"), traces, layout);
-        make_resizable(div);
+        make_plotly(div, traces, layout);
     }
 
     //
@@ -110,8 +109,7 @@ plot = (function(){
             violingap: 0,
             violingroupgap: 0,
         };
-        Plotly.newPlot(div.attr("id"), traces, layout);
-        make_resizable(div);
+        make_plotly(div, traces, layout);
     }
 
     //
@@ -256,8 +254,7 @@ plot = (function(){
                 },
             ],
         };
-        Plotly.newPlot(div.attr("id"), traces, layout);
-        make_resizable(div);
+        make_plotly(div, traces, layout);
         return true;
     }
 
@@ -349,8 +346,14 @@ plot = (function(){
             yaxis: { side: 'left', automargin: true,
                      tick0: 0, dtick: 1, ticks: '', ticksuffix: ' ' },
         };
+        var height = (texts.length * 1.3) + "vh";
+        make_plotly(div, data, layout, height);
+    }
+
+    function make_plotly(div, data, layout, height) {
         Plotly.newPlot(div.attr("id"), data, layout);
-        make_resizable(div, (texts.length * 1.3) + "vh");
+        make_resizable(div, height);
+        div.data({ data: data, layout: layout, height: height });
     }
 
     function make_resizable(div, size) {
@@ -380,21 +383,32 @@ plot = (function(){
     }
 
     function pop_out(div, title) {
-        Plotly.toImage(div.attr("id"), { format: "svg" })
-              .then(function(dataurl) {
-                var doc = $("<html/>");
-                var head = $("<head/>").appendTo(doc);
-                $("<title/>").text(title).appendTo(head);
-                var body = $("<body/>").appendTo(doc);
-                $("<img/>", { "src": dataurl })
-                    .css("width", "100%")
-                    .appendTo(body);
-                var win = window.open("", "");
-                var d = win.document;
-                d.open();
-                d.write(doc.html());
-                d.close();
-              });
+        var data = div.data("data");
+        var layout = div.data("layout");
+        var height = div.data("height");
+        var html = '<!DOCTYPE html><html><head>';
+        html += '<title>' + title + '</title>';
+        html += '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>';
+        html += '<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/1.45.2/plotly.min.js"></script>';
+        html += '<script src="js/fp-plot.js"></script>'
+        html += '<style>html { height:95%; } body { height:100%; }</style>';
+        html += '</head><body>';
+        html += '<div id="plot"></div>';
+        html += '</body>';
+        html += '<script>';
+        html += 'data = ' + JSON.stringify(data) + ';';
+        html += 'layout = ' + JSON.stringify(layout) + ';';
+        html += 'plot.make_plotly($("#plot"), data, layout, "100%");';
+        html += '</script></html>';
+        new_window(html);
+    }
+
+    function new_window(html) {
+        var win = window.open("", "");
+        var d = win.document;
+        d.open();
+        d.write(html);
+        d.close();
     }
 
     return {
@@ -404,5 +418,6 @@ plot = (function(){
         make_plot_violin_da: make_plot_violin_da,
         make_plot_heatmap_da: make_plot_heatmap_da,
         make_plot_volcano: make_plot_volcano,
+        make_plotly: make_plotly,
     };
 })();
