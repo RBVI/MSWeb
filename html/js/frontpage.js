@@ -74,7 +74,7 @@ frontpage = (function(){
             "copy": function(column, row) {
                 return '<button data-row-id="' + row.id +
                        '" class="btn btn-xs btn-default exp-copy-url">' +
-                       '<span class="icon fa fa-copy"></span></button>'
+                       '<span class="icon fa fa-copy align-top"></span></button>'
             }
         }
     };
