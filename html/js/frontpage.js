@@ -2,7 +2,8 @@
 
 frontpage = (function(){
 
-    var BaseURL = "/MSWeb/cgi-bin/frontpage.py"
+    var PageURL = "/MSWeb/index.html";
+    var BaseURL = "/MSWeb/cgi-bin/frontpage.py";
 
     // The front page consists of multiple tabs.
     // Tabs may (or may not) need initialization.
@@ -69,6 +70,13 @@ frontpage = (function(){
         multiSelect: false,
         keepSelection: true,
         rowCount: [20, 50, 100, -1],
+        formatters: {
+            "copy": function(column, row) {
+                return '<button data-row-id="' + row.id +
+                       '" class="btn btn-xs btn-default exp-copy-url">' +
+                       '<span class="icon fa fa-copy"></span></button>'
+            }
+        }
     };
 
     //
@@ -87,6 +95,10 @@ frontpage = (function(){
                                 "data-type": "numeric",
                                 "data-searchable": false,
                                 "data-visible": false }).text("Id"));
+        htr.append($("<th/>", { "data-column-id": "copy",
+                                "data-formatter": "copy",
+                                "data-searchable": false,
+                                "data-sortable": false }).text("URL"));
         $.each(columns, function(index, values) {
             htr.append($("<th/>", { "data-column-id": values[1] })
                             .text(values[0]));
@@ -96,7 +108,37 @@ frontpage = (function(){
            .append($("<tbody/>"))
            .bootgrid(BrowseExperimentsTableOptions)
            .on("selected.rs.jquery.bootgrid", browse_experiment_selected)
-           .on("deselected.rs.jquery.bootgrid", browse_experiment_deselected);
+           .on("deselected.rs.jquery.bootgrid", browse_experiment_deselected)
+           .on("loaded.rs.jquery.bootgrid", function() {
+                tbl.find("button.exp-copy-url").on("click", function(ev) {
+                    stop_default(ev);
+                    var exp_id = ev.currentTarget.dataset.rowId
+                    var exp = experiment_metadata[exp_id];
+                    var msg = "URL to clipboard.";
+                    if (exp.title || exp.uploader || exp.uploaddate)
+                        msg += "\nExperiment: ";
+                    if (exp.title)
+                        msg += ' "' + exp.title + '"';
+                    if (exp.uploader)
+                        msg += " uploaded by " + exp.uploader;
+                    if (exp.uploaddate)
+                        msg += " on " + exp.uploaddate;
+                    var url = [ location.protocol, "//",
+                                location.host, PageURL,
+                                "?exp_id=", exp_id ].join('');
+                    msg += "\nURL: " + url;
+                    var textarea = $("<textarea/>").appendTo($("body"))
+                                                   .val(url)
+                                                   .focus()
+                                                   .select();
+                    if (document.execCommand("copy"))
+                        msg = "Copied " + msg;
+                    else
+                        msg = "Failed to copy " + msg;
+                    textarea.remove();
+                    alert(msg);
+                });
+            });
         $("#download-raw").click(download_experiment);
         $("#download-csv").click(unimplemented);
         $("#download-selected").click(unimplemented);
@@ -962,7 +1004,9 @@ frontpage = (function(){
            .on("loaded.rs.jquery.bootgrid", function() {
                 tbl.find("button.exp-delete").on("click", function(ev) {
                     stop_default(ev);
-                    var exp_id = ev.target.dataset.rowId
+                    // Use currentTarget = element listener is attached to
+                    // not target = element triggering event
+                    var exp_id = ev.currentTarget.dataset.rowId
                     var exp = experiment_metadata[exp_id];
                     var msg = "Really delete experiment";
                     if (exp.title)
