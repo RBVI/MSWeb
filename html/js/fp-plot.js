@@ -277,23 +277,61 @@ plot = (function(){
         var columns = categories.map(function(cat_name) {
             return da_stats.columns.indexOf(cat_name + " log2FC");
         });
-        // plotly heatmap wants all y labels to be unique, so
-        // we prepend a space to non-unique labels until they are
+
+        var N = 10;
+        var protein_indices = [];
+        if (da_stats.data.length < N * 3) {
+            // Display all proteins
+            for (var i = 0; i < da_stats.data.length; i++)
+                protein_indices.push(i);
+        } else {
+            // Display top/bottom N for each category
+            function sorted_indices(rows, column_index) {
+                // Return an array of indices that would sort the given array,
+                // of values (while ignoring nulls)
+                var pairs = []
+                for (var i = 0; i < rows.length; i++) {
+                    var value = rows[i][column_index];
+                    if (value !== null)
+                        pairs.push([ value, i ]);
+                }
+                // Sort LOW-to-HIGH.  All values _should_ be floats.
+                pairs.sort((a, b) => a[0] - b[0]);
+                return pairs;
+            }
+            // Loop over columns in reverse order because plotly heatmap
+            // displays bottom to top.  Sorting is already low-to-high
+            // so no need to reverse direction.
+            for (var ci = columns.length - 1; ci >= 0; ci--) {
+                var column_index = columns[ci];
+                var pairs = sorted_indices(da_stats.data, column_index);
+                for (var i = 0; i < N; i++)
+                    protein_indices.push(pairs[i][1]);
+                for (var i = pairs.length - N; i < pairs.length; i++)
+                    protein_indices.push(pairs[i][1]);
+            }
+        }
         var dups = {};
-        var texts = raw.proteins.map(function(protein) {
+        var texts = [];
+        var zvalues = [];
+        for (var i = 0; i < protein_indices.length; i++) {
+            var protein_index = protein_indices[i];
+            var protein = raw.proteins[protein_index];
+            // plotly heatmap wants all y labels to be unique, so
+            // we prepend a Unicode zero width space to non-unique
+            // labels until they are unique
             var label = protein["Acc #"];
             var gene = protein["Gene"];
             if (gene)
                 label += " (" + gene + ")";
             while (dups[label] !== undefined)
-                label = " " + label;
+                label = "&#8203;" + label;
             dups[label] = 1;
-            return label;
-        });
-        var zvalues = [];
-        da_stats.data.forEach(function(row_data) {
+            texts.push(label);
+            row_data = da_stats.data[protein_index];
             zvalues.push(columns.map(n => row_data[n]));
-        });
+        }
+
         var data = [{
             x: categories,
             y: texts,
@@ -308,10 +346,11 @@ plot = (function(){
             title: metadata.title,
             automargin: true,
             xaxis: { side: 'top', ticks: '' },
-            yaxis: { side: 'left', automargin: true, ticks: '', ticksuffix: ' ' },
+            yaxis: { side: 'left', automargin: true,
+                     tick0: 0, dtick: 1, ticks: '', ticksuffix: ' ' },
         };
         Plotly.newPlot(div.attr("id"), data, layout);
-        make_resizable(div, "80vh");
+        make_resizable(div, (texts.length * 1.3) + "vh");
     }
 
     function make_resizable(div, size) {
@@ -338,13 +377,6 @@ plot = (function(){
             div.observer.observe(this, { attributes: true,
                                          attributeFilter: [ "style" ] });
         });
-    }
-
-    function sorted_indices(arr, cmp) {
-        // Return an array of indices that would sort the given array of values
-        var tmp = $.map(arr, function(v, i) { return [v, i]; });
-        tmp.sort(function(a, b) { return cmp(a[0], b[0]); });
-        return $map(tmp, function(v, i) { return v[1]; });
     }
 
     function pop_out(div, title) {
