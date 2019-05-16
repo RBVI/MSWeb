@@ -55,6 +55,7 @@ abundance = (function(){
             this.make_operations(container);
             this.disable(".need-normalized", true);
             this.disable(".need-differential", true);
+            this.disable(".need-TODO", true);
 
             // Create tab
             var tab = $("<a/>", { "class": "nav-item nav-link",
@@ -91,7 +92,7 @@ abundance = (function(){
             this.make_ops_text(ops_a, "op-diff", "Differential Abundance",
                                "need-normalized", this.op_differential);
             this.make_ops_text(ops_a, "op-enrich", "Enrichment",
-                               "need-normalized", this.op_enrichment);
+                               "need-TODO", this.op_enrichment);
             var ops_p = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
             this.make_ops_image(ops_p, "plot-violin", "violin.png",
                                 "Violin", "need-normalized",
@@ -103,7 +104,7 @@ abundance = (function(){
                                 "Volcano", "need-differential",
                                 this.plot_volcano);
             this.make_ops_image(ops_p, "plot-string", "string.png",
-                                "STRING", "need-normalized",
+                                "STRING", "need-TODO",
                                 this.plot_string);
         }
 

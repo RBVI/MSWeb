@@ -125,8 +125,28 @@ frontpage = (function(){
         //
         // If an experiment was selected, select it again.
         //
-        if (browse_exp_id)
-            tbl.select([ browse_exp_id ]);
+        if (experiment_init_target !== null) {
+            // tbl.on("appended.rs.jquery.bootgrid", function() {
+            //     console.log("appended");
+            // });
+            tbl.on("loaded.rs.jquery.bootgrid", function() {
+                // console.log("loaded");
+                if (experiment_init_target === null)
+                    tbl.off("loaded.rs.jquery.bootgrid");
+                else {
+                    if (tbl.bootgrid("getTotalRowCount") > 0) {
+                        tbl.bootgrid("select", [ parseInt(experiment_init_target) ]);
+                        experiment_init_target = null;
+                    }
+                }
+            });
+        }
+        else if (browse_exp_id) {
+            tbl.on("loaded.rs.jquery.bootgrid", function() {
+                tbl.off("loaded.rs.jquery.bootgrid");
+                tbl.bootgrid("select", [ browse_exp_id ]);
+            });
+        }
     }
 
     //
@@ -134,6 +154,7 @@ frontpage = (function(){
     //   Event callback when user clicks on a row in browse table
     //
     function browse_experiment_selected(ev, rows) {
+        // console.log("selected");
         if (rows[0].id == browse_exp_id)
             return;
         browse_exp_id = rows[0].id;
@@ -147,6 +168,7 @@ frontpage = (function(){
     //   selects a different row
     //
     function browse_experiment_deselected(ev, rows) {
+        // console.log("deselected");
         if (browse_exp_id) {
             // XXX: clear out runs and data tables?
             browse_exp_id = undefined;
@@ -227,6 +249,7 @@ frontpage = (function(){
             get_experiment_stats(browse_exp_id);
             return;
         }
+        // console.log("fill_browse_runs");
         var exp = experiment_metadata[browse_exp_id];
         var runs = exp["runs"];
         var rows = [];
@@ -342,6 +365,7 @@ frontpage = (function(){
     //   Get experiment data from server
     //
     function get_experiment_stats(exp_id) {
+        // console.log("get_experiment_stats");
         show_status("fetching experiment data...", true)
         browse_experiment_enable(false, true);
         $.ajax({
@@ -1307,6 +1331,7 @@ frontpage = (function(){
     };
     var experiment_metadata = {}      // All experiment metadata
     var experiment_stats = {}         // Fetched experiment stats
+    var experiment_init_target;
 
     //
     // init_main:
@@ -1319,10 +1344,6 @@ frontpage = (function(){
             if (func)
                 func();
         });
-        /*
-        var active = $("#frontpage .nav a.active").attr("id");
-        tab_funcs[active]();
-        */
         if (window.location.href.indexOf("upload") >= 0) {
             // Make the edit/upload tab active
             $("#tab-edit").tab("show");
@@ -1333,8 +1354,25 @@ frontpage = (function(){
             $("#tab-browse").tab("show");
         }
         abundance.init();
+        experiment_init_target = get_parameter("exp_id");
         reload_experiments_tables();
     };
+
+    //
+    // get_parameter:
+    //   Return query parameter from URL
+    //   Adapted from http://www.jquerybyexample.net/2012/06/get-url-parameters-using-jquery.html
+    //
+    function get_parameter(param) {
+        var url = window.location.search.substring(1);
+        var parameters = url.split('&');
+        for (var i = 0; i < parameters.length; i++) {
+            var param_parts = parameters[i].split('=');
+            if (param_parts[0] == param)
+                return param_parts[1]
+        }
+        return null;
+    }
 
     //
     // get_themes:

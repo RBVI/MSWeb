@@ -274,11 +274,8 @@ plot = (function(){
         var categories = stats.da_params.categories.filter(function(cat_name) {
             return da_stats.columns.indexOf(cat_name + " log2FC") >= 0;
         }).sort();
-        var indices = categories.map(function(cat_name) {
+        var columns = categories.map(function(cat_name) {
             return da_stats.columns.indexOf(cat_name + " log2FC");
-        });
-        var names = raw.proteins.map(function(protein) {
-            return protein["Acc #"];
         });
         // plotly heatmap wants all y labels to be unique, so
         // we prepend a space to non-unique labels until they are
@@ -295,7 +292,7 @@ plot = (function(){
         });
         var zvalues = [];
         da_stats.data.forEach(function(row_data) {
-            zvalues.push(indices.map(n => row_data[n]));
+            zvalues.push(columns.map(n => row_data[n]));
         });
         var data = [{
             x: categories,
@@ -341,6 +338,13 @@ plot = (function(){
             div.observer.observe(this, { attributes: true,
                                          attributeFilter: [ "style" ] });
         });
+    }
+
+    function sorted_indices(arr, cmp) {
+        // Return an array of indices that would sort the given array of values
+        var tmp = $.map(arr, function(v, i) { return [v, i]; });
+        tmp.sort(function(a, b) { return cmp(a[0], b[0]); });
+        return $map(tmp, function(v, i) { return v[1]; });
     }
 
     function pop_out(div, title) {
