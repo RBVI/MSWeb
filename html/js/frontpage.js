@@ -1436,10 +1436,15 @@ frontpage = (function(){
                 select.change(function() {
                     var url = $(this).children(":selected").attr("data-value");
                     if (url) {
-                        var link = $("<link/>", { "rel": "stylesheet",
+                        var theme = $("#css-theme");
+                        if (theme.length > 0)
+                            theme.attr("href", url);
+                        else
+                            $("<link/>", { "id": "css-theme",
+                                                  "rel": "stylesheet",
                                                   "type": "text/css",
-                                                  "href": url });
-                        $("head").append(link);
+                                                  "href": url })
+                                .appendTo($("head"));
                     }
                 });
                 select.val("Cosmo").trigger("change");
