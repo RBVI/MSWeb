@@ -22,22 +22,31 @@ plot = (function(){
     //
     function make_plot_violin_norm(div, metadata, stats) {
         var raw = stats.raw;
+        var accs = raw.proteins["Acc #"];
+        var genes = raw.proteins["Gene"];
+        var categories = metadata.run_categories.sort();
         var norm_stats = stats.norm_stats;
         var traces = [];
-        Object.keys(norm_stats).sort().forEach(function(cat_name) {
-            y = [];
-            text = [];
-            $.each(norm_stats[cat_name], function(pid, counts) {
-                var protein = raw.proteins[pid];
-                var label = protein["Acc #"];
-                var gene = protein["Gene"];
+        for (var i = 0; i < categories.length; i++) {
+            var cat_name = categories[i];
+            var y = [];
+            var text = [];
+            var means = norm_stats[cat_name + " Mean"];
+            var sds = norm_stats[cat_name + " SD"];
+            for (var pid = 0; pid < accs.length; pid++) {
+                var mean = means[pid];
+                if (mean === null)
+                    continue;
+                y.push(mean);
+                var label = accs[pid];
+                var gene = genes[pid];
                 if (gene)
                     label += " (" + gene + ")";
-                var sum = counts.reduce(function(a, b) { return a + b; });
-                var avg = sum / counts.length;
-                y.push(avg);
+                var sd = sds[pid];
+                if (sd !== null)
+                    label += " SD:&plusmn; " + sd.toFixed(2);
                 text.push(label);
-            });
+            }
             traces.push({
                 legendgroup: cat_name,
                 name: cat_name,
@@ -47,7 +56,7 @@ plot = (function(){
                 y: y,
                 text: text,
             });
-        });
+        }
         var layout = {
             showLegend: true,
             legend: { x:1, y:0.5 },
@@ -55,9 +64,6 @@ plot = (function(){
             xaxis: { title: "", automargin: true },
             yaxis: { title: "Average Normalized Counts", automargin: true },
             title: metadata.title,
-            violinmode: "overlay",
-            violingap: 0,
-            violingroupgap: 0,
         };
         make_plotly(div, traces, layout);
     }
@@ -70,24 +76,29 @@ plot = (function(){
     //
     function make_plot_violin_da(div, metadata, stats) {
         var raw = stats.raw;
-        var categories = stats.da_params.categories;
+        var accs = raw.proteins["Acc #"];
+        var genes = raw.proteins["Gene"];
+        var categories = stats.da_params.categories.sort();
         var da_stats = stats.da_stats;
         var traces = [];
-        categories.sort().forEach(function(cat_name) {
-            var column_index = da_stats.columns.indexOf(cat_name + " log2FC");
-            if (column_index < 0)
-                return;
+        for (var i = 0; i < categories.length; i++) {
+            var cat_name = categories[i];
+            var log2FC = da_stats[cat_name + " log2FC"];
+            if (log2FC === undefined)
+                continue;
             var y = [];
             var text = [];
-            $.each(da_stats.data, function(pid, row_data) {
-                var protein = raw.proteins[pid];
-                var label = protein["Acc #"];
-                var gene = protein["Gene"];
+            for (var pid = 0; pid < accs.length; pid++) {
+                var value = log2FC[pid];
+                if (value === null)
+                    continue;
+                y.push(value);
+                var label = accs[pid];
+                var gene = genes[pid];
                 if (gene)
                     label += " (" + gene + ")";
-                y.push(row_data[column_index]);
                 text.push(label);
-            });
+            }
             traces.push({
                 legendgroup: cat_name,
                 name: cat_name,
@@ -97,7 +108,7 @@ plot = (function(){
                 y: y,
                 text: text,
             });
-        });
+        }
         var layout = {
             showLegend: true,
             legend: { x:1, y:0.5 },
@@ -122,11 +133,12 @@ plot = (function(){
     //
     function make_plot_volcano(div, metadata, stats, cat, pvalue_threshold, fc) {
         var raw = stats.raw;
+        var accs = raw.proteins["Acc #"];
+        var genes = raw.proteins["Gene"];
         var da_stats = stats.da_stats;
-        var row_index = da_stats.columns.indexOf("Rows");
-        var pvalue_index = da_stats.columns.indexOf(cat + " pValue");
-        var fc_index = da_stats.columns.indexOf(cat + " log2FC");
-        if (pvalue_index < 0 || fc_index < 0) {
+        var pvalue_column = da_stats[cat + " pValue"];
+        var fc_column = da_stats[cat + " log2FC"];
+        if (pvalue_column === undefined || fc_column === undefined) {
             alert("No data found for category: " + cat);
             return false;
         }
@@ -140,17 +152,14 @@ plot = (function(){
         insig_x = [];
         insig_y = [];
         insig_text = [];
-        $.each(da_stats.data, function(index, row_data) {
-            var pvalue = row_data[pvalue_index];
-            if (pvalue === null)
-                return;
-            var log2FC = row_data[fc_index];
-            if (log2FC === null)
-                return;
+        for (var pid = 0; pid < accs.length; pid++) {
+            var pvalue = pvalue_column[pid];
+            var log2FC = fc_column[pid];
+            if (pvalue === null || log2FC === null)
+                continue;
             var pv = -Math.log10(pvalue);
-            var protein = raw.proteins[parseInt(row_data[row_index])];
-            var label = protein["Acc #"];
-            var gene = protein["Gene"];
+            var label = accs[pid];
+            var gene = genes[pid];
             if (gene)
                 label += " (" + gene + ")";
             if (pvalue > pvalue_threshold) {
@@ -171,7 +180,7 @@ plot = (function(){
                     insig_text.push(label);
                 }
             }
-        });
+        }
         var traces = [
             {
                 x: sig_plus_x,
@@ -267,28 +276,30 @@ plot = (function(){
     //
     function make_plot_heatmap_da(div, metadata, stats) {
         var raw = stats.raw;
+        var accs = raw.proteins["Acc #"];
+        var genes = raw.proteins["Gene"];
         var da_stats = stats.da_stats;
         var categories = stats.da_params.categories.filter(function(cat_name) {
-            return da_stats.columns.indexOf(cat_name + " log2FC") >= 0;
+            return da_stats[cat_name + " log2FC"] !== undefined;
         }).sort();
         var columns = categories.map(function(cat_name) {
-            return da_stats.columns.indexOf(cat_name + " log2FC");
+            return da_stats[cat_name + " log2FC"];
         });
 
         var N = 10;
         var protein_indices = [];
-        if (da_stats.data.length < N * 3) {
+        if (accs.length < N * 3) {
             // Display all proteins
-            for (var i = 0; i < da_stats.data.length; i++)
+            for (var i = 0; i < accs.length; i++)
                 protein_indices.push(i);
         } else {
             // Display top/bottom N for each category
-            function sorted_indices(rows, column_index) {
+            function sorted_indices(rows) {
                 // Return an array of indices that would sort the given array,
                 // of values (while ignoring nulls)
                 var pairs = []
                 for (var i = 0; i < rows.length; i++) {
-                    var value = rows[i][column_index];
+                    var value = rows[i];
                     if (value !== null)
                         pairs.push([ value, i ]);
                 }
@@ -300,8 +311,7 @@ plot = (function(){
             // displays bottom to top.  Sorting is already low-to-high
             // so no need to reverse direction.
             for (var ci = columns.length - 1; ci >= 0; ci--) {
-                var column_index = columns[ci];
-                var pairs = sorted_indices(da_stats.data, column_index);
+                var pairs = sorted_indices(columns[ci]);
                 for (var i = 0; i < N; i++)
                     protein_indices.push(pairs[i][1]);
                 for (var i = pairs.length - N; i < pairs.length; i++)
@@ -313,20 +323,18 @@ plot = (function(){
         var zvalues = [];
         for (var i = 0; i < protein_indices.length; i++) {
             var protein_index = protein_indices[i];
-            var protein = raw.proteins[protein_index];
             // plotly heatmap wants all y labels to be unique, so
             // we prepend a Unicode zero width space to non-unique
             // labels until they are unique
-            var label = protein["Acc #"];
-            var gene = protein["Gene"];
+            var label = accs[protein_index];
+            var gene = genes[protein_index];
             if (gene)
                 label += " (" + gene + ")";
             while (dups[label] !== undefined)
                 label = "&#8203;" + label;
             dups[label] = 1;
             texts.push(label);
-            row_data = da_stats.data[protein_index];
-            zvalues.push(columns.map(n => row_data[n]));
+            zvalues.push(columns.map(col => col[protein_index]));
         }
 
         var data = [{

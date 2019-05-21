@@ -86,18 +86,19 @@ def do_file_upload(out, form):
     from msweb_lib import datastore, abundance
     filename = os.path.basename(datafile.filename)
     ds = datastore.DataStore(DataStorePath)
-    exp_id = ds.add_experiment(None)
-    raw_file_name = ds.raw_file_name(exp_id)
-    with open(raw_file_name, "wb") as f:
+    tmp_file_name = ds.raw_file_name(0) + "-" + str(os.getpid())
+    with open(tmp_file_name, "wb") as f:
         f.write(datafile.file.read())
-    exp = abundance.parse_raw(raw_file_name)
-    with open(ds.cooked_file_name(exp_id), "w") as f:
-        exp.write_json(f)
+    exp = abundance.parse_raw(tmp_file_name)
+    exp_id = ds.add_experiment(exp)
+    raw_file_name = ds.raw_file_name(exp_id)
+    os.rename(tmp_file_name, raw_file_name)
+    exp.write_cooked(ds.cooked_file_name(exp_id))
     ds.update_experiment(exp_id, {
         "uploader": os.environ.get("REMOTE_USER", "anonymous"),
         "uploaddate": datetime.date.today().isoformat(),
         "datafile": filename,
-        "runs": { name: {} for name in exp.runs.keys() },
+        "runs": {name:{} for name in exp.runs},
         "run_categories": ["control"],
     })
     ds.write_index()
@@ -243,7 +244,7 @@ def do_get_experiment(out, form):
     from msweb_lib import abundance
     exp = abundance.parse_cooked(cooked)
     _send_success(out, {"experiment_data":exp.xhr_data(),
-                        "experiment_id":exp_id})
+                        "experiment_id":exp_id}, cls=MyEncoder)
 
 
 def do_download_experiment(out, form):
@@ -262,14 +263,11 @@ def do_normalization_methods(out, form):
         _send_failed(out, "no experiment type specified")
         return
     m = _module_for(form.getfirst("exptype"))
-    _send_success(out, {"methods":m.normalization_methods})
+    _send_success(out, {"methods":m.normalization_methods()})
 
 
 def do_normalize(out, form):
-    if "method" not in form:
-        raise ValueError("no normalization method specified")
-    method = form.getfirst("method")
-    params = form.getlist("params")
+    nc_params = _get_nc_params(form)
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:
@@ -278,21 +276,44 @@ def do_normalize(out, form):
     from msweb_lib import abundance
     exp = abundance.parse_cooked(cooked)
     try:
-        norm, cached = exp.normalize(exp_meta, method, params)
+        norm, cached = exp.normalized_counts(exp_meta, nc_params)
     except ValueError as e:
         _send_failed(out, str(e))
         return
     if not cached:
-        with open(cooked, "w") as f:
-            exp.write_json(f)
-    _send_success(out, norm.json_data(), cls=MyEncoder)
+        exp.write_cooked(cooked)
+    _send_success(out, {"params":nc_params,
+                        "stats":exp.xhr_nc(norm)}, cls=MyEncoder)
+
+
+def _get_nc_params(form):
+    method = form.getfirst("method") if "method" in form else "default"
+    params = {"method":method}
+    return params
 
 
 def do_differential_abundance(out, form):
-    if "method" not in form:
-        raise ValueError("no normalization method specified")
-    norm_method = form.getfirst("method")
-    norm_params = form.getlist("params")
+    da_params = _get_da_params(form)
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    cooked = ds.cooked_file_name(exp_id)
+    from msweb_lib import abundance
+    exp = abundance.parse_cooked(cooked)
+    try:
+        da, cached = exp.differential_abundance(exp_meta, da_params)
+    except ValueError as e:
+        _send_failed(out, str(e))
+        return
+    if not cached:
+        exp.write_cooked(cooked)
+    _send_success(out, {"params":da_params,
+                        "stats":exp.xhr_da(da)}, cls=MyEncoder)
+
+
+def _get_da_params(form):
+    method = form.getfirst("method") if "method" in form else "default"
     categories = form.getlist("categories")
     if not categories:
         raise ValueError("no differential categories specified")
@@ -307,25 +328,15 @@ def do_differential_abundance(out, form):
         mean_cutoff = float(form.getfirst("mean_cutoff", "0.0"))
     except ValueError:
         raise ValueError("non-number value for mean cutoff")
-    try:
-        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
-    except ValueError:
-        return
-    cooked = ds.cooked_file_name(exp_id)
-    from msweb_lib import abundance
-    exp = abundance.parse_cooked(cooked)
-    try:
-        da, cached = exp.differential_abundance(exp_meta, norm_method,
-                                                norm_params, categories,
-                                                control, fc_cutoff,
-                                                mean_cutoff)
-    except ValueError as e:
-        _send_failed(out, str(e))
-        return
-    if not cached:
-        with open(cooked, "w") as f:
-            exp.write_json(f)
-    _send_success(out, da.xhr_data(), cls=MyEncoder)
+    params = {"method":method,
+              "categories":categories,
+              "control":control,
+              "fc_cutoff":fc_cutoff,
+              "mean_cutoff":mean_cutoff}
+    for p in form.keys():
+        if p.startswith("nc_"):
+            params[p] = form.getfirst(p)
+    return params
 
 
 def _get_exp_metadata(out, form):
@@ -404,7 +415,7 @@ if __name__ == "__main__":
     else:
         import sys
         from msweb_lib import datastore
-        exp_id = "17"
+        exp_id = "1"
         ds = datastore.DataStore(DataStorePath)
         exp = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)

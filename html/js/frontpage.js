@@ -229,13 +229,11 @@ frontpage = (function(){
         if (enabled) {
             $("#analyze").removeClass("disabled").removeAttr("disabled");
             $("#download").removeClass("disabled").removeAttr("disabled");
-            $("#browse-fieldset").removeAttr("disabled");
             if (toggle)
                 $("#exp-stats-tabs").collapse("show");
         } else {
             $("#analyze").addClass("disabled").attr("disabled", "disabled");
             $("#download").addClass("disabled").attr("disabled", "disabled");
-            $("#browse-fieldset").attr("disabled", "disabled");
             if (toggle)
                 $("#exp-stats-tabs").collapse("hide");
         }
@@ -383,23 +381,7 @@ frontpage = (function(){
     //   Initialize stats user interface in "browse" tab
     //
     function init_browse_stats() {
-        var columns = $("#browse-stats-columns");
-        $.each(BrowseStatsColumns, function(index, column) {
-            var checkbox = $("<input/>",
-                             { "type": "checkbox",
-                               "class": "browse-stats-cb",
-                               "data-value": index,
-                               "name": column[0] });
-            checkbox.prop("checked", column[3]);
-            var label = $("<label/>", { "for": column[0] }).text(column[1]);
-            columns.append(checkbox, label);
-        });
-        $(".browse-stats-cb").click(function(ev) {
-            var index = $(this).attr("data-value");
-            var checked = $(this).prop("checked");
-            BrowseStatsColumns[index][3] = checked;
-            update_stats_columns();
-        });
+        return;
     }
 
     //
@@ -429,6 +411,10 @@ frontpage = (function(){
                     fill_browse();
                 }
             },
+            error: function(xhr, status, error) {
+                alert("Fetching experiment data failed.");
+                show_status(error);
+            },
         });
     }
 
@@ -449,49 +435,58 @@ frontpage = (function(){
                                 "data-searchable": false,
                                 "data-visible": false })
                         .text("Id"));
-        htr.append($("<th/>", { "data-column-id": "protein" })
-                        .text("Protein"));
-        htr.append($("<th/>", { "data-column-id": "gene" })
-                        .text("Gene"));
+        var std_cols = [ [ "Rank", false ],
+                         [ "Gene", true ],
+                         [ "Protein Name", true ],
+                         [ "Acc #", true ],
+                         [ "Protein MW", false ],
+                         [ "Species", true ],
+                         [ "Uniq Pep", false ],
+                         [ "Num Unique", false ],
+                         [ "% Cov", true ],
+                         [ "Best Expect Val", true ],
+                         [ "Count Total", false ] ];
+        for (var i = 0; i < std_cols.length; i++) {
+            var title = std_cols[i][0];
+            var visible = std_cols[i][1];
+            htr.append($("<th/>", { "data-column-id": title,
+                                    "data-visible": visible })
+                            .text(title));
+        }
         var exp = experiment_metadata[exp_id];
         var run_order = exp.run_order;
         var run_label = exp.run_label;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
-            $.each(BrowseStatsColumns, function(index, column) {
-                var id = run_id + "-" + column[2];
-                var label = run_label[run_name] + "<br/>" + column[2];
-                htr.append($("<th/>", { "data-column-id": id,
-                                        "data-type": "numeric",
-                                        "data-visible": column[3],
-                                        "data-searchable": false })
-                                .text(label));
-            });
+            var id = run_id + "-count";
+            var label = run_label[run_name];
+            htr.append($("<th/>", { "data-column-id": id,
+                                    "data-type": "numeric",
+                                    "data-visible": true,
+                                    "data-searchable": false })
+                            .text(label));
         });
 
         var raw = experiment_stats[exp_id].raw;
         var rows = [];
-        $.each(raw.proteins, function(index, protein) {
-            var row = { id: index };
-            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
-            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
+        for (var pid = 0; pid < raw.proteins["Gene"].length; pid++) {
+            var row = { id: pid };
+            for (var i = 0; i < std_cols.length; i++) {
+                var title = std_cols[i][0];
+                row[title] = raw.proteins[title][pid];
+            }
+            // Matches loop above
             $.each(run_order, function(run_index, run_name) {
                 var run_id = run_index + 1;
-                // Matches loop above
-                var run_data = raw.runs[run_name].protein_stats[index];
-                if (run_data)
-                    $.each(BrowseStatsColumns, function(index, column) {
-                        var column_id = run_id + "-" + column[2];
-                        row[column_id] = run_data[column[1]];
-                    });
+                var id = run_id + "-count";
+                var column = raw.proteins[run_name + " Count"];
+                if (column[pid] !== null)
+                    row[id] = column[pid];
                 else
-                    $.each(BrowseStatsColumns, function(index, column) {
-                        var column_id = run_id + "-" + column[2];
-                        row[column_id] = "-";
-                    });
+                    row[id] = "-";
             });
             rows.push(row);
-        });
+        }
         browse_raw_rows = rows;
         browse_raw_id = exp_id;
         table.append($("<thead/>").append(htr))

@@ -1,515 +1,325 @@
 #!/usr/bin/python3
-# vim: set expandtab ts=4 sw=4:
-from __future__ import print_function, absolute_import
-
-
-normalization_methods = [
-    "default",
-    # "fancy",
-]
-
-
-def parse_raw(filename, verbose=0):
-    import xlrd
-    exp = Experiment(filename)
-    with xlrd.open_workbook(filename) as wb:
-        # There should only be one worksheet
-        if wb.nsheets != 1:
-            raise ValueError("Expected one worksheet and found %d" % wb.nsheets)
-        sh = wb.sheet_by_index(0)
-        if verbose:
-            print("Worksheet: %s (%d rows x %d columns)" % (
-                  sh.name, sh.nrows, sh.ncols))
-
-        # Worksheet starts with rows with
-        #   column 0 = "Search Name:"
-        #   column 1 = name of run
-        row_index = 0
-        while sh.cell_value(rowx=row_index, colx=0).startswith("Search Name"):
-            name = sh.cell_value(rowx=row_index, colx=1)
-            if verbose > 1:
-                print("Search name:", name)
-            exp.add_run(Run(name))
-            row_index += 1
-        if verbose > 1:
-            print("%d search names listed" % len(exp.runs))
-
-        # Next row has some blank columns, followed by
-        # sets of five columns (with first column in set
-        # being a search name), followed by some more
-        # blank columns
-        col_index = 0
-        pre_columns = 0
-        post_columns = 0
-        search_name_columns = [         # Expected columns per search name
-            "Num Unique",
-            "Peptide Count",
-            "% Cov",
-            "Best Disc Score",
-            "Best Expect Val",
-        ]
-        search_name_bases = {}
-        while col_index < sh.ncols:     # Get first set of peptide columns
-            name = sh.cell_value(rowx=row_index, colx=col_index).strip()
-            if name:
-                pre_columns = col_index
-                break
-            col_index += 1
-        while col_index < sh.ncols:
-            name = sh.cell_value(rowx=row_index, colx=col_index).strip()
-            if not name:                # Must have finished all the names
-                post_columns = sh.ncols - col_index
-                break
-            else:
-                try:
-                    run = exp.runs[name]
-                except KeyError:
-                    raise ValueError("Search name title %r found, "
-                                     "but not listed initially" % name)
-                search_name_bases[name] = col_index
-                for i in range(len(search_name_columns)-1):
-                    col_index += 1
-                    v = sh.cell_value(rowx=row_index, colx=col_index).strip()
-                    if v:
-                        raise ValueError("Unexpected title in search name list")
-                col_index += 1
-        row_index += 1
-        if verbose:
-            print("%d titles found for search names" % len(search_name_bases))
-        if verbose > 1:
-            print("%d columns before, %d columns after" %
-                  (pre_columns, post_columns))
-
-        # Next row has the column titles for the peptides
-        # in subsequent rows.  There should be titles matching
-        # the leading blank columns on the previous line,
-        # followed by sets of five columns for each search
-        # name, followed by titles matching blank columns
-        # at the end.
-        column_titles = {}
-        for i in range(pre_columns):
-            title = sh.cell_value(rowx=row_index, colx=i).strip()
-            column_titles[i] = title
-        for i in range(len(search_name_bases)):
-            col_base = pre_columns + i * len(search_name_columns)
-            for j, expected in enumerate(search_name_columns):
-                col_index = col_base + j
-                title = sh.cell_value(rowx=row_index, colx=col_index).strip()
-                if title != expected:
-                    raise ValueError("Expected title %r and got %r" %
-                                     (expected, title))
-        start = pre_columns + len(search_name_columns) * len(search_name_bases)
-        for i in range(start, start + post_columns):
-            title = sh.cell_value(rowx=row_index, colx=i).strip()
-            column_titles[i] = title
-        if verbose > 1:
-            for col_index in sorted(column_titles.keys()):
-                print("Column %d: %s" % (col_index, column_titles[col_index]))
-        row_index += 1
-
-        # The rest of the rows are peptide rows where the first pre-column
-        # should not be empty.  We keep all values as strings unless we
-        # recognize the title.
-        while row_index < sh.nrows:
-            values = {}
-            for col_index, title in column_titles.items():
-                values[title] = sh.cell_value(rowx=row_index, colx=col_index)
-            protein = Protein(values)
-            exp.add_protein(protein)
-            for name, base in search_name_bases.items():
-                v = sh.cell_value(rowx=row_index, colx=base)
-                if not v:
-                    continue
-                run = exp.runs[name]
-                run_stats = {}
-                for offset, title in enumerate(search_name_columns):
-                    v = sh.cell_value(rowx=row_index, colx=base+offset)
-                    run_stats[title] = v
-                run.add_protein_stats(protein, Stats(run_stats))
-            row_index += 1
-        if verbose:
-            print("%d proteins found" % len(exp.proteins))
-
-    return exp
-
-
-def parse_cooked(filename):
-    import json
-    with open(filename) as f:
-        data = json.load(f)
-    return Experiment.from_json(data)
-
-
-def parse_int(s):
-    try:
-        return int(s)
-    except ValueError:
-        return 0
-
-
-def parse_float(s):
-    try:
-        return float(s)
-    except ValueError:
-        return 0.0
-
-
-def parse_percentage(s):
-    return parse_float(s) / 100.0
+# vim: expandtab shiftwidth=4 softtabstop=4:
+from __future__ import print_function
 
 
 """MSWeb "abundance" experiment data.
 
-An experiment consists of a list of proteins and a series of runs.
-A run consists of a list of proteins and their coverage statistics.
+An experiment consists of a list of runs and a pandas DataFrame
+with rows corresponding to proteins, and columns to protein properties.
+Standard protein properties are in ProteinProperties.  Per-experiment
+properties are generated from the run name using run_column()
+and there should be one "Peptide Count"/"PSMs" column for each run,
+as well as a single "Count Total" column that is the sum of all
+the per-run count columns.
 """
+
+
+def no_op(v):
+    return v
 
 
 class Experiment:
 
-    def __init__(self, name):
-        self.name = name        # string
-        self.proteins = []      # list of all Protein instances
-        self.runs = {}          # map of name to Run instance
-        self.normalized = {}    # map of name to NormalizedAbundance instance
-        self.differential = {}  # map of name to DifferentialAbundance instance
+    ProteinProperties = {"Rank":str,
+                         "Uniq Pep":int,
+                         "Acc #":str,
+                         "Gene":str,
+                         "Num Unique":int,
+                         "% Cov":float,
+                         "Best Expect Val":float,
+                         "Protein MW":float,
+                         "Species":str,
+                         "Protein Name":str,}
 
-    def add_protein(self, protein):
-        protein.index = len(self.proteins)
-        self.proteins.append(protein)
+    def __init__(self, name, runs, proteins,
+                 normalized_counts, differential_abundance):
+        """Create experiment from data.
+        
+        `name` - a string, typically the Excel spreadsheet file name.
+        `runs` - a list of run names.
+        `proteins` - a pandas.DataFrame.
+        `normalized_counts` - a list of (parameters, stats) where
+             `params` is a dictionary and `stats` is a
+             pandas.DataFrame.to_dict() dictionary.
+        `differential abundance` - a list of (parameters, stats) where
+             `params` is a dictionary and `stats` is a
+             pandas.DataFrame.to_dict() dictionary."""
 
-    def add_run(self, run):
-        self.runs[run.name] = run
+        self.name = name
+        self.runs = runs
+        self.proteins = proteins
+        self.cache_nc = normalized_counts
+        self.cache_da = differential_abundance
 
-    def write_json(self, f):
+    def write_cooked(self, filename):
         import json
-        json.dump(self.json_data(), f)
-
-    def json_data(self):
-        return {
-            "name": self.name,
-            "proteins": [ p.json_data() for p in self.proteins ],
-            "runs": { r.name: r.json_data()
-                      for r in self.runs.values() },
-            "normalized": { n.name: n.json_data()
-                            for n in self.normalized.values() },
-            "differential": { n.norm_method: n.json_data()
-                              for n in self.differential.values() },
-        }
+        with open(filename, "w") as f:
+            json.dump(self.xhr_data(), f)
 
     def xhr_data(self):
-        return {
-            "name": self.name,
-            "proteins": [ p.json_data() for p in self.proteins ],
-            "runs": { r.name: r.json_data()
-                      for r in self.runs.values() },
-        }
+        return {"name":self.name,
+                "runs":self.runs,
+                "proteins":self.proteins.to_dict(orient="list"),
+                "normalized_counts":self.cache_nc,
+                "differential_abundance":self.cache_da,}
 
-    @staticmethod
-    def from_json(data):
-        exp = Experiment(data["name"])
-        exp.proteins = [ Protein.from_json(d) for d in data["proteins"] ]
-        for i, p in enumerate(exp.proteins):
-            p.index = i
-        exp.runs = { n: Run.from_json(d, exp.proteins)
-                     for n, d in data["runs"].items() }
-        if "normalized" in data:
-            exp.normalized = { n: NormalizedAbundance.from_json(d, exp.proteins)
-                               for n, d in data["normalized"].items() }
-        if "differential" in data:
-            exp.differential = { n: DifferentialAbundance.from_json(d)
-                                 for n, d in data["differential"].items() }
-        return exp
+    def normalized_counts(self, md, params):
+        for nc_params, nc_stats in self.cache_nc:
+            if params == nc_params:
+                import pandas
+                return pandas.DataFrame.from_dict(nc_stats), True
+        df = NormalizedCounts.compute(md, self, params)
+        self.cache_nc.append((params, df.to_dict(orient="list")))
+        return df, False
 
-    def normalize(self, metadata, method, params):
-        try:
-            return self._find_norm(method, params), True
-        except KeyError:
-            pass
-        if method == "default":
-            norm = self.normalize_default(metadata)
-            return norm, False
-        raise ValueError("unsupported normalization method: %s" % method)
+    def xhr_nc(self, df):
+        return df.to_dict(orient="list")
 
-    def _find_norm(self, method, params):
-        norm = self.normalized[method]
-        if params and norm.params != params:
-            raise KeyError("mismatched parameters")
-        return norm
+    def differential_abundance(self, md, params):
+        for da_params, da_stats in self.cache_da:
+            if params == da_params:
+                import pandas
+                return pandas.DataFrame.from_dict(da_stats), True
+        df = DifferentialAbundance.compute(md, self, params)
+        self.cache_da.append((params, df.to_dict(orient="list")))
+        return df, False
 
-    def normalize_default(self, metadata):
+    def xhr_da(self, df):
+        return df.to_dict(orient="list")
+
+
+    @classmethod
+    def parse_raw(cls, filename):
+        import pandas
+
+        # Read the spreadsheet to find the label row
+        # TODO: if performance is important, hand-roll a parser using xlrd
+        # that returns immediately when it sees the label row instead
+        # of reading the whole sheet
+        df = pandas.read_excel(filename, header=None,
+                               converters=cls.ProteinProperties)
+        num_rows, num_cols = df.shape
+        label_row = None
+        for i in range(num_rows):
+            if df[0][i] == "Rank":
+                label_row = i
+                break
+
+        # Pull the experiment names from the first column, skipping empty cells
+        runs = df[0][:label_row].dropna()
+
+        # Read the spreadsheet again to get the actual abundance data
+        df = pandas.read_excel(filename, skiprows=label_row,
+                               converters=cls.ProteinProperties)
+
+        # Make sure that we have the expected columns
+        for col_name in cls.ProteinProperties:
+            if col_name not in df.columns:
+                raise KeyError("column %r missing" % col_name)
+        count_cols = set(df.columns) - set(cls.ProteinProperties.keys())
+        if len(count_cols) != len(runs) + 1:
+            raise ValueError("expected %d count columns and got %d" %
+                             (len(runs) + 1, len(count_cols)))
+        count_names = ["Peptide Count", "PSMs"]
+        for base_name in count_names:
+            if base_name in count_cols:
+                break
+        else:
+            raise KeyError("count columns not found")
+
+        # Rename count columns for runs
+        mapper = {base_name + '.' + str(i + 1):run_column(run_name)
+                   for i, run_name in enumerate(runs)}
+        mapper[base_name] = "Count Total"
+        df.rename(mapper, axis="columns", inplace=True)
+
+        return cls(filename, list(runs), df, [], [])
+
+
+    @classmethod
+    def parse_cooked(cls, filename):
+        import json
+        with open(filename) as f:
+            data = json.load(f)
+
+        from pandas import DataFrame
+        name = data["name"]
+        runs = data["runs"]
+        df = DataFrame.from_dict(data["proteins"])
+        normalized_counts = data["normalized_counts"]
+        differential_abundance = data["differential_abundance"]
+
+        return cls(name, list(runs), df,
+                   normalized_counts, differential_abundance)
+
+
+class _BaseComputation:
+
+    @classmethod
+    def methods(cls):
+        return [name[len(cls._Prefix):] for name in dir(cls)
+                if name.startswith(cls._Prefix)]
+
+    @classmethod
+    def compute(cls, md, exp, params):
+        f = getattr(cls, cls._Prefix + params["method"])
+        return f(md, exp, params)
+
+
+class NormalizedCounts(_BaseComputation):
+    """Normalized counts stats by category.
+
+    Returns pandas.DataFrame.to_dict() dictionary where rows
+    match proteins in experiment, and there are three columns
+    per category in metadata: (mean, sd, count).  Columns are
+    "Mean", "SD" and "Count", prefixed by their category names."""
+
+    _Prefix = "nc_"
+
+    @classmethod
+    def nc_default(cls, md, exp, params):
         #
         # Find maximum sum of peptide counts per run.
         # It will be used to scale run counts later.
         #
-        run_total = {}
-        for run in self.runs.values():
-            run_total[run] = sum([stat.peptide_count
-                                  for stat in run.protein_stats.values()])
-        max_total = float(max(run_total.values()))
+        run_counts = exp.proteins.filter([run_column(run) for run in exp.runs])
+        run_total = run_counts.sum(axis=0)
+        max_total = run_total.max()
         #
-        # Create map from run to category name
+        # Create map from category to run names
         #
-        run2cat = {}
-        for run_name, run_data in metadata["runs"].items():
-            run2cat[run_name] = run_data["category"]
+        cat2runs = {}
+        for run, run_md in md["runs"].items():
+            cat = run_md["category"]
+            col_name = run_column(run)
+            try:
+                cat2runs[cat].append(col_name)
+            except KeyError:
+                cat2runs[cat] = [col_name]
         #
         # Compute per-category dictionary of normalized
         # counts for each protein
         #
         cat_counts = {}
-        for run_name, run in self.runs.items():
-            scale = max_total / run_total[run]
-            cat_name = run2cat[run.name]
-            try:
-                category = cat_counts[cat_name]
-            except KeyError:
-                category = cat_counts[cat_name] = {}
-            for protein, stat in run.protein_stats.items():
-                norm_count = stat.peptide_count * scale
-                try:
-                    category[protein].append(norm_count)
-                except KeyError:
-                    category[protein] = [norm_count]
-        #
-        # Compute per-protein dictionary of per-category
-        # mean, standard deviation and count
-        #
-        import numpy
-        stats = {}
-        for cat_name, category in cat_counts.items():
-            cat_stats = stats[cat_name] = {}
-            for protein in self.proteins:
-                try:
-                    counts = numpy.array(category[protein])
-                except KeyError:
-                    pass
-                else:
-                    mean = numpy.mean(counts)
-                    sd = numpy.std(counts)
-                    cat_stats[protein] = (mean, sd, len(counts))
-        norm = NormalizedAbundance("default", {}, stats)
-        self.normalized["default"] = norm
-        return norm
+        for cat, runs in cat2runs.items():
+            columns = exp.proteins.filter(runs)
+            for run in runs:
+                scale = max_total / run_total[run]
+                columns[run] *= scale
+            cat_counts[cat_column(cat, "Mean")] = columns.mean(axis=1)
+            cat_counts[cat_column(cat, "SD")] = columns.std(axis=1)
+            cat_counts[cat_column(cat, "Count")] = columns.count(axis=1)
 
-    def differential_abundance(self, metadata, norm_method, norm_params,
-                               categories, control, fc_cutoff, mean_cutoff):
-        params = {"norm_params": norm_params,
-                  "categories": list(sorted(categories)),
-                  "control": control,
-                  "fc_cutoff": fc_cutoff,
-                  "mean_cutoff": mean_cutoff}
-        try:
-            return self._find_diff_abundance(norm_method, params), True
-        except KeyError:
-            pass
-        norm, cached = self.normalize(metadata, norm_method, norm_params)
-        df = norm.pandas_dataframe(self.proteins, categories)
+        import pandas
+        return pandas.DataFrame(cat_counts)
+
+
+class DifferentialAbundance(_BaseComputation):
+    """Normalized counts stats by category.
+
+    Returns pandas.DataFrame.to_dict() dictionary where rows
+    match proteins in experiment, and there are three columns
+    per category in metadata: (mean, sd, count).  Columns are
+    "Mean", "SD" and "Count", prefixed by their category names."""
+
+    _Prefix = "da_"
+
+    @classmethod
+    def da_default(cls, md, exp, params):
+        # TODO: more here
+        nc_params = {name[3:]:value for name, value in params.items()
+                     if name.startswith("nc_")}
+        nc_df, cached = exp.normalized_counts(md, nc_params)
         try:
             from .diff_abundance import calc_diff_abundance
         except ImportError:
+            # Test code below cannot use relative import
             from diff_abundance import calc_diff_abundance
-        pda = calc_diff_abundance(df, categories, control,
-                                  fc_cutoff, mean_cutoff)
-        da = DifferentialAbundance(norm_method, params, pda)
-        self.differential[norm_method] = da
-        return da, False
-
-    def _find_diff_abundance(self, norm_method, params):
-        da = self.differential[norm_method]
-        if params != da.params:
-            raise KeyError("mismatched parameters")
-        return da
+        da_df = calc_diff_abundance(nc_df, params["categories"],
+                                    params["control"], params["fc_cutoff"],
+                                    params["mean_cutoff"])
+        return da_df
 
 
-class NormalizedAbundance:
-    """Normalized abundance values by category.
 
-    Each category is a map from protein to (mean, sd, count)."""
-
-    def __init__(self, name, params, stats):
-        self.name = name
-        self.params = params
-        self.stats = stats
-
-    def json_data(self):
-        """Returns normalized stats, replacing Protein instances by indices."""
-
-        json_stats = {}
-        for cat_name, category in self.stats.items():
-            index_data = json_stats[cat_name] = {}
-            for protein, protein_stats in category.items():
-                index_data[protein.index] = protein_stats
-        return {"name":self.name, "params":self.params, "stats":json_stats}
-
-    def pandas_dataframe(self, proteins, categories):
-        # Return pandas data frame intended for use with
-        # differential abundance calculation.  Data frame
-        # always has "Rows" column corresponding to the given
-        # protein indices.  Each given category generates three
-        # additional columns: "<category_name> Mean",
-        # "<category_name> SD" and "<category_name> Count".
-        import pandas, numpy
-        df = {"Rows": pandas.Categorical([p.index for p in proteins])}
-        for cat_name in categories:
-            category = self.stats[cat_name]
-            mean = []
-            sd = []
-            count = []
-            default_stats = (numpy.nan, numpy.nan, numpy.nan)
-            for p in proteins:
-                protein_stats = category.get(p, default_stats)
-                mean.append(protein_stats[0])
-                sd.append(protein_stats[1])
-                count.append(protein_stats[2])
-            df[cat_name + " Mean"] = mean
-            df[cat_name + " SD"] = sd
-            df[cat_name + " Count"] = count
-        return pandas.DataFrame(df)
-
-    @staticmethod
-    def from_json(data, proteins):
-        stats = {}
-        for cat_name, category in data["stats"].items():
-            protein_data = stats[cat_name] = {}
-            for n, protein_stats in category.items():
-                protein_data[proteins[int(n)]] = protein_stats
-        return NormalizedAbundance(data["name"], data["params"], stats)
+def run_column(run):
+    """Return run column name in Experiments.proteins."""
+    return "%s Count" % run
 
 
-class DifferentialAbundance:
-    """Differential abundance of proteins."""
-
-    def __init__(self, norm_method, params, dataframe):
-        self.norm_method = norm_method
-        self.params = params
-        self.dataframe = dataframe
-
-    def json_data(self):
-        return {"norm_method":self.norm_method,
-                "params":self.params,
-                "dataframe":self.dataframe.to_dict()}
-
-    def xhr_data(self):
-        # Return data for AJAX request
-        return {"norm_method":self.norm_method,
-                "params":self.params,
-                "stats":self.dataframe.to_dict(orient="split")}
-
-    @staticmethod
-    def from_json(data):
-        from pandas import DataFrame
-        return DifferentialAbundance(data["norm_method"], data["params"],
-                                     DataFrame.from_dict(data["dataframe"]))
+def cat_column(cat, which):
+    """Return category column name in NormalizedCounts."""
+    return "%s %s" % (cat, which)
 
 
-class _AttrLabelStore:
-    """Base class for storing dictionary as instance attributes.
-
-    Derived classes must define the "AttrLabelMap" class dictionary
-    whose keys are instance attribute names and values are string
-    label keys from raw data dictionaries."""
-
-    def __init__(self, data):
-        for attr, label in self.AttrLabelMap.items():
-            setattr(self, attr, data[label])
-
-    def json_data(self):
-        return { label: getattr(self, attr)
-                 for attr, label in self.AttrLabelMap.items() }
-
-    @classmethod
-    def from_json(cls, data):
-        return cls(data)
+def parse_raw(*args):
+    return Experiment.parse_raw(*args)
 
 
-class Protein(_AttrLabelStore):
-
-    AttrLabelMap = {
-        "rank": "Rank",
-        "unique_peptides": "Uniq Pep",
-        "accession": "Acc #",
-        "gene": "Gene",
-        "molecular_weight": "Protein MW",
-        "species": "Species",
-        "name": "Protein Name",
-    }
+def parse_cooked(*args):
+    return Experiment.parse_cooked(*args)
 
 
-class Run:
-
-    def __init__(self, name):
-        self.name = name
-        self.protein_stats = {}
-
-    def add_protein_stats(self, protein, stats):
-        self.protein_stats[protein] = stats
-
-    def json_data(self):
-        return {
-            "name": self.name,
-            "protein_stats": { p.index: s.json_data()
-                               for p, s in self.protein_stats.items() },
-        }
-
-    @staticmethod
-    def from_json(data, proteins):
-        r = Run(data["name"])
-        for n, d in data["protein_stats"].items():
-            r.protein_stats[proteins[int(n)]] = Stats.from_json(d)
-        return r
-
-
-class Stats(_AttrLabelStore):
-
-    AttrLabelMap = {
-        "unique_peptides": "Num Unique",
-        "peptide_count": "Peptide Count",
-        "coverage": "% Cov",
-        "best_score": "Best Disc Score",
-        "best_expected": "Best Expect Val",
-    }
+def normalization_methods():
+    return NormalizedCounts.methods()
 
 
 if __name__ == "__main__":
+    def test_parse_raw():
+        import sys
+        try:
+            filename = sys.argv[1]
+        except IndexError:
+            filename = "results-Plnx2-Sem5a-may19-sent-foruploading.xlsx"
+            # filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
+            filename = "../../experiments/" + filename
+        exp = Experiment.parse_raw(filename)
+        print(exp.runs)
+        print(exp.proteins)
+        print(exp.proteins.dtypes)
+        return exp
+    # test_parse_raw()
 
-    def main():
-        import sys, getopt
-        verbose = 0
-        opts, args = getopt.getopt(sys.argv[1:], "v")
-        for opt, val in opts:
-            if opt == "-v":
-                verbose += 1
-        if len(args) == 1:
-            input_name = args[0]
-            output_name = None
-        elif len(args) == 2:
-            input_name = args[0]
-            output_name = args[1]
-        else:
-            print("Usage: %s [-v] excel_file [json_file]" % sys.argv[0],
-                  file=sys.stderr)
-            raise SystemExit(1)
+    def test_parse_cooked():
+        exp = test_parse_raw()
+        test_file = "test.json"
+        exp.write_cooked(test_file)
+        nexp = Experiment.parse_cooked(test_file)
+        print(nexp.proteins)
+    # test_parse_cooked()
 
-        exp = parse_raw(input_name, verbose=verbose)
-        print(exp)
-        json_data = exp.json_data()
-        exp2 = Experiment.from_json(json_data)
-        print(exp2)
-    # main()
-
-    def test_abundance():
+    def test_normalized_counts():
         from datastore import DataStore
         ds = DataStore("../../experiments")
-        exp_id = "17"
+        exp_id = "1"
         metadata = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
-        # norm = exp.normalize_default(metadata)
-        cat_list = ["control", "L1", "L2", "L3", "L4", "L5" ]
-        da, cached = exp.differential_abundance(metadata, "default", {},
-                                                cat_list, "control", 1.0, 0.0)
+        params = {
+            "method":"default",
+        }
+        nc, cached = exp.normalized_counts(metadata, params)
         print(cached)
-        print(da)
-        print(da.xhr_data())
-    test_abundance()
+        print(nc)
+    # test_normalized_counts()
+
+    def test_differential_abundance():
+        from datastore import DataStore
+        ds = DataStore("../../experiments")
+        exp_id = "1"
+        metadata = ds.experiments[exp_id]
+        cooked = ds.cooked_file_name(exp_id)
+        exp = parse_cooked(cooked)
+        params = {
+            "nc_method":"default",
+            "method":"default",
+            "categories":["control", "test"],
+            "control":"control",
+            "fc_cutoff":1.0,
+            "mean_cutoff":0.0,
+        }
+        da, cached = exp.differential_abundance(metadata, params)
+        print(cached)
+        print(exp.xhr_da(da))
+    test_differential_abundance()

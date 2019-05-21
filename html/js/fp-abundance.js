@@ -21,6 +21,10 @@ abundance = (function(){
                 else
                     normalization_methods = data.results.methods;
             },
+            error: function(xhr, status, error) {
+                alert("Fetching normalization methods failed.");
+                frontpage.show_status(error);
+            },
         });
     }
 
@@ -251,13 +255,16 @@ abundance = (function(){
                             frontpage.show_ajax_error(data.status, data.reason,
                                                       data.cause);
                         else {
-                            this.stats.norm_method = data.results.name;
                             this.stats.norm_params = data.results.params;
                             this.stats.norm_stats = data.results.stats;
                             this.make_normalized_counts(this.card_container);
                             this.disable(".need-normalized", false);
                         }
                     }.bind(this),
+                    error: function(xhr, status, error) {
+                        alert("Fetching normalized counts failed.");
+                        show_status(error);
+                    },
                 });
             }
             if (normalization_methods.length == 1)
@@ -302,26 +309,24 @@ abundance = (function(){
             var okay = dialog.find(".modal-okay-button");
             okay.off("click");
             okay.on("click", function(ev) {
-                var params = [];
-                $.each(this.stats.norm_params, function(key, value) {
-                    params.push(key + "=" + value);
-                });
                 frontpage.show_status("computing differential abundance...", true)
+                var data = {
+                    action: "differential_abundance",
+                    exp_id: this.exp_id,
+                    method: "default",
+                    categories: categories.selectpicker("val"),
+                    control: control.val(),
+                    fc_cutoff: fc_cutoff.val(),
+                    mean_cutoff: mean_cutoff.val(),
+                }
+                for (var nc_prop in this.stats.norm_params)
+                    data["nc_" + nc_prop] = this.stats.norm_params[nc_prop];
                 $.ajax({
                     dataType: "json",
                     method: "POST",
                     traditional: true,
                     url: frontpage.url,
-                    data: {
-                        action: "differential_abundance",
-                        exp_id: this.exp_id,
-                        method: this.stats.norm_method,
-                        params: params,
-                        categories: categories.selectpicker("val"),
-                        control: control.val(),
-                        fc_cutoff: fc_cutoff.val(),
-                        mean_cutoff: mean_cutoff.val(),
-                    },
+                    data: data,
                     success: function(data) {
                         frontpage.show_status("", false)
                         if (data.status != "success")
@@ -334,6 +339,10 @@ abundance = (function(){
                             this.disable(".need-differential", false);
                         }
                     }.bind(this),
+                    error: function(xhr, status, error) {
+                        alert("Fetching differential abundance failed.");
+                        frontpage.show_status(error);
+                    },
                 });
             }.bind(this));
             dialog.modal();
@@ -500,7 +509,7 @@ abundance = (function(){
 
         make_normalized_counts(container) {
             if (this.normalized_counts_table_id === undefined) {
-                var title = "Normalized Counts (method: " + this.stats.norm_method + ")";
+                var title = "Normalized Counts (method: " + this.stats.norm_params.method + ")";
                 var card = this.make_collapsible_card(container, "nc", title);
                 var body = card.find(".card-body");
                 var div = $("<div/>", { "class": "table-responsive" })
@@ -555,13 +564,16 @@ abundance = (function(){
         rowCount: [20, 50, 100, -1],
         formatters: {
             floats: function(column, row) {
-                var value = row[column.id];
-                if (value == "-")
-                    return value;
+                var mean = row[column.id];
+                if (mean === null)
+                    return "-";
                 else {
                     var sd = row[column.id + "_sd"];
-                    return value.toFixed(2) + " &plusmn; " + sd.toFixed(2);
-                    // console.log(value + '+' + sd);
+                    if (sd === null)
+                        return mean.toFixed(2)
+                    else
+                        return mean.toFixed(2) + " &plusmn; " + sd.toFixed(2);
+                    // console.log(mean + '+' + sd);
                 }
             }
         },
@@ -586,10 +598,9 @@ abundance = (function(){
                         .text("Protein"));
         htr.append($("<th/>", { "data-column-id": "gene" })
                         .text("Gene"));
-        var exp = metadata;
         var raw = stats.raw;
         var norm = stats.norm_stats;
-        var cat_order = Object.keys(norm).sort();
+        var cat_order = metadata.run_categories.sort();
         $.each(cat_order, function(cat_index, cat_name) {
             var id = "nc-" + cat_name;
             htr.append($("<th/>", { "data-column-id": id,
@@ -601,23 +612,20 @@ abundance = (function(){
         });
 
         var rows = [];
-        $.each(raw.proteins, function(protein_index, protein) {
-            var row = { id: protein_index };
-            row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
-            row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
+        var accs = raw.proteins["Acc #"];
+        var genes = raw.proteins["Gene"];
+        for (var pid = 0; pid < accs.length; pid++) {
+            var row = { id: pid };
+            row["protein"] = accs[pid] ? accs[pid].toString() : "-";
+            row["gene"] = genes[pid] ? genes[pid].toString() : "-";
             $.each(cat_order, function(cat_index, cat_name) {
                 // Matches loop above
                 var column_id = "nc-" + cat_name;
-                var counts = norm[cat_name][protein_index];
-                if (!counts)
-                    row[column_id] = "-";
-                else {
-                    row[column_id] = counts[0];
-                    row[column_id + "_sd"] = counts[1];
-                }
+                row[column_id] = norm[cat_name + " Mean"][pid];
+                row[column_id + "_sd"] = norm[cat_name + " SD"][pid];
             });
             rows.push(row);
-        });
+        }
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
              .bootgrid(NormalizedCountsTableOptions)
@@ -646,51 +654,49 @@ abundance = (function(){
         $(selector).bootgrid("destroy");
         var table = $(selector).empty();
         var htr = $("<tr/>");
+        var da_stats = stats.da_stats;
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
                                 "data-type": "numeric",
                                 "data-searchable": false,
                                 "data-visible": false })
                         .text("Id"));
-        $.each(stats.da_stats.columns, function(col_index, col_name) {
-            if (col_name == "Rows") {
-                htr.append($("<th/>", { "data-column-id": "protein" })
-                                .text("Protein"));
-                htr.append($("<th/>", { "data-column-id": "gene" })
-                                .text("Gene"));
-            } else {
-                var id = "nc-" + col_name;
-                htr.append($("<th/>", { "data-column-id": id,
-                                        "data-converter": "numeric",
-                                        "data-formatter": "nullmeric",
-                                        "data-visible": true,
-                                        "data-searchable": false })
-                                .text(col_name));
-            }
-        });
+        htr.append($("<th/>", { "data-column-id": "protein" })
+                        .text("Protein"));
+        htr.append($("<th/>", { "data-column-id": "gene" })
+                        .text("Gene"));
+        for (var col_name in da_stats) {
+            if (col_name == "Row")
+                continue
+            var id = "nc-" + col_name;
+            htr.append($("<th/>", { "data-column-id": id,
+                                    "data-converter": "numeric",
+                                    "data-formatter": "nullmeric",
+                                    "data-visible": true,
+                                    "data-searchable": false })
+                            .text(col_name));
+        }
 
         var rows = [];
-        $.each(stats.da_stats.data, function(row_index, row_data) {
-            var row = {};
-            $.each(stats.da_stats.columns, function(col_index, col_name) {
+        var accs = stats.raw.proteins["Acc #"];
+        var genes = stats.raw.proteins["Gene"];
+        for (var pid = 0; pid < accs.length; pid++) {
+            var row = { id: pid };
+            row["protein"] = accs[pid] ? accs[pid].toString() : "-";
+            row["gene"] = genes[pid] ? genes[pid].toString() : "-";
+            for (var col_name in da_stats) {
                 // Matches loop above
-                var value = row_data[col_index];
-                if (col_name == "Rows") {
-                    var protein_index = parseInt(value);
-                    var protein = stats.raw.proteins[protein_index];
-                    row["id"] = protein_index;
-                    row["protein"] = protein["Acc #"] ? protein["Acc #"].toString() : "-";
-                    row["gene"] = protein["Gene"] ? protein["Gene"].toString() : "-";
-                } else {
-                    var column_id = "nc-" + col_name;
-                    if (value === null)
-                        row[column_id] = Infinity;
-                    else
-                        row[column_id] = value;
-                }
-            });
+                if (col_name == "Rows")
+                    continue;
+                var value = da_stats[col_name][pid];
+                var column_id = "nc-" + col_name;
+                if (value === null)
+                    row[column_id] = Infinity;
+                else
+                    row[column_id] = value;
+            }
             rows.push(row);
-        });
+        }
         table.append($("<thead/>").append(htr))
              .append($("<tbody/>"))
              .bootgrid(DifferentialAbundanceTableOptions)
