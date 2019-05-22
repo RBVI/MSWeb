@@ -64,25 +64,29 @@ class Experiment:
                 "normalized_counts":self.cache_nc,
                 "differential_abundance":self.cache_da,}
 
-    def normalized_counts(self, md, params):
-        for nc_params, nc_stats in self.cache_nc:
-            if params == nc_params:
-                import pandas
-                return pandas.DataFrame.from_dict(nc_stats), True
+    def normalized_counts(self, md, params, use_cache=True):
+        if use_cache:
+            for nc_params, nc_stats in self.cache_nc:
+                if params == nc_params:
+                    import pandas
+                    return pandas.DataFrame.from_dict(nc_stats), True
         df = NormalizedCounts.compute(md, self, params)
-        self.cache_nc.append((params, df.to_dict(orient="list")))
+        if use_cache:
+            self.cache_nc.append((params, df.to_dict(orient="list")))
         return df, False
 
     def xhr_nc(self, df):
         return df.to_dict(orient="list")
 
-    def differential_abundance(self, md, params):
-        for da_params, da_stats in self.cache_da:
-            if params == da_params:
-                import pandas
-                return pandas.DataFrame.from_dict(da_stats), True
+    def differential_abundance(self, md, params, use_cache=True):
+        if use_cache:
+            for da_params, da_stats in self.cache_da:
+                if params == da_params:
+                    import pandas
+                    return pandas.DataFrame.from_dict(da_stats), True
         df = DifferentialAbundance.compute(md, self, params)
-        self.cache_da.append((params, df.to_dict(orient="list")))
+        if use_cache:
+            self.cache_da.append((params, df.to_dict(orient="list")))
         return df, False
 
     def xhr_da(self, df):
@@ -231,6 +235,7 @@ class DifferentialAbundance(_BaseComputation):
         nc_params = {name[3:]:value for name, value in params.items()
                      if name.startswith("nc_")}
         nc_df, cached = exp.normalized_counts(md, nc_params)
+        nc_df["Rows"] = nc_df.index
         try:
             from .diff_abundance import calc_diff_abundance
         except ImportError:
@@ -319,7 +324,7 @@ if __name__ == "__main__":
             "fc_cutoff":1.0,
             "mean_cutoff":0.0,
         }
-        da, cached = exp.differential_abundance(metadata, params)
+        da, cached = exp.differential_abundance(metadata, params, use_cache=False)
         print(cached)
         print(exp.xhr_da(da))
     test_differential_abundance()
