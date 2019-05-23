@@ -94,7 +94,7 @@ class Experiment:
 
 
     @classmethod
-    def parse_raw(cls, filename):
+    def parse_raw(cls, name, filename):
         import pandas
 
         # Read the spreadsheet to find the label row
@@ -125,20 +125,40 @@ class Experiment:
         if len(count_cols) != len(runs) + 1:
             raise ValueError("expected %d count columns and got %d" %
                              (len(runs) + 1, len(count_cols)))
-        count_names = ["Peptide Count", "PSMs"]
+        count_names = {"Peptide Count":"Peptide Count",
+                       "PSMs":"PSM"}
         for base_name in count_names:
             if base_name in count_cols:
                 break
         else:
             raise KeyError("count columns not found")
 
-        # Rename count columns for runs
-        mapper = {base_name + '.' + str(i + 1):run_column(run_name)
-                   for i, run_name in enumerate(runs)}
+        # Rename count columns for runs.
+        # pandas requires unique column names, so the next column with
+        # an identical name gets a ".X" appended to it, where X=1 for
+        # the second, X=2 for the third, etc.
+        # If the base (total) column name and the run column names
+        # are the same (eg "Peptide Count"), the run columns, in
+        # order, are colname.1, colname.2, colname.3, etc.
+        # When base name and run names are different
+        # (eg, "PSMs" and "PSM"), the run columns, in order are
+        # colname, colname.1, colname.2, etc.
+        # Code below handles the two cases.
+        col_name = count_names[base_name]
+        if col_name == base_name:
+            # Run columns have a 1-based numeric suffix
+            mapper = {col_name + '.' + str(i + 1):run_column(run_name)
+                      for i, run_name in enumerate(runs)}
+        else:
+            # Run columns have a 0-based numeric suffix
+            # except for the first one which has no suffix
+            mapper = {col_name + '.' + str(i):run_column(run_name)
+                      for i, run_name in enumerate(runs)}
+            mapper[col_name] = mapper[col_name + '.0']
         mapper[base_name] = "Count Total"
         df.rename(mapper, axis="columns", inplace=True)
 
-        return cls(filename, list(runs), df, [], [])
+        return cls(name, list(runs), df, [], [])
 
 
     @classmethod
@@ -231,7 +251,6 @@ class DifferentialAbundance(_BaseComputation):
 
     @classmethod
     def da_default(cls, md, exp, params):
-        # TODO: more here
         nc_params = {name[3:]:value for name, value in params.items()
                      if name.startswith("nc_")}
         nc_df, cached = exp.normalized_counts(md, nc_params)
@@ -276,13 +295,14 @@ if __name__ == "__main__":
         try:
             filename = sys.argv[1]
         except IndexError:
-            filename = "results-Plnx2-Sem5a-may19-sent-foruploading.xlsx"
-            # filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
+            # filename = "results-Plnx2-Sem5a-may19-sent-foruploading.xlsx"
+            filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
             filename = "../../experiments/" + filename
-        exp = Experiment.parse_raw(filename)
+        exp = Experiment.parse_raw("filename", filename)
         print(exp.runs)
-        print(exp.proteins)
+        # print(exp.proteins)
         print(exp.proteins.dtypes)
+        print(exp.proteins.columns)
         return exp
     # test_parse_raw()
 
@@ -312,17 +332,34 @@ if __name__ == "__main__":
     def test_differential_abundance():
         from datastore import DataStore
         ds = DataStore("../../experiments")
-        exp_id = "1"
+        exp_id = "8"
         metadata = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
         params = {
             "nc_method":"default",
             "method":"default",
-            "categories":["control", "test"],
-            "control":"control",
-            "fc_cutoff":1.0,
-            "mean_cutoff":0.0,
+            "categories":[
+                "control cortex-contralateral 24h",
+                "control cortex-contralateral 48h",
+                "control cortex-ipsilateral 24h",
+                "control cortex-ipsilateral 48h",
+                "control hypothalamus-contralateral 24h",
+                "control hypothalamus-contralateral 48h",
+                "control hypothalamus-ipsilateral 24h",
+                "control hypothalamus-ipsilateral 48h",
+                "shame-cortex-contralateral 24h",
+                "shame-cortex-ipsilateral 24h",
+                "shame-hypothalamus-contralateral 24h",
+                "shame-hypothalamus-ipsilateral 24h",
+                "treatment-cortex-contralateral 24h",
+                "treatment-cortex-ipsilateral 24h",
+                "treatment-hypothalamus-contralateral 24h",
+                "treatment-hypothalamus-ipsilateral 24h",
+            ],
+            "control":"control cortex-contralateral 48h",
+            "fc_cutoff":1,
+            "mean_cutoff":0,
         }
         da, cached = exp.differential_abundance(metadata, params, use_cache=False)
         print(cached)

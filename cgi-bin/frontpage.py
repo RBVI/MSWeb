@@ -89,7 +89,7 @@ def do_file_upload(out, form):
     tmp_file_name = ds.raw_file_name(0) + "-" + str(os.getpid())
     with open(tmp_file_name, "wb") as f:
         f.write(datafile.file.read())
-    exp = abundance.parse_raw(tmp_file_name)
+    exp = abundance.parse_raw(filename, tmp_file_name)
     exp_id = ds.add_experiment(exp)
     raw_file_name = ds.raw_file_name(exp_id)
     os.rename(tmp_file_name, raw_file_name)

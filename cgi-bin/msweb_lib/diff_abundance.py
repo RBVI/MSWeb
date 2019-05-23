@@ -63,6 +63,8 @@ def calc_diff_abundance(mean_abundance_table, catList, controlColumn='Control', 
         diff_exp[cat+' log2FC'] = log2FC
 
         rows = filter(log2FC, control, control_count, cond, cond_sd, cond_count, fc_cutoff, mean_cutoff)
+        if not rows:
+            continue
 
         # print(rows)
         ttest = stats.ttest_ind_from_stats(control.iloc[rows], control_sd.iloc[rows], control_count.iloc[rows],

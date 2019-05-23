@@ -34,6 +34,13 @@ abundance = (function(){
             this.tab_container = container;
             this.exp_id = exp_id;
             this.metadata = metadata;
+            // Fix up metadata run_categories so that it contains only
+            // categories that are in use
+            var runs = metadata.runs;
+            var used_categories = {};
+            for (var run in runs)
+                used_categories[runs[run].category] = 1;
+            metadata.run_categories = Object.keys(used_categories).sort();
             this.stats = stats;
             this.volcano = 0;
             this.initialize();
@@ -456,8 +463,11 @@ abundance = (function(){
             var control = this.stats.da_params.control;
             var body = dialog.find(".modal-body").empty();
             var form = $("<form/>").appendTo(body);
-            var cat_names = this.metadata.run_categories.slice();
-            cat_names.splice(cat_names.indexOf(control), 1);
+            var da_stats = this.stats.da_stats;
+            var cat_names = this.metadata.run_categories.filter(function(cat) {
+                return (da_stats[cat + " pValue"] !== undefined &&
+                        da_stats[cat + " log2FC"] !== undefined);
+            });
             var cat_id = this.make_id("volcano", "cat");
             var cat_field = this.add_field(form, cat_id, "Category");
             var cat = this.add_select(cat_field, cat_id, cat_names);
@@ -546,7 +556,7 @@ abundance = (function(){
                 this.add_card_buttons(card, [ [ "fa-times-circle", close_card ] ]);
                 this.differential_table_id = table_id;
             }
-            show_differential_table(this.differential_table_id, this.metadata, this.stats);
+            show_differential_abundance_table(this.differential_table_id, this.metadata, this.stats);
             // body.collapse("hide");
         }
 
@@ -600,7 +610,7 @@ abundance = (function(){
                         .text("Gene"));
         var raw = stats.raw;
         var norm = stats.norm_stats;
-        var cat_order = metadata.run_categories.sort();
+        var cat_order = metadata.run_categories;
         $.each(cat_order, function(cat_index, cat_name) {
             var id = "nc-" + cat_name;
             htr.append($("<th/>", { "data-column-id": id,
@@ -646,10 +656,10 @@ abundance = (function(){
     };
 
     //
-    // show_differential_table:
+    // show_differential_abundance_table:
     //   Display differential abundance for given experiment.
     //
-    function show_differential_table(table_id, metadata, stats) {
+    function show_differential_abundance_table(table_id, metadata, stats) {
         var selector = "#" + table_id;
         $(selector).bootgrid("destroy");
         var table = $(selector).empty();
@@ -666,7 +676,7 @@ abundance = (function(){
         htr.append($("<th/>", { "data-column-id": "gene" })
                         .text("Gene"));
         for (var col_name in da_stats) {
-            if (col_name == "Row")
+            if (col_name == "Rows")
                 continue
             var id = "nc-" + col_name;
             htr.append($("<th/>", { "data-column-id": id,
