@@ -131,7 +131,7 @@ class Experiment:
             if base_name in count_cols:
                 break
         else:
-            raise KeyError("count columns not found")
+            raise KeyError("Total count columns not found")
 
         # Rename count columns for runs.
         # pandas requires unique column names, so the next column with
@@ -155,7 +155,12 @@ class Experiment:
             mapper = {col_name + '.' + str(i):run_column(run_name)
                       for i, run_name in enumerate(runs)}
             mapper[col_name] = mapper[col_name + '.0']
+            del mapper[col_name + '.0']
         mapper[base_name] = "Count Total"
+        missing = [expected for expected in mapper.keys()
+                   if expected not in df.columns]
+        if missing:
+            raise KeyError("Missing run columns: %s" % ", ".join(missing))
         df.rename(mapper, axis="columns", inplace=True)
 
         return cls(name, list(runs), df, [], [])
@@ -296,7 +301,8 @@ if __name__ == "__main__":
             filename = sys.argv[1]
         except IndexError:
             # filename = "results-Plnx2-Sem5a-may19-sent-foruploading.xlsx"
-            filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
+            # filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
+            filename = "raw/raw-12"
             filename = "../../experiments/" + filename
         exp = Experiment.parse_raw("filename", filename)
         print(exp.runs)
@@ -304,7 +310,7 @@ if __name__ == "__main__":
         print(exp.proteins.dtypes)
         print(exp.proteins.columns)
         return exp
-    # test_parse_raw()
+    test_parse_raw()
 
     def test_parse_cooked():
         exp = test_parse_raw()
@@ -364,4 +370,4 @@ if __name__ == "__main__":
         da, cached = exp.differential_abundance(metadata, params, use_cache=False)
         print(cached)
         print(exp.xhr_da(da))
-    test_differential_abundance()
+    # test_differential_abundance()

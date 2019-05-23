@@ -87,12 +87,22 @@ def do_file_upload(out, form):
     filename = os.path.basename(datafile.filename)
     ds = datastore.DataStore(DataStorePath)
     tmp_file_name = ds.raw_file_name(0) + "-" + str(os.getpid())
-    with open(tmp_file_name, "wb") as f:
-        f.write(datafile.file.read())
-    exp = abundance.parse_raw(filename, tmp_file_name)
-    exp_id = ds.add_experiment(exp)
-    raw_file_name = ds.raw_file_name(exp_id)
-    os.rename(tmp_file_name, raw_file_name)
+    try:
+        with open(tmp_file_name, "wb") as f:
+            f.write(datafile.file.read())
+        try:
+            exp = abundance.parse_raw(filename, tmp_file_name)
+        except KeyError as e:
+            _send_failed(out, str(e))
+            return
+        exp_id = ds.add_experiment(exp)
+        raw_file_name = ds.raw_file_name(exp_id)
+        os.rename(tmp_file_name, raw_file_name)
+    finally:
+        try:
+            os.remove(tmp_file_name)
+        except OSError:
+            pass
     exp.write_cooked(ds.cooked_file_name(exp_id))
     ds.update_experiment(exp_id, {
         "uploader": os.environ.get("REMOTE_USER", "anonymous"),
