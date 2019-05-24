@@ -348,9 +348,9 @@ plot = (function(){
             colorbar: { title: { text: "Log2FC", side: "right", }, },
         }];
         var layout = {
-            title: metadata.title,
             automargin: true,
-            xaxis: { side: 'top', ticks: '' },
+            title: metadata.title,
+            xaxis: { side: 'top', automargin: true, ticks: '' },
             yaxis: { side: 'left', automargin: true,
                      tick0: 0, dtick: 1, ticks: '', ticksuffix: ' ' },
         };
