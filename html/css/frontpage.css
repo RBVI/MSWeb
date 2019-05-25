@@ -50,6 +50,11 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     max-height: 3rem;
     filter: contrast(200%);
 }
+.abundance-count-column {
+    max-width: 10rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 /* Add disclosure triangle before collapse link */
 [data-toggle="collapse"] .fa:before {   
     margin-right: 0.5rem;

@@ -69,7 +69,7 @@ frontpage = (function(){
         rowSelect: true,
         multiSelect: false,
         keepSelection: true,
-        rowCount: [20, 50, 100, -1],
+        rowCount: [10, 20, 50, 100, -1],
         formatters: {
             "copy": function(column, row) {
                 return '<button data-row-id="' + row.id +
@@ -140,7 +140,7 @@ frontpage = (function(){
                 });
             });
         $("#download-raw").click(download_experiment);
-        $("#download-csv").click(unimplemented);
+        $("#download-csv").click(download_csv);
         $("#download-selected").click(unimplemented);
         $("#analyze").click(analyze_experiment);
         browse_experiment_enable(false, true);
@@ -168,9 +168,6 @@ frontpage = (function(){
         // If an experiment was selected, select it again.
         //
         if (experiment_init_target !== null) {
-            // tbl.on("appended.rs.jquery.bootgrid", function() {
-            //     console.log("appended");
-            // });
             tbl.on("loaded.rs.jquery.bootgrid", function() {
                 // console.log("loaded");
                 if (experiment_init_target === null)
@@ -210,7 +207,7 @@ frontpage = (function(){
     //   selects a different row
     //
     function browse_experiment_deselected(ev, rows) {
-        // console.log("deselected");
+        // console.log("deselected", browse_exp_id, browse_raw_id);
         if (browse_exp_id) {
             // XXX: clear out runs and data tables?
             browse_exp_id = undefined;
@@ -366,7 +363,7 @@ frontpage = (function(){
         rowSelect: true,
         multiSelect: true,
         keepSelection: true,
-        rowCount: [20, 50, 100, -1],
+        rowCount: [10, 20, 50, 100, -1],
     };
     var BrowseStatsColumns = [
         [ "unique_peptides", "Num Unique", "Unique", false, ],
@@ -374,6 +371,19 @@ frontpage = (function(){
         [ "coverage", "% Cov", "Cov", false, ],
         [ "best_score", "Best Disc Score", "Score", false, ],
         [ "best_expected", "Best Expect Val", "Exp", false, ],
+    ];
+    var AbundanceColumns = [
+        [ "Rank", false ],
+        [ "Gene", true ],
+        [ "Protein Name", true ],
+        [ "Acc #", true ],
+        [ "Protein MW", false ],
+        [ "Species", true ],
+        [ "Uniq Pep", false ],
+        [ "Num Unique", false ],
+        [ "% Cov", true ],
+        [ "Best Expect Val", true ],
+        [ "Count Total", false ]
     ];
 
     //
@@ -423,11 +433,15 @@ frontpage = (function(){
     //   Display data for given experiment in browse tab
     //
     function show_experiment_raw(exp_id) {
-        // console.log("show_experiment_raw");
+        // console.log("show_experiment_raw", exp_id, browse_raw_id);
         if (browse_raw_id == exp_id)
             return;
-        $("#browse-stats-table").bootgrid("destroy").empty();
-        var table = $("#browse-stats-table");
+        $("#browse-stats-table").bootgrid("destroy");
+        $("#browse-stats-table").remove();
+        var table = $("<table/>", { "class": "table table-condensed table-hover table-striped",
+                                    "css": { "width": "inherit" },
+                                    "id": "browse-stats-table" })
+                            .appendTo("#browse-stats-table-container");
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",
                                 "data-identifier": true,
@@ -435,35 +449,26 @@ frontpage = (function(){
                                 "data-searchable": false,
                                 "data-visible": false })
                         .text("Id"));
-        var std_cols = [ [ "Rank", false ],
-                         [ "Gene", true ],
-                         [ "Protein Name", true ],
-                         [ "Acc #", true ],
-                         [ "Protein MW", false ],
-                         [ "Species", true ],
-                         [ "Uniq Pep", false ],
-                         [ "Num Unique", false ],
-                         [ "% Cov", true ],
-                         [ "Best Expect Val", true ],
-                         [ "Count Total", false ] ];
-        for (var i = 0; i < std_cols.length; i++) {
-            var title = std_cols[i][0];
-            var visible = std_cols[i][1];
+        for (var i = 0; i < AbundanceColumns.length; i++) {
+            var title = AbundanceColumns[i][0];
+            var visible = AbundanceColumns[i][1];
             htr.append($("<th/>", { "data-column-id": title,
                                     "data-visible": visible })
                             .text(title));
         }
-        var exp = experiment_metadata[exp_id];
-        var run_order = exp.run_order;
-        var run_label = exp.run_label;
+        var md = experiment_metadata[exp_id];
+        var run_order = md.run_order;
+        var run_label = md.run_label;
         $.each(run_order, function(run_index, run_name) {
             var run_id = run_index + 1;
             var id = run_id + "-count";
-            var label = run_label[run_name];
+            // var label = run_label[run_name];
+            var label = run_name;
             htr.append($("<th/>", { "data-column-id": id,
                                     "data-type": "numeric",
                                     "data-visible": true,
-                                    "data-searchable": false })
+                                    "data-searchable": false,
+                                    "data-header-css-class":"abundance-count-column" })
                             .text(label));
         });
 
@@ -471,8 +476,8 @@ frontpage = (function(){
         var rows = [];
         for (var pid = 0; pid < raw.proteins["Gene"].length; pid++) {
             var row = { id: pid };
-            for (var i = 0; i < std_cols.length; i++) {
-                var title = std_cols[i][0];
+            for (var i = 0; i < AbundanceColumns.length; i++) {
+                var title = AbundanceColumns[i][0];
                 row[title] = raw.proteins[title][pid];
             }
             // Matches loop above
@@ -567,6 +572,58 @@ frontpage = (function(){
             var url = BaseURL + "?action=download_experiment&exp_id=" +
                       browse_exp_id;
             window.location.href = url;
+        }
+    }
+
+    //
+    // download_csv:
+    //   Download raw file for selected experiment
+    //
+    function download_csv(ev) {
+        ev.preventDefault();
+        if (!browse_exp_id)
+            alert("No experiment selected");
+        else {
+            function quote(s) {
+                return /[,"]/.test(s) ?  '"' + s.replace(/"/g, '""') + '"' : s;
+            }
+            var md = experiment_metadata[browse_exp_id];
+            var proteins = experiment_stats[browse_exp_id].raw.proteins;
+            var headers = [];
+            for (var ci = 0; ci < AbundanceColumns.length; ci++) {
+                var column = AbundanceColumns[ci];
+                headers.push(quote(column[0]));
+            }
+            for (var ci = 0; ci < md.run_order.length; ci++) {
+                var run_name = md.run_order[ci];
+                headers.push(quote(run_name));
+            }
+            var lines = [ headers.join(',') + '\n' ];
+            var num_proteins = proteins["Acc #"].length;
+            var rows = [];
+            for (var i = 0; i < num_proteins; i++) {
+                var fields = [];
+                for (var ci = 0; ci < AbundanceColumns.length; ci++) {
+                    var column = AbundanceColumns[ci];
+                    fields.push(quote(proteins[column[0]][i]));
+                }
+                rows.push(fields);
+            }
+            for (var ci = 0; ci < md.run_order.length; ci++) {
+                var run_name = md.run_order[ci];
+                var column = proteins[run_name + " Count"];
+                for (var i = 0; i < num_proteins; i++)
+                    rows[i].push(column[i]);
+            }
+            for (var i = 0; i < rows.length; i++)
+                lines.push(rows[i].join(',') + '\n');
+            var blob = new Blob(lines, {type:"text/csv"})
+            var filename = md.datafile;
+            if (filename.endsWith(".xlsx") || filename.endswith(".xls"))
+                // Remove suffix
+                filename = filename.split('.').slice(0, -1).join('.');
+            filename += ".csv";
+            saveAs(blob, filename);
         }
     }
 
@@ -955,7 +1012,7 @@ frontpage = (function(){
         rowSelect: true,
         multiSelect: false,
         keepSelection: true,
-        rowCount: [20, 50, 100, -1],
+        rowCount: [10, 20, 50, 100, -1],
         formatters: {
             "actions": function(column, row) {
                 return '<button data-row-id="' + row.id +
@@ -1436,9 +1493,9 @@ frontpage = (function(){
                             theme.attr("href", url);
                         else
                             $("<link/>", { "id": "css-theme",
-                                                  "rel": "stylesheet",
-                                                  "type": "text/css",
-                                                  "href": url })
+                                           "rel": "stylesheet",
+                                           "type": "text/css",
+                                           "href": url })
                                 .appendTo($("head"));
                     }
                 });
