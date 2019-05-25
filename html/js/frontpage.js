@@ -141,7 +141,7 @@ frontpage = (function(){
             });
         $("#download-raw").click(download_experiment);
         $("#download-csv").click(download_csv);
-        $("#download-selected").click(unimplemented);
+        $("#download-selected").click(download_csv_selected);
         $("#analyze").click(analyze_experiment);
         browse_experiment_enable(false, true);
     }
@@ -439,7 +439,6 @@ frontpage = (function(){
         $("#browse-stats-table").bootgrid("destroy");
         $("#browse-stats-table").remove();
         var table = $("<table/>", { "class": "table table-condensed table-hover table-striped",
-                                    "css": { "width": "inherit" },
                                     "id": "browse-stats-table" })
                             .appendTo("#browse-stats-table-container");
         var htr = $("<tr/>");
@@ -581,6 +580,23 @@ frontpage = (function(){
     //
     function download_csv(ev) {
         ev.preventDefault();
+        _download_csv(false);
+    }
+
+    //
+    // download_csv:
+    //   Download raw file for selected experiment
+    //
+    function download_csv_selected(ev) {
+        ev.preventDefault();
+        _download_csv(true);
+    }
+
+    //
+    // _download_csv:
+    //    Download selected (or all) rows for selected experiment
+    //
+    function _download_csv(only_selected) {
         if (!browse_exp_id)
             alert("No experiment selected");
         else {
@@ -590,30 +606,34 @@ frontpage = (function(){
             var md = experiment_metadata[browse_exp_id];
             var proteins = experiment_stats[browse_exp_id].raw.proteins;
             var headers = [];
+            var columns = []
             for (var ci = 0; ci < AbundanceColumns.length; ci++) {
                 var column = AbundanceColumns[ci];
+                columns.push(proteins[column[0]]);
                 headers.push(quote(column[0]));
             }
             for (var ci = 0; ci < md.run_order.length; ci++) {
                 var run_name = md.run_order[ci];
+                columns.push(proteins[run_name + " Count"]);
                 headers.push(quote(run_name));
             }
             var lines = [ headers.join(',') + '\n' ];
-            var num_proteins = proteins["Acc #"].length;
-            var rows = [];
-            for (var i = 0; i < num_proteins; i++) {
-                var fields = [];
-                for (var ci = 0; ci < AbundanceColumns.length; ci++) {
-                    var column = AbundanceColumns[ci];
-                    fields.push(quote(proteins[column[0]][i]));
+            var which_rows;
+            if (!only_selected || browse_raw_id != browse_exp_id)
+                which_rows = Array(proteins["Acc #"].length).keys();
+            else {
+                which_rows = $("#browse-stats-table").bootgrid("getSelectedRows");
+                if (which_rows.length == 0) {
+                    alert("No rows have been selected");
+                    return;
                 }
-                rows.push(fields);
             }
-            for (var ci = 0; ci < md.run_order.length; ci++) {
-                var run_name = md.run_order[ci];
-                var column = proteins[run_name + " Count"];
-                for (var i = 0; i < num_proteins; i++)
-                    rows[i].push(column[i]);
+            var rows = [];
+            for (var ri of which_rows) {
+                var fields = [];
+                for (var ci = 0; ci < columns.length; ci++)
+                    fields.push(quote(columns[ci][ri]));
+                rows.push(fields);
             }
             for (var i = 0; i < rows.length; i++)
                 lines.push(rows[i].join(',') + '\n');
