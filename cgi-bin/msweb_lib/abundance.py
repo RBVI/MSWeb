@@ -106,9 +106,13 @@ class Experiment:
         num_rows, num_cols = df.shape
         label_row = None
         for i in range(num_rows):
-            if df[0][i] == "Rank":
-                label_row = i
-                break
+            try:
+                if df[0][i].lower() == "rank":
+                    label_row = i
+                    break
+            except AttributeError:
+                # NaN, numbers, etc. do not have lower() attribute
+                pass
 
         # Pull the experiment names from the first column, skipping empty cells
         runs = df[0][:label_row].dropna()
@@ -117,51 +121,50 @@ class Experiment:
         df = pandas.read_excel(filename, skiprows=label_row,
                                converters=cls.ProteinProperties)
 
-        # Make sure that we have the expected columns
-        for col_name in cls.ProteinProperties:
-            if col_name not in df.columns:
-                raise KeyError("column %r missing" % col_name)
+        # Make sure that we have the standard expected columns
+        # All column name comparisons should be done in lowercase 
+        lc_map = {s.lower():s for s in cls.ProteinProperties}
+        found = set()
+        rename_map = {}
+        for col_name in df.columns:
+            try:
+                canonical_name = lc_map[col_name.lower()]
+            except KeyError:
+                pass
+            else:
+                found.add(canonical_name)
+                if col_name != canonical_name:
+                    rename_map[col_name] = canonical_name
+        missing = set(cls.ProteinProperties.keys()) - found
+        if missing:
+            raise KeyError("Missing columns: %s" % ", ".join(missing))
+
+        # Make sure we have the right number of "count" columns
         count_cols = set(df.columns) - set(cls.ProteinProperties.keys())
         if len(count_cols) != len(runs) + 1:
             raise ValueError("expected %d count columns and got %d" %
                              (len(runs) + 1, len(count_cols)))
-        count_names = {"Peptide Count":"Peptide Count",
-                       "PSMs":"PSM"}
-        for base_name in count_names:
-            if base_name in count_cols:
+        count_names = {"peptide count":"peptide count",
+                       "psms":"psm"}
+        num_std_cols = len(cls.ProteinProperties) + 1
+        for i, col_name in enumerate(df.columns[:num_std_cols]):
+            try:
+                count_prefix = count_names[col_name.lower()]
+                rename_map[col_name] = "Count Total"
                 break
+            except KeyError:
+                pass
         else:
-            raise KeyError("Total count columns not found")
-
-        # Rename count columns for runs.
-        # pandas requires unique column names, so the next column with
-        # an identical name gets a ".X" appended to it, where X=1 for
-        # the second, X=2 for the third, etc.
-        # If the base (total) column name and the run column names
-        # are the same (eg "Peptide Count"), the run columns, in
-        # order, are colname.1, colname.2, colname.3, etc.
-        # When base name and run names are different
-        # (eg, "PSMs" and "PSM"), the run columns, in order are
-        # colname, colname.1, colname.2, etc.
-        # Code below handles the two cases.
-        col_name = count_names[base_name]
-        if col_name == base_name:
-            # Run columns have a 1-based numeric suffix
-            mapper = {col_name + '.' + str(i + 1):run_column(run_name)
-                      for i, run_name in enumerate(runs)}
-        else:
-            # Run columns have a 0-based numeric suffix
-            # except for the first one which has no suffix
-            mapper = {col_name + '.' + str(i):run_column(run_name)
-                      for i, run_name in enumerate(runs)}
-            mapper[col_name] = mapper[col_name + '.0']
-            del mapper[col_name + '.0']
-        mapper[base_name] = "Count Total"
-        missing = [expected for expected in mapper.keys()
-                   if expected not in df.columns]
-        if missing:
-            raise KeyError("Missing run columns: %s" % ", ".join(missing))
-        df.rename(mapper, axis="columns", inplace=True)
+            raise KeyError('Missing column: "Peptide Count" or "PSMs"')
+        unexpected = []
+        for i, col_name in enumerate(df.columns[num_std_cols:]):
+            if not col_name.lower().startswith(count_prefix):
+                unexpected.append(col_name)
+            else:
+                rename_map[col_name] = run_column(runs[i])
+        if len(unexpected) > 0:
+            raise KeyError("Unexpected columns: %s" % ", ".join(unexpected))
+        df.rename(rename_map, axis="columns", inplace=True)
 
         return cls(name, list(runs), df, [], [])
 
@@ -302,13 +305,12 @@ if __name__ == "__main__":
         except IndexError:
             # filename = "results-Plnx2-Sem5a-may19-sent-foruploading.xlsx"
             # filename = "brain_cortex_hippo_PSM-dataupload.xlsx"
-            filename = "raw/raw-12"
-            filename = "../../experiments/" + filename
+            filename = "raw/raw-15"
+            filename = "../../../production/experiments/" + filename
         exp = Experiment.parse_raw("filename", filename)
         print(exp.runs)
         # print(exp.proteins)
         print(exp.proteins.dtypes)
-        print(exp.proteins.columns)
         return exp
     test_parse_raw()
 
