@@ -24,6 +24,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script type="text/javascript" src="js/frontpage.js"></script>
     <script type="text/javascript" src="js/fp-abundance.js"></script>
+    <script type="text/javascript" src="js/fp-generic.js"></script>
     <script type="text/javascript" src="js/fp-plot.js"></script>
   </head>
   <body>
@@ -150,11 +151,16 @@
                    aria-labelledby="edit-upload-heading">
                 <div class="card-body">
                   <form id="upload-file-form">
-                    <div class="file-input" id="upload-drop">
-                      Drag-and-drop file here, or click to browse
-                      <input type="file" id="upload-file" name="upload-file">
-                      <br>
-                      Selected file: <span id="upload-file-name">none</span>
+                    <div class="form-group">
+                      <div class="file-input" id="upload-drop">
+                        Drag-and-drop file here, or click to browse
+                        <input type="file" id="upload-file" name="upload-file">
+                        <br>
+                        Selected file: <span id="upload-file-name">none</span>
+                      </div>
+                    </div>
+                    <div class="form-group" id="upload-experiment-type">
+                      <label>Experiment Type</label>
                     </div>
                     <button id="upload-button" disabled>Upload</button>
                     <span id="upload-status"></span>

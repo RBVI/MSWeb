@@ -2,6 +2,30 @@
 
 abundance = (function(){
 
+    //
+    // Options for raw stats table and stats column information
+    //
+    var BrowseStatsTableOptions = {
+        selection: true,
+        rowSelect: true,
+        multiSelect: true,
+        keepSelection: true,
+        rowCount: [10, 20, 50, 100, -1],
+    };
+    var AbundanceColumns = [
+        [ "Rank", false ],
+        [ "Gene", true ],
+        [ "Protein Name", true ],
+        [ "Acc #", true ],
+        [ "Protein MW", false ],
+        [ "Species", true ],
+        [ "Uniq Pep", false ],
+        [ "Num Unique", false ],
+        [ "% Cov", true ],
+        [ "Best Expect Val", true ],
+        [ "Count Total", false ]
+    ];
+
     var serial = 0;
     var normalization_methods;
 
@@ -713,8 +737,122 @@ abundance = (function(){
              .bootgrid("append", rows);
     }
 
+    //
+    // download_csv:
+    //   Download raw table data
+    //
+    function download_csv(only_selected, md, stats, table) {
+        function quote(s) {
+            return /[,"]/.test(s) ?  '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+        var proteins = stats.raw.proteins;
+        var headers = [];
+        var columns = []
+        for (var ci = 0; ci < AbundanceColumns.length; ci++) {
+            var column = AbundanceColumns[ci];
+            columns.push(proteins[column[0]]);
+            headers.push(quote(column[0]));
+        }
+        for (var ci = 0; ci < md.run_order.length; ci++) {
+            var run_name = md.run_order[ci];
+            columns.push(proteins[run_name + " Count"]);
+            headers.push(quote(run_name));
+        }
+        var lines = [ headers.join(',') + '\n' ];
+        var which_rows;
+        if (!only_selected || table === null)
+            which_rows = Array(proteins["Acc #"].length).keys();
+        else {
+            which_rows = table.bootgrid("getSelectedRows");
+            if (which_rows.length == 0) {
+                alert("No rows have been selected");
+                return;
+            }
+        }
+        var rows = [];
+        for (var ri of which_rows) {
+            var fields = [];
+            for (var ci = 0; ci < columns.length; ci++)
+                fields.push(quote(columns[ci][ri]));
+            rows.push(fields);
+        }
+        for (var i = 0; i < rows.length; i++)
+            lines.push(rows[i].join(',') + '\n');
+        var blob = new Blob(lines, {type:"text/csv"})
+        var filename = md.datafile;
+        if (filename.endsWith(".xlsx") || filename.endswith(".xls"))
+            // Remove suffix
+            filename = filename.split('.').slice(0, -1).join('.');
+        filename += ".csv";
+        saveAs(blob, filename);
+    }
+
+    function show_raw(md, stats, table_id, container_id) {
+        var table_sel = "#" + table_id;
+        $(table_sel).bootgrid("destroy");
+        $(table_sel).remove();
+        var table = $("<table/>", { "class": "table table-condensed table-hover table-striped",
+                                    "id": table_id })
+                            .appendTo("#" + container_id);
+        var htr = $("<tr/>");
+        htr.append($("<th/>", { "data-column-id": "id",
+                                "data-identifier": true,
+                                "data-type": "numeric",
+                                "data-searchable": false,
+                                "data-visible": false })
+                        .text("Id"));
+        for (var i = 0; i < AbundanceColumns.length; i++) {
+            var title = AbundanceColumns[i][0];
+            var visible = AbundanceColumns[i][1];
+            htr.append($("<th/>", { "data-column-id": title,
+                                    "data-visible": visible })
+                            .text(title));
+        }
+        var run_order = md.run_order;
+        var run_label = md.run_label;
+        $.each(run_order, function(run_index, run_name) {
+            var run_id = run_index + 1;
+            var id = run_id + "-count";
+            // var label = run_label[run_name];
+            var label = run_name;
+            htr.append($("<th/>", { "data-column-id": id,
+                                    "data-type": "numeric",
+                                    "data-visible": true,
+                                    "data-searchable": false,
+                                    "data-header-css-class":"abundance-count-column" })
+                            .text(label));
+        });
+
+        var raw = stats.raw;
+        var rows = [];
+        for (var pid = 0; pid < raw.proteins["Gene"].length; pid++) {
+            var row = { id: pid };
+            for (var i = 0; i < AbundanceColumns.length; i++) {
+                var title = AbundanceColumns[i][0];
+                row[title] = raw.proteins[title][pid];
+            }
+            // Matches loop above
+            $.each(run_order, function(run_index, run_name) {
+                var run_id = run_index + 1;
+                var id = run_id + "-count";
+                var column = raw.proteins[run_name + " Count"];
+                if (column[pid] !== null)
+                    row[id] = column[pid];
+                else
+                    row[id] = "-";
+            });
+            rows.push(row);
+        }
+        table.append($("<thead/>").append(htr))
+             .append($("<tbody/>"))
+             .bootgrid(BrowseStatsTableOptions)
+             .bootgrid("append", rows);
+    }
+
     return {
         init: init,
         create_tab: create_tab,
+        download_csv: download_csv,
+        show_raw: show_raw,
     };
 })();

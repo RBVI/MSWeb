@@ -15,10 +15,6 @@ the per-run count columns.
 """
 
 
-def no_op(v):
-    return v
-
-
 class Experiment:
 
     ProteinProperties = {"Rank":str,

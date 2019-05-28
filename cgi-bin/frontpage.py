@@ -52,12 +52,9 @@ UploadFields = [
 
 
 def cgi_main():
-    try:
-        from StringIO import StringIO
-    except ImportError:
-        from io import StringIO
+    from io import BytesIO
     import cgi, sys
-    out = StringIO()
+    out = BytesIO()
     try:
         form = cgi.FieldStorage()
         action = form.getfirst("action", "none")
@@ -70,7 +67,7 @@ def cgi_main():
     except:
         import traceback
         _send_failed(out, "Python error", traceback.format_exc())
-    sys.stdout.write(out.getvalue())
+    sys.stdout.buffer.write(out.getvalue())
 
 
 def do_metadata_fields(out, form):
@@ -82,8 +79,13 @@ def do_file_upload(out, form):
     if not datafile.file:
         _send_failed(out, "no file given")
         return
+    if "exptype" not in form:
+        _send_failed(out, "no file type given")
+        return
+    exptype = form.getfirst("exptype")
     import os.path, os, datetime
-    from msweb_lib import datastore, abundance
+    from msweb_lib import datastore
+    mod = _get_module_by_type(exptype)
     filename = os.path.basename(datafile.filename)
     ds = datastore.DataStore(DataStorePath)
     tmp_file_name = ds.raw_file_name(0) + "-" + str(os.getpid())
@@ -91,7 +93,7 @@ def do_file_upload(out, form):
         with open(tmp_file_name, "wb") as f:
             f.write(datafile.file.read())
         try:
-            exp = abundance.parse_raw(filename, tmp_file_name)
+            exp = mod.parse_raw(filename, tmp_file_name)
         except KeyError as e:
             _send_failed(out, str(e))
             return
@@ -110,13 +112,14 @@ def do_file_upload(out, form):
         "datafile": filename,
         "runs": {name:{} for name in exp.runs},
         "run_categories": ["control"],
+        "exptype": exptype,
     })
     ds.write_index()
     _send_success(out, None)
 
 
 def do_add_experiment_type(out, form):
-    etype = form.getfirst("exp_type")
+    etype = form.getfirst("exptype")
     if not etype:
         _send_failed(out, "no experiment type given")
         return
@@ -128,7 +131,7 @@ def do_add_experiment_type(out, form):
 
 
 def do_remove_experiment_type(out, form):
-    etype = form.getfirst("exp_type")
+    etype = form.getfirst("exptype")
     if not etype:
         _send_failed(out, "no experiment type given")
         return
@@ -245,20 +248,20 @@ def do_update_experiment(out, form):
 
 
 def do_get_experiment(out, form):
-    from msweb_lib import abundance
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:
         return
     cooked = ds.cooked_file_name(exp_id)
-    from msweb_lib import abundance
-    exp = abundance.parse_cooked(cooked)
+    # Our first uploads do not have types, but are all abundance experiments
+    exptype = exp_meta.get("exptype", "abundance")
+    mod = _get_module_by_type(exptype)
+    exp = mod.parse_cooked(cooked)
     _send_success(out, {"experiment_data":exp.xhr_data(),
                         "experiment_id":exp_id}, cls=MyEncoder)
 
 
 def do_download_experiment(out, form):
-    from msweb_lib import abundance
     try:
         ds, exp_id, exp_meta = _get_exp_metadata(out, form)
     except ValueError:
@@ -272,8 +275,8 @@ def do_normalization_methods(out, form):
     if "exptype" not in form:
         _send_failed(out, "no experiment type specified")
         return
-    m = _module_for(form.getfirst("exptype"))
-    _send_success(out, {"methods":m.normalization_methods()})
+    mod = _get_module_by_type(form.getfirst("exptype"))
+    _send_success(out, {"methods":mod.normalization_methods()})
 
 
 def do_normalize(out, form):
@@ -382,23 +385,17 @@ def _send_success(out, value, **kw):
 
 def _send_json(out, value, **kw):
     import json
-    print("Content-Type: application/json", file=out)
-    print(file=out)
-    json.dump(value, out, **kw)
+    out.write("Content-Type: application/json\r\n\r\n".encode("utf-8"))
+    out.write(json.dumps(value, **kw).encode("utf-8"))
 
 
 def _send_download(out, f, filename, content_type=None):
-    print("Content-Type: %s" % _content_type(filename, content_type), file=out)
-    print("Content-Disposition: attachment; filename=\"%s\"" % filename)
-    print(file=out)
+    # f is the file object to send and must be opened as binary, not text
+    c_type = "Content-Type: %s\r\n" % _content_type(filename, content_type)
+    c_disp = "Content-Disposition: attachment; filename=\"%s\"\r\n" % filename
+    header = c_type + c_disp + "\r\n"
+    out.write(header.encode("utf-8"))
     out.write(f.read())
-
-
-def _module_for(exptype):
-    if exptype == "abundance":
-        from msweb_lib import abundance
-        return abundance
-    raise ValueError("unknown experiment type: %s" % exptype)
 
 
 DefaultContentType = "application/octet-stream"
@@ -413,23 +410,25 @@ def _content_type(filename, content_type):
         return content_type
     else:
         import os.path
-        ext = os.path.splitext(filename)[1]
+        ext = os.path.splitext(filename)[1].lower()
         return ContentTypes.get(ext, DefaultContentType)
 
 
+def _get_module_by_type(exptype):
+    if exptype.lower().startswith("abundance"):
+        from msweb_lib import abundance
+        return abundance
+    from msweb_lib import generic
+    return generic
+
+
 if __name__ == "__main__":
-    import os
+    import os, sys
     am_cgi = "REQUEST_METHOD" in os.environ
     if am_cgi:
         cgi_main()
     else:
-        import sys
-        from msweb_lib import datastore
-        exp_id = "1"
-        ds = datastore.DataStore(DataStorePath)
-        exp = ds.experiments[exp_id]
-        cooked = ds.cooked_file_name(exp_id)
-        from msweb_lib import abundance
-        exp = abundance.parse_cooked(cooked)
-        _send_success(sys.stdout, {"experiment_data":exp.xhr_data(),
-                                   "experiment_id":exp_id})
+        from io import BytesIO
+        out = BytesIO()
+        _send_success(out, {"methods":["hello","world"]})
+        sys.stdout.buffer.write(out.getvalue())
