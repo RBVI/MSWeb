@@ -2,14 +2,14 @@
 # vim: set expandtab ts=4 sw=4:
 from __future__ import print_function
 
-"""MSWeb data store.
+"""AMaSS data store.
 
-MSWeb data is stored in a directory with an index of
+AMaSS data is stored in a directory with an index of
 experiments, a raw data directory, and a parsed data
 directory.
 
 The index, "index.json" at the root of the data store,
-maps MSWeb experiments to unique identifiers,
+maps AMaSS experiments to unique identifiers,
 which are used as part of file names in the two data
 directories.  The unique identifiers, essentially
 auto-incremented integers, are used so that experiment
@@ -29,14 +29,14 @@ correspondence of files in the two data directories.
 # two experiments):
 #
 #   {
-#       "creator": "MSWeb",
+#       "creator": "AMaSS",
 #       "version": 1,
 #       "uid": 3,
 #       "experiment_types": [ "T1" ],           # controlled vocab
 #       "datadirs": [ "raw", "cooked" ],        # version-dependent
 #       "experiments": {                        # version-dependent
 #           "1": {
-#                   "datafile": "uploaded_MSWeb.XLSX",
+#                   "datafile": "uploaded_AMaSS.XLSX",
 #                   "title": "First experiment",
 #                   "researcher": "Someone Else",
 #                   "expdate": "10/20/2018",
@@ -75,7 +75,7 @@ correspondence of files in the two data directories.
 class DataStore:
 
     IndexFile = "index.json"
-    Creator = "MSWeb"
+    Creator = "AMaSS"
     Version = 1
 
     def __init__(self, base_dir):

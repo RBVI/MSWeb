@@ -2,8 +2,8 @@
 
 frontpage = (function(){
 
-    var PageURL = "/MSWeb/index.html";
-    var BaseURL = "/MSWeb/cgi-bin/frontpage.py";
+    var PageURL = "/AMaSS/index.html";
+    var BaseURL = "/AMaSS/cgi-bin/frontpage.py";
     var modules = {};
 
     // The front page consists of multiple tabs.
@@ -1561,7 +1561,7 @@ frontpage = (function(){
     return {
         init: function() {
             init_main();
-            console.log("MSWeb initialization complete");
+            console.log("AMaSS initialization complete");
         },
         url: BaseURL,
         show_status: show_status,

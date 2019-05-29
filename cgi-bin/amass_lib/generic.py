@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 
-"""MSWeb "generic" experiment data.
+"""AMaSS "generic" experiment data.
 
 Raw data is parsed.  Only thing end user can do is download.
 """

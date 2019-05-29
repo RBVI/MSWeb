@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 
-"""MSWeb "abundance" experiment data.
+"""AMaSS "abundance" experiment data.
 
 An experiment consists of a list of runs and a pandas DataFrame
 with rows corresponding to proteins, and columns to protein properties.

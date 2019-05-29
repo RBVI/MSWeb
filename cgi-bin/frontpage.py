@@ -84,7 +84,7 @@ def do_file_upload(out, form):
         return
     exptype = form.getfirst("exptype")
     import os.path, os, datetime
-    from msweb_lib import datastore
+    from amass_lib import datastore
     mod = _get_module_by_type(exptype)
     filename = os.path.basename(datafile.filename)
     ds = datastore.DataStore(DataStorePath)
@@ -123,7 +123,7 @@ def do_add_experiment_type(out, form):
     if not etype:
         _send_failed(out, "no experiment type given")
         return
-    from msweb_lib import datastore
+    from amass_lib import datastore
     ds = datastore.DataStore(DataStorePath)
     ds.add_experiment_type(etype)
     ds.write_index()
@@ -135,7 +135,7 @@ def do_remove_experiment_type(out, form):
     if not etype:
         _send_failed(out, "no experiment type given")
         return
-    from msweb_lib import datastore
+    from amass_lib import datastore
     ds = datastore.DataStore(DataStorePath)
     ds.remove_experiment_type(etype)
     ds.write_index()
@@ -143,13 +143,13 @@ def do_remove_experiment_type(out, form):
 
 
 def do_controlled_vocabulary(out, form):
-    from msweb_lib import datastore
+    from amass_lib import datastore
     ds = datastore.DataStore(DataStorePath)
     _send_success(out, {"experiment_types": ds.experiment_types})
 
 
 def do_all_experiments(out, form):
-    from msweb_lib import datastore
+    from amass_lib import datastore
     ds = datastore.DataStore(DataStorePath)
     experiments = {}
     # We can modify the "ds.experiments" dictionaries
@@ -286,7 +286,7 @@ def do_normalize(out, form):
     except ValueError:
         return
     cooked = ds.cooked_file_name(exp_id)
-    from msweb_lib import abundance
+    from amass_lib import abundance
     exp = abundance.parse_cooked(cooked)
     try:
         norm, cached = exp.normalized_counts(exp_meta, nc_params)
@@ -312,7 +312,7 @@ def do_differential_abundance(out, form):
     except ValueError:
         return
     cooked = ds.cooked_file_name(exp_id)
-    from msweb_lib import abundance
+    from amass_lib import abundance
     exp = abundance.parse_cooked(cooked)
     try:
         da, cached = exp.differential_abundance(exp_meta, da_params)
@@ -353,7 +353,7 @@ def _get_da_params(form):
 
 
 def _get_exp_metadata(out, form):
-    from msweb_lib import datastore
+    from amass_lib import datastore
     if "exp_id" not in form:
         _send_failed(out, "no experiment specified", "missing experiment id")
         raise ValueError("no experiment specified")
@@ -416,9 +416,9 @@ def _content_type(filename, content_type):
 
 def _get_module_by_type(exptype):
     if exptype.lower().startswith("abundance"):
-        from msweb_lib import abundance
+        from amass_lib import abundance
         return abundance
-    from msweb_lib import generic
+    from amass_lib import generic
     return generic
 
 
