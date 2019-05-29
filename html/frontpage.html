@@ -94,18 +94,36 @@
             <div class="card-body collapse" id="exp-stats-tabs">
               <nav>
                 <div class="nav nav-tabs" role="tablist">
+                  <a class="nav-item nav-link active" id="tab-browse-metadata" data-toggle="tab"
+                     href="#exp-metadata-tab" role="tab" aria-controls="exp-metadata-tab" aria-selected="false">
+                    Metadata
+                  </a>
+                  <a class="nav-item nav-link" id="tab-browse-runs" data-toggle="tab"
+                     href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
+                    Runs
+                  </a>
                   <a class="nav-item nav-link" id="tab-browse-raw" data-toggle="tab"
                      href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="false">
                     Raw Data
-                  </a>
-                  <a class="nav-item nav-link active" id="tab-browse-runs" data-toggle="tab"
-                     href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
-                    Runs
                   </a>
                 </div>
               </nav>
 
               <div class="tab-content py-3 px-3 px-sm-0">
+                <!-- metadata tab -->
+                <div class="tab-pane fade show active" id="exp-metadata-tab"
+                     role="tabpanel" aria-labelledby="tab-browse-metadata">
+                  <!--
+                  <table class="table table-condensed table-hover table-striped" id="browse-metadata-table"></table>
+                  -->
+                </div>
+                <!-- end metadata tab -->
+                <!-- experiment runs tab -->
+                <div class="tab-pane fade" id="exp-runs-tab"
+                     role="tabpanel" aria-labelledby="tab-browse-runs">
+                  <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
+                </div>
+                <!-- end experiment runs tab -->
                 <!-- experiment raw tab -->
                 <div class="tab-pane fade" id="exp-raw-tab"
                      role="tabpanel" aria-labelledby="tab-browse-raw">
@@ -116,12 +134,6 @@
                   </div>
                 </div>
                 <!-- end experiment raw tab -->
-                <!-- experiment runs tab -->
-                <div class="tab-pane fade show active" id="exp-runs-tab"
-                     role="tabpanel" aria-labelledby="tab-browse-runs">
-                  <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
-                </div>
-                <!-- end experiment runs tab -->
               </div>
 
             </div>

@@ -55,6 +55,10 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.metadata-value {
+    background: lightgray;
+    border: 1px solid gray;
+}
 /* Add disclosure triangle before collapse link */
 [data-toggle="collapse"] .fa:before {   
     margin-right: 0.5rem;

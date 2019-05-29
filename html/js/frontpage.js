@@ -31,6 +31,7 @@ frontpage = (function(){
     function init_tab_browse() {
         // console.log("init_tab_browse");
         init_browse_experiments();
+        init_browse_metadata();
         init_browse_runs();
         init_browse_stats();
         browse_initialized = true;
@@ -345,7 +346,67 @@ frontpage = (function(){
     }
 
     // -----------------------------------------------------------------
-    // Browse stats section
+    // Browse metadata section
+    // -----------------------------------------------------------------
+
+    //
+    // init_browse_metadata:
+    //   Display metadata upload form
+    //
+    function init_browse_metadata() {
+        if (metadata_fields)
+            make_browse_metadata_form();
+        else
+            $.ajax({
+                dataType: "json",
+                method: "POST",
+                url: BaseURL,
+                data: {
+                    action: "metadata_fields",
+                },
+                success: function(data) {
+                    metadata_fields = data.results;
+                    make_browse_metadata_form();
+                },
+            });
+    }
+
+    //
+    // make_browse_metadata_form:
+    //   Lay out experiment attribute name and value fields in metadata form in browse tab
+    //
+    function make_browse_metadata_form() {
+        var div = $("#exp-metadata-tab");
+        // console.log(metadata_fields);
+        $.each(metadata_fields, function(index, val) {
+            var span_id = "browse-" + val[2];
+            var label = $("<label/>", { "class": "col-sm-2 col-form-label",
+                                        "for": span_id }).text(val[0]);
+            var span = $("<span/>", { "class": "col-sm-10 col-form-label metadata-value",
+                                      "id": span_id });
+            div.append($("<div/>", { "class": "form-group row" })
+                        .append(label, span));
+        });
+    }
+
+    //
+    // fill_browse_metadata:
+    //   Display experiment attribute values in metadata form
+    //
+    function fill_browse_metadata(exp_id) {
+        if (!browse_exp_id)
+            return;
+        var exp = experiment_metadata[browse_exp_id];
+        $.each(metadata_fields, function(index, val) {
+            var span_id = val[2];
+            var field_value = exp[span_id];
+            $("#browse-" + span_id).text(field_value);
+        });
+        browse_experiment_enable(true, true);
+    }
+
+    // -----------------------------------------------------------------
+    // Browse raw data section
     // -----------------------------------------------------------------
 
     //
@@ -434,6 +495,8 @@ frontpage = (function(){
             fill_browse_raw();
         else if (active == "tab-browse-runs")
             fill_browse_runs();
+        else if (active == "tab-browse-metadata")
+            fill_browse_metadata();
     }
 
     // -----------------------------------------------------------------
@@ -523,9 +586,9 @@ frontpage = (function(){
 
         // Show experiments
         init_edit_experiments();
-        init_controlled_vocabulary();
-        init_metadata_form();
-        init_runs_form();
+        init_edit_controlled_vocabulary();
+        init_edit_metadata();
+        init_edit_runs();
         edit_initialized = true;
 
         // Reset tab callback
@@ -689,10 +752,10 @@ frontpage = (function(){
     var cv_exptypes = [ "exptype-vocab" ];
 
     // 
-    // init_controlled_vocabulary:
+    // init_edit_controlled_vocabulary:
     //   Initialize controlled vocabulary elements
     //
-    function init_controlled_vocabulary() {
+    function init_edit_controlled_vocabulary() {
         var v = add_editable_vocab("exptype-vocab", "experiment-type");
         $("#exptype-vocab-div").append(v[0]);
         v[1].prop("placeholder", "experiment type name");
@@ -996,7 +1059,7 @@ frontpage = (function(){
         $("#edit-metadata-fieldset").removeAttr("disabled");
         $(".edit-metadata").removeClass("disabled")
         edit_exp_id = rows[0].id;
-        show_metadata(edit_exp_id);
+        show_edit_metadata(edit_exp_id);
     }
 
     //
@@ -1042,30 +1105,36 @@ frontpage = (function(){
     var edit_exp_id;
 
     //
-    // init_metadata_form:
+    // init_edit_metadata:
     //   Display metadata upload form
     //
-    function init_metadata_form() {
+    function init_edit_metadata() {
         $("#edit-metadata-button").click(update_metadata);
         $("#edit-revert-metadata-button").click(revert_metadata);
-        $.ajax({
-            dataType: "json",
-            method: "POST",
-            url: BaseURL,
-            data: {
-                action: "metadata_fields",
-            },
-            success: fill_metadata_form,
-        });
+        if (metadata_fields)
+            fill_edit_metadata_form();
+        else
+            $.ajax({
+                dataType: "json",
+                method: "POST",
+                url: BaseURL,
+                data: {
+                    action: "metadata_fields",
+                },
+                success: function(data) {
+                    metadata_fields = data.results;
+                    fill_edit_metadata_form();
+                },
+            });
     }
 
     //
-    // fill_metadata_form:
+    // fill_edit_metadata_form:
     //   Lay out experiment attribute name and value fields in metadata form
     //
-    function fill_metadata_form(data) {
+    function fill_edit_metadata_form() {
         var div = $("#edit-metadata-exp");
-        $.each(data.results, function(index, val) {
+        $.each(metadata_fields, function(index, val) {
             var input_type = val[1];
             var input_id = val[2];
             var label = $("<label/>", { "class": "col-sm-2 col-form-label",
@@ -1088,14 +1157,13 @@ frontpage = (function(){
             div.append($("<div/>", { "class": "form-group row" })
                         .append(label, container));
         });
-        metadata_fields = data.results;
     }
 
     //
-    // show_metadata:
+    // show_edit_metadata:
     //   Display experiment attribute values in metadata form
     //
-    function show_metadata(exp_id) {
+    function show_edit_metadata(exp_id) {
         fill_controlled_vocabulary(null);
         fill_run_category_vocabulary(exp_id, null);
         var exp = experiment_metadata[exp_id];
@@ -1152,7 +1220,7 @@ frontpage = (function(){
     //   Revert metadata values to unchanged values
     //
     function revert_metadata() {
-        show_metadata(edit_exp_id);
+        show_edit_metadata(edit_exp_id);
     }
 
     // -----------------------------------------------------------------
@@ -1162,10 +1230,10 @@ frontpage = (function(){
     var cv_runcats = [];
 
     //
-    // init_runs_form:
+    // init_edit_runs:
     //   Initialize the edit runs table with appropriate headers
     //
-    function init_runs_form() {
+    function init_edit_runs() {
         var htr = $("<tr/>");
         htr.append($("<th/>").text("Name"));
         htr.append($("<th/>").text("Date"));
@@ -1304,6 +1372,7 @@ frontpage = (function(){
     var tab_funcs = {
         "tab-browse": init_tab_browse,
         "tab-browse-raw": fill_browse_raw,
+        "tab-browse-metadata": fill_browse_metadata,
         "tab-browse-runs": fill_browse_runs,
         "tab-edit": init_tab_edit,
     };
