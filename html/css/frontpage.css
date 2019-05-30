@@ -36,14 +36,20 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     margin-left: 0.5rem;
 }
 .op-row {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: auto;
     margin-bottom: 0.3rem;
+    -webkit-box-sizing: border-box;
 }
 .op-button {
+    white-space: normal;
     height: 100%;
     width: 7rem;
     margin-right: 0.3rem;
 }
 .op-icon {
+    white-space: normal;
     min-width: 3rem;
     min-height: 3rem;
     max-width: 3rem;

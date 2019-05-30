@@ -121,14 +121,14 @@ abundance = (function(){
 
         make_operations(container) {
             var ops = $("<div/>", { "class": "row op-row" }).appendTo(container);
-            var ops_a = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
+            var ops_a = $("<div/>", { "class": "col-6" }).appendTo(ops);
             this.make_ops_text(ops_a, "op-normalize", "Normalize",
                                "", this.op_normalize);
             this.make_ops_text(ops_a, "op-diff", "Differential Abundance",
                                "need-normalized", this.op_differential);
             this.make_ops_text(ops_a, "op-enrich", "Enrichment",
                                "need-TODO", this.op_enrichment);
-            var ops_p = $("<div/>", { "class": "col-sm-6" }).appendTo(ops);
+            var ops_p = $("<div/>", { "class": "col-6" }).appendTo(ops);
             this.make_ops_image(ops_p, "plot-violin", "violin.png",
                                 "Violin", "need-normalized",
                                 this.plot_violin);
@@ -205,9 +205,9 @@ abundance = (function(){
             var row = $("<div/>", { "class": "form-group form-row" })
                         .appendTo(form);
             $("<label/>", { "for": target_id,
-                            "class": "col-sm-4 col-form-label" })
+                            "class": "col-4 col-form-label" })
                         .text(label).appendTo(row);
-            var div = $("<div/>", { "class": "col-sm-8" }).appendTo(row);
+            var div = $("<div/>", { "class": "col-8" }).appendTo(row);
             return div;
         }
 

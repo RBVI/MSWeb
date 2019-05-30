@@ -380,9 +380,9 @@ frontpage = (function(){
         // console.log(metadata_fields);
         $.each(metadata_fields, function(index, val) {
             var span_id = "browse-" + val[2];
-            var label = $("<label/>", { "class": "col-sm-2 col-form-label",
+            var label = $("<label/>", { "class": "col-2 col-form-label",
                                         "for": span_id }).text(val[0]);
-            var span = $("<span/>", { "class": "col-sm-10 col-form-label metadata-value",
+            var span = $("<span/>", { "class": "col-10 col-form-label metadata-value",
                                       "id": span_id });
             div.append($("<div/>", { "class": "form-group row" })
                         .append(label, span));
@@ -421,10 +421,12 @@ frontpage = (function(){
     // get_experiment_stats:
     //   Get experiment data from server
     //
-    function get_experiment_stats(exp_id) {
+    function get_experiment_stats(exp_id, callback) {
         // console.log("get_experiment_stats");
         show_status("fetching experiment data...", true)
         browse_experiment_enable(false, true);
+        if (callback === null)
+            callback = fill_browse();
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -441,7 +443,7 @@ frontpage = (function(){
                     var exp_id = data.results.experiment_id;
                     var raw = data.results.experiment_data;
                     experiment_stats[exp_id] = { raw: raw };
-                    fill_browse();
+                    callback();
                 }
             },
             error: function(xhr, status, error) {
@@ -581,7 +583,7 @@ frontpage = (function(){
         $("#upload-button").click(upload_file).attr("disabled", "disabled");
         container = input = add_exptype_vocab("upload-type");
         input.click(update_upload_button);
-        container.attr("class", "col-sm-4");
+        container.attr("class", "col-4");
         $("#upload-experiment-type").append(container);
 
         // Show experiments
@@ -1137,7 +1139,7 @@ frontpage = (function(){
         $.each(metadata_fields, function(index, val) {
             var input_type = val[1];
             var input_id = val[2];
-            var label = $("<label/>", { "class": "col-sm-2 col-form-label",
+            var label = $("<label/>", { "class": "col-2 col-form-label",
                                         "for": input_id }).text(val[0]);
             var input;
             if (input_type == "exptype") {
@@ -1153,7 +1155,7 @@ frontpage = (function(){
             $.each(val[3], function(index, value) {
                 input.prop(value[0], value[1]);
             });
-            container.attr("class", "col-sm-10");
+            container.attr("class", "col-10");
             div.append($("<div/>", { "class": "form-group row" })
                         .append(label, container));
         });
@@ -1359,10 +1361,17 @@ frontpage = (function(){
     }
 
     function analyze_experiment() {
-        // TODO: use class matching experiment type to create tab
-        abundance.create_tab($("#frontpage"), browse_exp_id,
-                             experiment_metadata[browse_exp_id],
-                             experiment_stats[browse_exp_id]);
+        if (browse_exp_id in experiment_stats)
+            create_analyze_tab();
+        else
+            get_experiment_stats(browse_exp_id, create_analyze_tab);
+    }
+
+    function create_analyze_tab() {
+        var md = experiment_metadata[browse_exp_id];
+        var module = get_module_by_type(md.exptype);
+        module.create_tab($("#frontpage"), browse_exp_id, md,
+                          experiment_stats[browse_exp_id]);
     }
 
     // =================================================================
