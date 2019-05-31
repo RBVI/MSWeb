@@ -244,6 +244,16 @@ abundance = (function(){
             return input;
         }
 
+        add_int_input(div, input_id, default_value, step) {
+            var input = $("<input/>",  { "id": input_id,
+                                         "class": "form-control",
+                                         "type": "number",
+                                         "min": 4,
+                                         "step": step })
+                            .val(default_value).appendTo(div);
+            return input;
+        }
+
         make_id(name, subtype) {
             return "abundance-" + name + "-" + subtype + "-" + this.serial;
         }
@@ -459,26 +469,38 @@ abundance = (function(){
         }
 
         plot_heatmap(ev) {
-            var container = this.pane.children(".container-fluid");
-            var card = this.make_collapsible_card(container, "heatmap",
-                                                  "Heat Map - Differential Abundance");
-            var body = card.find(".card-body");
-            var plot_id = this.make_id("heatmap", "plot");
-            var div = $("<div/>", { "id": plot_id,
-                                    "css": { "resize": "vertical",
-                                             "overflow": "hidden",
-                                             "width": "600px",
-                                             "height": "500px" } })
-                            .appendTo(body);
-            plot.make_plot_heatmap_da(div, this.metadata, this.stats);
-            var pop_out = function() {
-                plot.pop_out(div, this.metadata.title + " - Differential Abundance")
-            }.bind(this);
-            var close_card = function() {
-                card.remove();
-            }.bind(this);
-            this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
-                                          [ "fa-times-circle", close_card ] ]);
+            var dialog = $("#modal-dialog");
+            dialog.find(".modal-title").text("Heatmap");
+            var body = dialog.find(".modal-body").empty();
+            var form = $("<form/>").appendTo(body);
+            var topn_id = this.make_id("heatmap", "topn");
+            var topn_field = this.add_field(form, topn_id, "Show Top N");
+            var topn_cutoff = this.add_int_input(topn_field, topn_id, 10, 1);
+            var okay = dialog.find(".modal-okay-button");
+            okay.off("click");
+            okay.on("click", function(ev) {
+                var container = this.pane.children(".container-fluid");
+                var card = this.make_collapsible_card(container, "heatmap",
+                                                      "Heat Map - Differential Abundance");
+                var body = card.find(".card-body");
+                var plot_id = this.make_id("heatmap", "plot");
+                var div = $("<div/>", { "id": plot_id,
+                                        "css": { "resize": "vertical",
+                                                 "overflow": "hidden",
+                                                 "width": "600px",
+                                                 "height": "500px" } })
+                                .appendTo(body);
+                plot.make_plot_heatmap_da(div, this.metadata, this.stats, topn_cutoff.val());
+                var pop_out = function() {
+                    plot.pop_out(div, this.metadata.title + " - Differential Abundance")
+                }.bind(this);
+                var close_card = function() {
+                    card.remove();
+                }.bind(this);
+                this.add_card_buttons(card, [ [ "fa-arrow-circle-up", pop_out ],
+                                              [ "fa-times-circle", close_card ] ]);
+            }.bind(this));
+            dialog.modal();
         }
 
         plot_volcano(ev) {

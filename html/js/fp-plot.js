@@ -274,7 +274,7 @@ plot = (function(){
     //   y = protein
     //   z = ???
     //
-    function make_plot_heatmap_da(div, metadata, stats) {
+    function make_plot_heatmap_da(div, metadata, stats, topn) {
         var raw = stats.raw;
         var accs = raw.proteins["Acc #"];
         var genes = raw.proteins["Gene"];
@@ -286,35 +286,35 @@ plot = (function(){
             return da_stats[cat_name + " log2FC"];
         });
 
-        var N = 10;
         var protein_indices = [];
-        if (accs.length < N * 3) {
-            // Display all proteins
-            for (var i = 0; i < accs.length; i++)
-                protein_indices.push(i);
-        } else {
-            // Display top/bottom N for each category
-            function sorted_indices(rows) {
-                // Return an array of indices that would sort the given array,
-                // of values (while ignoring nulls)
-                var pairs = []
-                for (var i = 0; i < rows.length; i++) {
-                    var value = rows[i];
-                    if (value !== null)
-                        pairs.push([ value, i ]);
-                }
-                // Sort LOW-to-HIGH.  All values _should_ be floats.
-                pairs.sort((a, b) => a[0] - b[0]);
-                return pairs;
+        function sorted_indices(rows) {
+            // Return an array of indices that would sort the given array,
+            // of values (while ignoring nulls)
+            var pairs = []
+            for (var i = 0; i < rows.length; i++) {
+                var value = rows[i];
+                if (value !== null)
+                    pairs.push([ value, i ]);
             }
-            // Loop over columns in reverse order because plotly heatmap
-            // displays bottom to top.  Sorting is already low-to-high
-            // so no need to reverse direction.
-            for (var ci = columns.length - 1; ci >= 0; ci--) {
+            // Sort LOW-to-HIGH.  All values _should_ be floats.
+            pairs.sort((a, b) => a[0] - b[0]);
+            return pairs;
+        }
+        // Loop over columns in reverse order because plotly heatmap
+        // displays bottom to top.  Sorting is already low-to-high
+        // so no need to reverse direction.
+        for (var ci = columns.length - 1; ci >= 0; ci--) {
+            if (accs.length <= topn * 2) {
+                // Display all proteins
                 var pairs = sorted_indices(columns[ci]);
-                for (var i = 0; i < N; i++)
+                for (var i = 0; i < pairs.length; i++)
                     protein_indices.push(pairs[i][1]);
-                for (var i = pairs.length - N; i < pairs.length; i++)
+            } else {
+                // Display top/bottom N
+                var pairs = sorted_indices(columns[ci]);
+                for (var i = 0; i < topn; i++)
+                    protein_indices.push(pairs[i][1]);
+                for (var i = pairs.length - topn; i < pairs.length; i++)
                     protein_indices.push(pairs[i][1]);
             }
         }
