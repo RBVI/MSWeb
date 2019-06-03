@@ -170,7 +170,7 @@ frontpage = (function(){
         if (experiment_init_target !== null) {
             tbl.on("loaded.rs.jquery.bootgrid", function() {
                 // console.log("loaded");
-                if (experiment_init_target === null)
+                if (experiment_init_target == null)
                     tbl.off("loaded.rs.jquery.bootgrid");
                 else {
                     if (tbl.bootgrid("getTotalRowCount") > 0) {
@@ -292,7 +292,7 @@ frontpage = (function(){
         if (!browse_exp_id)
             return;
         if (!experiment_stats[browse_exp_id]) {
-            get_experiment_stats(browse_exp_id);
+            get_experiment_stats(browse_exp_id, fill_browse);
             return;
         }
         // console.log("fill_browse_runs");
@@ -329,7 +329,7 @@ frontpage = (function(){
             var run_data = runs[run_name];
             var cat_name = run_data["category"];
             var index = cat_index[cat_name];
-            if (index === undefined)
+            if (index == null)
                 index = 1;
             else
                 index += 1;
@@ -425,8 +425,6 @@ frontpage = (function(){
         // console.log("get_experiment_stats");
         show_status("fetching experiment data...", true)
         browse_experiment_enable(false, true);
-        if (callback === null)
-            callback = fill_browse();
         $.ajax({
             dataType: "json",
             method: "POST",
@@ -476,7 +474,7 @@ frontpage = (function(){
         if (!browse_exp_id)
             return;
         if (!experiment_stats[browse_exp_id]) {
-            get_experiment_stats(browse_exp_id);
+            get_experiment_stats(browse_exp_id, fill_browse);
             return;
         }
         show_experiment_raw(browse_exp_id);

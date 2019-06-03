@@ -35,7 +35,7 @@ plot = (function(){
             var sds = norm_stats[cat_name + " SD"];
             for (var pid = 0; pid < accs.length; pid++) {
                 var mean = means[pid];
-                if (mean === null)
+                if (mean == null)
                     continue;
                 y.push(mean);
                 var label = accs[pid];
@@ -84,13 +84,13 @@ plot = (function(){
         for (var i = 0; i < categories.length; i++) {
             var cat_name = categories[i];
             var log2FC = da_stats[cat_name + " log2FC"];
-            if (log2FC === undefined)
+            if (log2FC == null)
                 continue;
             var y = [];
             var text = [];
             for (var pid = 0; pid < accs.length; pid++) {
                 var value = log2FC[pid];
-                if (value === null)
+                if (value == null)
                     continue;
                 y.push(value);
                 var label = accs[pid];
@@ -138,7 +138,7 @@ plot = (function(){
         var da_stats = stats.da_stats;
         var pvalue_column = da_stats[cat + " pValue"];
         var fc_column = da_stats[cat + " log2FC"];
-        if (pvalue_column === undefined || fc_column === undefined) {
+        if (pvalue_column == null || fc_column == null) {
             alert("No data found for category: " + cat);
             return false;
         }
@@ -155,7 +155,7 @@ plot = (function(){
         for (var pid = 0; pid < accs.length; pid++) {
             var pvalue = pvalue_column[pid];
             var log2FC = fc_column[pid];
-            if (pvalue === null || log2FC === null)
+            if (pvalue == null || log2FC == null)
                 continue;
             var pv = -Math.log10(pvalue);
             var label = accs[pid];

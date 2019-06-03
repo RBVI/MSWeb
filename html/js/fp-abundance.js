@@ -564,7 +564,7 @@ abundance = (function(){
         }
 
         make_normalized_counts(container) {
-            if (this.normalized_counts_table_id === undefined) {
+            if (this.normalized_counts_table_id == null) {
                 var title = "Normalized Counts (method: " + this.stats.norm_params.method + ")";
                 var card = this.make_collapsible_card(container, "nc", title);
                 var body = card.find(".card-body");
@@ -585,7 +585,7 @@ abundance = (function(){
         }
 
         make_differential(container) {
-            if (this.differential_table_id === undefined) {
+            if (this.differential_table_id == null) {
                 var title = "Differential Abundance (reference: " +
                             this.stats.da_params.control + ")";
                 var card = this.make_collapsible_card(container, "da", title);
@@ -621,11 +621,11 @@ abundance = (function(){
         formatters: {
             floats: function(column, row) {
                 var mean = row[column.id];
-                if (mean === null)
+                if (mean == null)
                     return "-";
                 else {
                     var sd = row[column.id + "_sd"];
-                    if (sd === null)
+                    if (sd == null)
                         return mean.toFixed(2)
                     else
                         return mean.toFixed(2) + " &plusmn; " + sd.toFixed(2);
@@ -746,7 +746,7 @@ abundance = (function(){
                     continue;
                 var value = da_stats[col_name][pid];
                 var column_id = "nc-" + col_name;
-                if (value === null)
+                if (value == null)
                     row[column_id] = Infinity;
                 else
                     row[column_id] = value;
@@ -782,7 +782,7 @@ abundance = (function(){
         }
         var lines = [ headers.join(',') + '\n' ];
         var which_rows;
-        if (!only_selected || table === null)
+        if (!only_selected || table == null)
             which_rows = Array(proteins["Acc #"].length).keys();
         else {
             which_rows = table.bootgrid("getSelectedRows");
