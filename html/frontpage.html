@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!-- vim: set expandtab shiftwidth=2 softtabstop=2: -->
+<!-- edited using 120-column window -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>AMaSS: Adelson Mass Spec System</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/frontpage.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.css">
+    <!-- FA 5.7 requires shims and does not look better -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.10/js/bootstrap-select.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.fa.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/1.45.2/plotly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+    <script type="text/javascript" src="js/frontpage.js"></script>
+    <script type="text/javascript" src="js/fp-abundance.js"></script>
+    <script type="text/javascript" src="js/fp-generic.js"></script>
+    <script type="text/javascript" src="js/fp-plot.js"></script>
+  </head>
+  <body>
+    <div id="frontpage" class="container-fluid col-xs-12">
+      <div class="frontpage-title">
+        <h5><span id="top-status-box" class="frontpage-status"></span>
+        <span class="frontpage-theme">Theme: <select id="themes"></select></span>
+        AMaSS v0.1</h5>
+      </div>
+      <nav>
+        <div class="nav nav-tabs" role="tablist">
+          <a class="nav-item nav-link" id="tab-edit" data-toggle="tab" href="#edit-tab" role="tab"
+             aria-controls="edit-tab" aria-selected="false">
+            Upload
+          </a>
+          <a class="nav-item nav-link" id="tab-browse" data-toggle="tab" href="#browse-tab" role="tab"
+             aria-controls="browse-tab" aria-selected="false">
+            Browse
+          </a>
+        </div>
+      </nav>
+      <div class="tab-content">
+
+        <!-- ===================================== "Browse" tab ================================= -->
+
+        <div class="tab-pane fade show active" id="browse-tab" role="tabpanel" aria-labelledby="tab-browse">
+          <!-- Browse table of ready experiments -->
+          <div class="card" id="browse-experiments">
+            <div class="card-header">
+              <h3 class="mb-0">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#browse-exp-card"
+                        aria-expanded="true" aria-controls="browse-exp-card">
+                  <span class="fa"></span>Available Experiments
+                </button>
+              </h3>
+            </div>
+            <div class="card-body collapse show" id="browse-exp-card">
+              <div class="table-responsive">
+                <table class="table table-condensed table-hover table-striped" id="browse-exp-table"></table>
+              </div>
+            </div>
+          </div>
+          <!-- end Browse table of ready experiments -->
+
+          <!-- all experiment stats -->
+          <div class="card" id="browse-experiment-data">
+            <div class="card-header">
+              <h3>
+                <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#exp-stats-tabs"
+                        aria-expanded="false" aria-controls="exp-stats-tabs">
+                  <span class="fa"></span>Experiment Data
+                </button>
+                <div class="dropdown" style="display:inline-block;">
+                  <button type="button" class="btn btn-secondary dropdown-toggle disabled" id="download"
+                          data-toggle="dropdown" aria-haspopup=true' aria-expanded="false">Download</button>
+                  <div class="dropdown-menu aria-labelledby="download">
+                    <a class="dropdown-item" id="download-raw">Download Raw Data</a>
+                    <a class="dropdown-item" id="download-csv">Download CSV</a>
+                    <a class="dropdown-item" id="download-selected">Download CSV (selected rows)</a>
+                  </div>
+                </div>
+                <div class="float-right">
+                  <button type="button" class="btn btn-primary disabled" id="analyze">Analyze</button>
+                </div>
+              </h3>
+            </div>
+            <div class="card-body collapse" id="exp-stats-tabs">
+              <nav>
+                <div class="nav nav-tabs" role="tablist">
+                  <a class="nav-item nav-link active" id="tab-browse-metadata" data-toggle="tab"
+                     href="#exp-metadata-tab" role="tab" aria-controls="exp-metadata-tab" aria-selected="false">
+                    Metadata
+                  </a>
+                  <a class="nav-item nav-link" id="tab-browse-runs" data-toggle="tab"
+                     href="#exp-runs-tab" role="tab" aria-controls="exp-runs-tab" aria-selected="false">
+                    Runs
+                  </a>
+                  <a class="nav-item nav-link" id="tab-browse-raw" data-toggle="tab"
+                     href="#exp-raw-tab" role="tab" aria-controls="exp-raw-tab" aria-selected="false">
+                    Raw Data
+                  </a>
+                </div>
+              </nav>
+
+              <div class="tab-content">
+                <!-- metadata tab -->
+                <div class="tab-pane fade show active" id="exp-metadata-tab"
+                     role="tabpanel" aria-labelledby="tab-browse-metadata">
+                  <!--
+                  <table class="table table-condensed table-hover table-striped" id="browse-metadata-table"></table>
+                  -->
+                </div>
+                <!-- end metadata tab -->
+                <!-- experiment runs tab -->
+                <div class="tab-pane fade" id="exp-runs-tab"
+                     role="tabpanel" aria-labelledby="tab-browse-runs">
+                  <table class="table table-condensed table-hover table-striped" id="browse-runs-table"></table>
+                </div>
+                <!-- end experiment runs tab -->
+                <!-- experiment raw tab -->
+                <div class="tab-pane fade" id="exp-raw-tab"
+                     role="tabpanel" aria-labelledby="tab-browse-raw">
+                  <div id="browse-stats-table-container" class="table-responsive">
+                      <table class="table table-condensed table-hover table-striped"
+                             style="width:inherit;"
+                             id="browse-stats-table"></table>
+                  </div>
+                </div>
+                <!-- end experiment raw tab -->
+              </div>
+
+            </div>
+          </div>
+          <!-- end all experiment stats -->
+        </div>
+        <!-- end "Browse" tab -->
+
+        <!-- ===================================== "Upload" tab ================================= -->
+
+        <!-- previously named "Edit" -->
+        <div class="tab-pane fade" id="edit-tab" role="tabpanel" aria-labelledby="tab-edit">
+          <!-- Accordion with three sections: upload, vocab, metadata -->
+          <div id="edit-accordion">
+
+            <!-- Upload UI -->
+            <div class="card" id="edit-upload">
+              <div class="card-header" id="edit-upload-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link" data-toggle="collapse" data-target="#edit-upload-body"
+                          aria-controls="edit-upload-body" aria-expanded="true">
+                    <span class="fa"></span>Upload Dataset
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse show" id="edit-upload-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-upload-heading">
+                <div class="card-body">
+                  <form id="upload-file-form">
+                    <div class="form-group">
+                      <div class="file-input" id="upload-drop">
+                        Drag-and-drop file here, or click to browse
+                        <input type="file" id="upload-file" name="upload-file">
+                        <br>
+                        Selected file: <span id="upload-file-name">none</span>
+                      </div>
+                    </div>
+                    <div class="form-group" id="upload-experiment-type">
+                      <label>Experiment Type</label>
+                    </div>
+                    <button id="upload-button" disabled>Upload</button>
+                    <span id="upload-status"></span>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- end Upload UI -->
+
+            <!-- Controlled vocabulary -->
+            <div class="card" id="edit-vocabulary">
+              <div class="card-header" id="edit-vocab-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#edit-vocab-body"
+                          aria-controls="edit-vocab-body" aria-expanded="false">
+                    <span class="fa"></span>Edit Controlled Vocabulary
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse" id="edit-vocab-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-vocab-heading">
+                <div class="card-body">
+                  <form id="edit-vocabulary-form">
+                    <div class="form-group row">
+                      <label class="col-2 col-form-label"
+                             for="exptype-vocab">Experiment Type</label>
+                      <div id="exptype-vocab-div" class="col-10"></div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- end Controlled vocabulary -->
+
+            <!-- Experiment and runs metadata UI -->
+            <div class="card" id="edit-metadata">
+              <div class="card-header" id="edit-metadata-heading">
+                <h5 class="mb-0">
+                  <button class="btn btn-link collapsed" data-toggle="collapse" data-target="#edit-metadata-body"
+                          aria-controls="edit-metadata-body" aria-expanded="false">
+                    <span class="fa"></span>Edit Experiment/Run Metadata
+                  </button>
+                </h5>
+              </div>
+              <div class="collapse" id="edit-metadata-body" data-parent="#edit-accordion"
+                   aria-labelledby="edit-metadata-heading">
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-condensed table-hover table-striped" id="edit-table"></table>
+                  </div>
+                  <form id="edit-metadata-form">
+                    <fieldset id="edit-metadata-fieldset" class="edit-metdata" disabled>
+                      <nav>
+                        <div class="nav nav-tabs" role="tablist">
+                          <li class="nav active">
+                          <a class="nav-item nav-link active disabled edit-metadata" id="tab-edit-exp"
+                             href="#edit-metadata-exp" data-toggle="tab"
+                             role="tab" aria-controls="edit-metadata-exp" aria-selected="true">
+                            Edit Experiment
+                          </a>
+                          <a class="nav-item nav-link disabled edit-metadata" id="tab-edit-runs"
+                             href="#edit-metadata-runs" data-toggle="tab"
+                             role="tab" aria-controls="edit-metadata-runs" aria-selected="false">
+                            Edit Runs</a></li>
+                        </div>
+                      </nav>
+                      <div class="tab-content">
+                        <div class="tab-pane fade show active" id="edit-metadata-exp" role="tabpanel"
+                             aria-labelledby="tab-edit-exp">
+                        </div>
+                        <div class="tab-pane fade" id="edit-metadata-runs" role="tabpanel"
+                             aria-labelledby="tab-edit-runs">
+                          <div class="form-group row">
+                            <label class="col-2 col-form-label"
+                                   for="runcat-vocab">Run Category</label>
+                            <div id="runcat-vocab-div" class="col-10"></div>
+                          </div>
+                          <table class="table table-condensed table-hover table-striped" id="edit-runs-table"></table>
+                        </div>
+                      </div>
+                      <button id="edit-metadata-button">Update</button>
+                      <button id="edit-revert-metadata-button">Revert</button>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- end Experiment and runs metadata UI -->
+          </div>
+          <!-- end Accordion with three sections: upload, vocab, metadata -->
+        </div>
+        <!-- end "Upload/Edit" tab -->
+
+      </div>
+      <!-- end frontpage tabs -->
+
+      <!-- Plot parameters dialog -->
+      <div class="modal" id="modal-dialog">
+        <!-- modal dialog -->
+        <div class="modal-dialog">
+          <!-- modal content -->
+          <div class="modal-content">
+            <!-- modal header -->
+            <div class="modal-header">
+              <h4 class="modal-title">Modal Dialog Title</h4>
+              <button type="button" class="close modal-cancel-button" data-dismiss="modal">&times;</button>
+              </div>
+            <!-- end modal header -->
+            <!-- modal body -->
+            <div class="modal-body">
+              Modal body...
+            </div>
+            <!-- end modal body -->
+            <!-- modal footer -->
+            <div class="modal-footer">
+              <button type="button" class="btn modal-cancel-button"
+                      value="cancel" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary modal-okay-button"
+                      value="plot" data-dismiss="modal">Okay</button>
+            </div>
+            <!-- end modal footer -->
+          </div>
+          <!-- end modal content -->
+        </div>
+        <!-- end modal dialog -->
+      </div>
+      <!-- end Plot parameters dialog -->
+    </div>
+    <!-- end frontpage -->
+  </body>
+</html>
