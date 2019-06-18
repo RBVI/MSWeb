@@ -1441,31 +1441,24 @@ frontpage = (function(){
     //   Fetch list of Bootstrap themes from cdnjs
     //
     function get_themes() {
+        default_css = "https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css";
         $.ajax({
             dataType: "json",
             method: "GET",
             url: "https://bootswatch.com/api/4.json",
             success: function(data) {
                 var select = $("#themes");
+                select.append($("<option/>", { "data-value": default_css })
+                                .text("Default"));
                 $.each(data.themes, function(index, theme) {
                     select.append($("<option/>", { "data-value": theme.cssCdn })
                                     .text(theme.name));
                 });
                 select.change(function() {
                     var url = $(this).children(":selected").attr("data-value");
-                    if (url) {
-                        var theme = $("#css-theme");
-                        if (theme.length > 0)
-                            theme.attr("href", url);
-                        else
-                            $("<link/>", { "id": "css-theme",
-                                           "rel": "stylesheet",
-                                           "type": "text/css",
-                                           "href": url })
-                                .appendTo($("head"));
-                    }
+                    if (url)
+                        $("#bootstrap-css").attr("href", url);
                 });
-                select.val("Cosmo").trigger("change");
             }
         });
     }

@@ -36,7 +36,7 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     margin-left: 0.5rem;
 }
 .op-row {
-    display: inline-block;
+    display: flex;
     white-space: nowrap;
     overflow: auto;
     margin-bottom: 0.3rem;
@@ -97,6 +97,17 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     text-align: right;
     top: 0;
 }
+
+/* Tighten up spacing */
+.table td {
+    padding: 0.25rem;
+    vertical-align: middle;
+}
+.form-group {
+    margin-bottom: 0.25rem;
+    margin-top: 0.25rem;
+}
+
 /* Bootgrid hack for Bootstrap 4
  * https://github.com/rstaib/jquery-bootgrid/issues/403 */
 ul.pagination > li:first-child > a, 
