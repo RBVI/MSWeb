@@ -119,7 +119,7 @@ class DataStore:
     def experiment_status(self, exp):
         try:
             for attr in ["title", "researcher", "expdate",
-                         "exptype", "datafile"]:
+                         "exptype", "datafile", "released"]:
                 if not exp.get(attr):
                     raise ValueError("no %s" % attr)
             for run_name, run_data in exp["runs"].items():

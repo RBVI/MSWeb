@@ -88,6 +88,8 @@ frontpage = (function(){
             ["Title", "title"],
             ["Researcher", "researcher"],
             ["Upload Date", "uploaddate"],
+            ["Exp. Date", "expdate"],
+            ["Species", "species"],
         ];
         var htr = $("<tr/>");
         htr.append($("<th/>", { "data-column-id": "id",

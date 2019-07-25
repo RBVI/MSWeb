@@ -43,11 +43,15 @@ UploadFields = [
         ("placeholder", "name of requester"), )),
     ( "Experiment Date", "date", "expdate", (
         ("placeholder", "date of experiment"), )),
+    ( "Species", "text", "species", (
+        ("placeholder", "sample species"), )),
     ( "Notes", "textarea", "expnotes", (
         ("placeholder", "free text"), )),
     ( "Uploader", "text", "uploader", ()),
     ( "Upload Date", "date", "uploaddate", ()),
     ( "Data File", "text", "datafile", ()),
+    ( "Released", "text", "released", (
+        ("placeholder", "empty=false, any text=true"), )),
 ]
 
 
@@ -220,18 +224,25 @@ def do_update_experiment(out, form):
         return
 
     # Update experiment metadata
+    # We loop over all possible fields because if user
+    # deleted the field value, browser will just skip
+    # the field key instead of sending an empty value
     updated = []
     deleted = []
-    for key in form.keys():
-        if key in [ "action", "exp_id", "runs" ]:
-            continue
+    for field in UploadFields:
+        key = field[2]
         value = form.getfirst(key)
         if value:
-            exp[key] = value
-            updated.append(key)
+            if value != exp.get(key, None):
+                exp[key] = value
+                updated.append(key)
         else:
-            del exp[key]
-            deleted.append(key)
+            try:
+                del exp[key]
+            except KeyError:
+                pass
+            else:
+                deleted.append(key)
 
     # Update runs metadata
     runs = exp.get("runs", None)
