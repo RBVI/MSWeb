@@ -304,7 +304,7 @@ abundance = (function(){
                     }.bind(this),
                     error: function(xhr, status, error) {
                         alert("Fetching normalized counts failed.");
-                        show_status(error);
+                        frontpage.show_status(error);
                     },
                 });
             }

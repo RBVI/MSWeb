@@ -211,7 +211,17 @@ class NormalizedCounts(_BaseComputation):
         # Find maximum sum of peptide counts per run.
         # It will be used to scale run counts later.
         #
-        run_counts = exp.proteins.filter([run_column(run) for run in exp.runs])
+        # From Juan (7/29/2019):
+        # "In the label free spectral count analysis already implemented,
+        # many hits do not have ratios because the controls have 0 values.
+        # A way of solve this is to use 0.5 (below the minimal count of 1)
+        # as a value in all cases where we have no value. For instance, in
+        # a case where we would compare for protein ABCDEF 2 "control" and
+        # 2 "condition A" samples, and we have Peptide Count values 0 0 3 5,
+        # we would use 0.5 0.5 3 5. Another example, 2 0 8 0 would
+        # be 2 0.5 8 0.5."
+        column_names = [run_column(run) for run in exp.runs]
+        run_counts = exp.proteins.filter(column_names).fillna(0.5)
         run_total = run_counts.sum(axis=0)
         max_total = run_total.max()
         #
@@ -231,7 +241,7 @@ class NormalizedCounts(_BaseComputation):
         #
         cat_counts = {}
         for cat, runs in cat2runs.items():
-            columns = exp.proteins.filter(runs)
+            columns = run_counts.filter(runs)
             for run in runs:
                 scale = max_total / run_total[run]
                 columns[run] *= scale
@@ -308,7 +318,7 @@ if __name__ == "__main__":
         # print(exp.proteins)
         print(exp.proteins.dtypes)
         return exp
-    test_parse_raw()
+    # test_parse_raw()
 
     def test_parse_cooked():
         exp = test_parse_raw()
@@ -321,7 +331,7 @@ if __name__ == "__main__":
     def test_normalized_counts():
         from datastore import DataStore
         ds = DataStore("../../experiments")
-        exp_id = "1"
+        exp_id = "19"
         metadata = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
@@ -336,7 +346,7 @@ if __name__ == "__main__":
     def test_differential_abundance():
         from datastore import DataStore
         ds = DataStore("../../experiments")
-        exp_id = "8"
+        exp_id = "19"
         metadata = ds.experiments[exp_id]
         cooked = ds.cooked_file_name(exp_id)
         exp = parse_cooked(cooked)
@@ -344,28 +354,16 @@ if __name__ == "__main__":
             "nc_method":"default",
             "method":"default",
             "categories":[
-                "control cortex-contralateral 24h",
-                "control cortex-contralateral 48h",
-                "control cortex-ipsilateral 24h",
-                "control cortex-ipsilateral 48h",
-                "control hypothalamus-contralateral 24h",
-                "control hypothalamus-contralateral 48h",
-                "control hypothalamus-ipsilateral 24h",
-                "control hypothalamus-ipsilateral 48h",
-                "shame-cortex-contralateral 24h",
-                "shame-cortex-ipsilateral 24h",
-                "shame-hypothalamus-contralateral 24h",
-                "shame-hypothalamus-ipsilateral 24h",
-                "treatment-cortex-contralateral 24h",
-                "treatment-cortex-ipsilateral 24h",
-                "treatment-hypothalamus-contralateral 24h",
-                "treatment-hypothalamus-ipsilateral 24h",
+                "noRNA",
+                "mTOR_1-47",
+                "mTOR_40-80",
+                "mTOR_72-120",
             ],
-            "control":"control cortex-contralateral 48h",
-            "fc_cutoff":1,
+            "control":"noRNA",
+            "fc_cutoff":0,
             "mean_cutoff":0,
         }
         da, cached = exp.differential_abundance(metadata, params, use_cache=False)
         print(cached)
-        print(exp.xhr_da(da))
-    # test_differential_abundance()
+        # print(exp.xhr_da(da))
+    test_differential_abundance()
