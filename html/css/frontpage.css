@@ -56,7 +56,7 @@ html, body, #frontpage, #browse-tab, #edit-tab {
     max-height: 3rem;
     filter: contrast(200%);
 }
-.abundance-count-column {
+.abundance-count-column, .tmt-count-column {
     max-width: 10rem;
     overflow: hidden;
     text-overflow: ellipsis;

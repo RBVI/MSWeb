@@ -269,7 +269,7 @@ plot = (function(){
 
     //
     // make_plot_heatmap_da:
-    //   Create volcano plot for abundance experiment.
+    //   Create heatmap plot for abundance experiment.
     //   x = category
     //   y = protein
     //   z = ???
@@ -358,12 +358,21 @@ plot = (function(){
         make_plotly(div, data, layout, height);
     }
 
+    //
+    // make_plotly:
+    //   Create resizable plotly plot
+    //
     function make_plotly(div, data, layout, height) {
         Plotly.newPlot(div.attr("id"), data, layout);
         make_resizable(div, height);
         div.data({ data: data, layout: layout, height: height });
     }
 
+    //
+    // make_resizable:
+    //   Make a plotly plot resizable by monitoring "style" changes
+    //   (which include size changes)
+    //
     function make_resizable(div, size) {
         var div_id = div.attr("id");
         var d3 = Plotly.d3;
@@ -390,6 +399,10 @@ plot = (function(){
         });
     }
 
+    //
+    // pop_out:
+    //   Move a plotly plot into its own window/tab
+    //
     function pop_out(div, title) {
         var data = div.data("data");
         var layout = div.data("layout");
@@ -411,6 +424,10 @@ plot = (function(){
         new_window(html);
     }
 
+    //
+    // new_window:
+    //   Create new tab/window with given content
+    //
     function new_window(html) {
         var win = window.open("", "");
         var d = win.document;

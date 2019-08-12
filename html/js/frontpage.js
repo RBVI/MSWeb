@@ -1396,6 +1396,8 @@ frontpage = (function(){
     function init_main() {
         // Enumerate all supported experiment type modules
         modules["abundance"] = abundance;
+        modules["tmt"] = tmt;
+        modules["itraq"] = tmt;
         modules["generic"] = generic;
 
         get_themes();
@@ -1556,6 +1558,9 @@ frontpage = (function(){
         var lc_type = type.toLowerCase();
         for (var module_name in modules)
             if (lc_type.startsWith(module_name))
+                return modules[module_name];
+        for (var module_name in modules)
+            if (lc_type.includes(module_name))
                 return modules[module_name];
         return generic;
     }

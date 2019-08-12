@@ -264,8 +264,7 @@ def do_get_experiment(out, form):
     except ValueError:
         return
     cooked = ds.cooked_file_name(exp_id)
-    # Our first uploads do not have types, but are all abundance experiments
-    exptype = exp_meta.get("exptype", "abundance")
+    exptype = exp_meta.get("exptype", "generic")
     mod = _get_module_by_type(exptype)
     exp = mod.parse_cooked(cooked)
     _send_success(out, {"experiment_data":exp.xhr_data(),
@@ -363,6 +362,40 @@ def _get_da_params(form):
     return params
 
 
+def do_tmt_data(out, form):
+    if "control" not in form:
+        raise ValueError("no control category specified")
+    control = form.getfirst("control")
+    if "type" not in form:
+        raise ValueError("no data type specified")
+    data_type = form.getfirst("type")
+    try:
+        ds, exp_id, exp_meta = _get_exp_metadata(out, form)
+    except ValueError:
+        return
+    cooked = ds.cooked_file_name(exp_id)
+    from amass_lib import tmt
+    exp = tmt.parse_cooked(cooked)
+    channels = {run_name:run["category"]
+                for run_name, run in exp_meta["runs"].items()}
+    params = {"control":control,"channels":channels}
+    try:
+        if data_type == "proteins":
+            data, cached = exp.proteins(params)
+        elif data_type == "peptides":
+            data, cached = exp.peptides(params)
+        elif data_type == "spectra":
+            data, cached = exp.spectra(params)
+        else:
+            raise ValueError("unknown data type: %s" % data_type)
+    except ValueError as e:
+        _send_failed(out, str(e))
+        return
+    if not cached:
+        exp.write_cooked(cooked)
+    _send_success(out, {"params":params,"stats":data}, cls=MyEncoder)
+
+
 def _get_exp_metadata(out, form):
     from amass_lib import datastore
     if "exp_id" not in form:
@@ -429,6 +462,9 @@ def _get_module_by_type(exptype):
     if exptype.lower().startswith("abundance"):
         from amass_lib import abundance
         return abundance
+    if "TMT" in exptype or "iTRAQ" in exptype:
+        from amass_lib import tmt
+        return tmt
     from amass_lib import generic
     return generic
 
